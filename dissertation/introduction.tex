@@ -11,7 +11,8 @@
 %Liquid democracy offers significant opportunities for enhancing the quality of collective decisions, particularly within systems that rely heavily on user-generated ratings. This project explores integrating liquid democracy into an existing rating platform to improve user engagement, decision-making accuracy, and the overall reliability of rating outcomes.
 
 \section{Vodle}
-Vodle is an online platform where users participate in polls to vote on any subject that they want to by creating a poll. Each poll contains a set of options, and users provide ratings for each option from 0 to 100 using a slider controls (below). When the poll ends, the ratings submitted by voters are then aggregated and a result that represents the overall sentiment of the voters is produced.
+Vodle is an online platform where users participate in polls to vote on subjects through user created polls. Each poll contains a set of options, and users provide ratings for each option from 0 to 100, where a larger number means that they prefer the option more, using a slider (below). When the poll ends, the ratings submitted by voters are then aggregated and a result is calculated.
+
 
 \textbf{INSERT IMAGE OF SLIDERS}
 
@@ -20,18 +21,17 @@ Liquid democracy is a decision-making system that combines elements of both dire
 
 In direct democracy, every participant votes individually on each issue. This model offers the most individual input but can become impractical for large-scale decision-making due to the high level of participation required from each individual. As \cite{ford_delegative_2002} states, direct democracy assumes that all individuals are both willing and able to engage meaningfully with every decision, which is often not the case in large groups due to the variance in both the interest and knowledge of voters. The cognitive demand of staying informed on all matters, combined with the time commitment necessary for constant participation, makes direct democracy unmanageable at scale.
 
-In representative democracy, participants elect representatives to vote on their behalf. While more scalable, this approach can reduce the influence of individual voters and may not always reflect their evolving preferences.
+% In representative democracy, participants elect representatives to vote on their behalf. While more scalable, this approach can reduce the influence of individual voters and may not always reflect their evolving preferences.
+In a representative democracy, citizens elect officials to deliberate and decide on legislation and policies on their behalf. While this system is more scalable than direct democracy, it introduces certain limitations:
+% vote based on party lines, personal convictions, or special interests rather than strictly reflecting constituent preferences
+% time btwn elections - unresponsive to rapidly evolving public opinion
+% need to find references and write up
 
-
-Alternatively, representational democracy
-
-Liquid democracy addresses these limitations by allowing voters to either cast their votes directly or delegate them to someone that they trust or to abstain from voting entirely (\cite{blum_liquid_2016}). These delegations are optional and can be updated at any time, giving users control over how their vote is used. Delegation is also transitive, meaning a vote can be passed through multiple levels of trusted participants. For example, if Alice delegates to Bob who in turn delegates to Charlie, Charlie's vote would then represent three individuals (Alice, Bob and Charlie).
+Liquid democracy addresses these limitations by allowing voters to either cast their votes directly or delegate them to someone that they trust or to abstain from voting entirely (\cite{blum_liquid_2016}). These delegations can be updated or revoked at any time, giving users control over how their vote is used. Delegations are also transitive, meaning a vote can be passed through multiple levels of trusted participants. For example, if Alice delegates to Bob who in turn delegates to Charlie, Charlie's vote would then represent three individuals (Alice, Bob and Charlie).
 
 % This enables users to rely on others' expertise while retaining the option to reclaim their vote at any point.
 
 % The model promotes participation, flexibility, and informed decision-making, making it an appealing option for platforms seeking to improve their user experience and quality of voting result.
-
-The end result is 
 
 \section{Motivation}
 Liquid democracy holds considerable potential, but practical applications face notable challenges. Common issues include delegation cycles, where voting authority becomes circular and unresolved; voter abstention, where users choose not to vote; and disproportionate influence by super-voters.

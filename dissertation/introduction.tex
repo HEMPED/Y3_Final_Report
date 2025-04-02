@@ -1,18 +1,49 @@
+% - Introduction
+% 	- Introduce vodle
+% 	- Introduce Liquid Democracy
+% 	- Motivation
+% 	- Audience
+% 	- Project Goal (implement LD into vodle)
+% 	- Project Outline (Outline of Report)
 \chapter{Introduction}
 \label{ch:introduction}
 
-Write around four paragraphs establishing the context and motivating your project.
+Liquid democracy offers significant opportunities for enhancing the quality of collective decisions, particularly within systems that rely heavily on user-generated ratings. This project explores integrating liquid democracy into an existing rating platform to improve user engagement, decision-making accuracy, and the overall reliability of rating outcomes.
 
-\section{Related work}
+\section{vodle} Vodle is an innovative online platform where users participate in polls to rate various types of content, such as consumer products and academic resources. Each poll presents a set of options, and users provide ratings using intuitive slider controls, allowing them to express their preferences. These ratings are then aggregated to generate results that reflect the collective input of the poll's voters.
 
-Discuss related work.
+\section{Liquid Democracy}
+Liquid democracy is a flexible decision-making system combining elements of direct and representative democracy.
 
-\section{Objectives}
+In direct democracy, every participant votes individually on each issue. In representative democracy, participants elect representatives to make decisions on their behalf.
 
-One sentence summary of your project. Followed by a short list of concrete objectives:
+Liquid democracy allows users either to vote directly or delegate their voting power to others they trust or consider more knowledgeable. Delegations can be transitive, meaning voting authority can pass through several individuals, forming chains of delegated influence that reflect users' preferences and perceived expertise.
 
-\begin{itemize}
-    \item Objective 1
-    \item Objective 2
-    \item Objective 3
-\end{itemize}
+The key advantages of liquid democracy include reducing voter fatigue, increasing participation, and enhancing decision-making by effectively utilising specialised knowledge.
+
+\section{Motivation}
+Liquid democracy holds considerable potential, but practical applications face notable challenges. Common issues include delegation cycles, where voting authority becomes circular and unresolved; voter abstention, where users choose not to vote; and disproportionate influence by super-voters.
+
+Current systems rarely implement solutions like ranked delegation (allowing users to specify multiple, ranked delegates) or the ability to allocate voting power across multiple delegates.
+
+This project aims to address these gaps, specifically within platforms like Vodle, to improve rating accuracy and reliability.
+
+\section{Project Goal}
+The project's main goal is integrating a liquid democracy system into the Vodle platform, emphasising technical robustness and practical usability.
+
+Key features include ranked delegation, vote splitting, and backup votes. Addressing technical challenges such as delegation cycles and disproportionate influence is critical to enhancing rating accuracy, increasing user trust, and boosting engagement.
+
+While the project explores theoretical aspects, its primary focus remains practical implementation and technical effectiveness.
+
+\section{Project Outline}
+This report is structured to clearly illustrate the project's progression and outcomes:
+
+Chapter 2 provides background, covering existing literature and implementations of liquid democracy.
+
+Chapter 3 details essential design decisions for effectively integrating liquid democracy into Vodle.
+
+Chapter 4 describes the technical implementation, methods, and practical considerations.
+
+Chapter 5 evaluates the implemented solution through rigorous testing and user feedback.
+
+Chapter 6 summarises the project's achievements, identifies its limitations, and suggests directions for future research and development.

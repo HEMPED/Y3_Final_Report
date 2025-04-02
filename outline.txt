@@ -1,5 +1,5 @@
 - Introduction
-	- Introduce vodel
+	- Introduce vodle
 	- Introduce Liquid Democracy
 	- Motivation
 	- Audience

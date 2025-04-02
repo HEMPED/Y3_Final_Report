@@ -1,23 +1,24 @@
 - Introduction
-	- vodle Introduction
-	- Liquid Democracy Introduction
+	- Introduce vodel
+	- Introduce Liquid Democracy
 	- Motivation
 	- Audience
 	- Project Goal (implement LD into vodle)
 	- Project Outline (Outline of Report)
 - Research
 	- Existing Variations of Liquid Democracy
-	- Existing Implementations of Liquid Democracy
+	- Existing Real World Implementations of Liquid Democracy
 	- Research into vodle's Design Philosophy (Need to Maintain a Consistent User Interface)
+	- Research into how the vodle website works (architecture)
 - System Specifications
-	- Project Objectives (get clarification about whether to make last objective an extension objective from Markus)
+	- Project Objectives
 - Methodology
 	- Talk about specific approach - agile, iterative etc
 	- Plan - Gantt chart
 	- Risk Assessment
 - Design and Implementation
 - Evaluation
-	- Unit Testing
+	- Unit Testing (For LD Algorithms)
 	- User Testing
 	- Feedback from Customer (Jobst)
 - Project Management

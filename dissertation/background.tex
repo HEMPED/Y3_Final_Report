@@ -1,2 +1,89 @@
 \chapter{Research}
 \label{ch:background}
+
+This chapter provides background context for the development of a liquid democracy system within Vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of Vodle as a platform are explored.
+
+\section{Liquid Democracy}
+
+Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain (\cite{blum_liquid_2016}). A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
+
+Whilst the transitivity property enables concentration of voting power with trusted individuals, it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating so-called super-voters. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed in the following subsections.
+
+%\cite{ford_delegative_2002} argues that direct democracy becomes ineffective at scale due to the diversity in participants' knowledge and interest. Without mechanisms to channel influence through trusted intermediaries, the collective outcome may reflect average rather than informed decision-making. Liquid democracy addresses this by enabling voters to shift influence toward participants with greater expertise or engagement.
+
+\subsection{Issues with Liquid Democracy}
+
+\subsubsection{Delegation cycles}
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[->, >=stealth, thick, scale=1.5]
+        % Nodes at triangle vertices
+        \node[circle, draw] (A) at (0,0) {A};
+        \node[circle, draw] (B) at (2,0) {B};
+        \node[circle, draw] (C) at (1,1.732) {C}; % height = sqrt(3)
+
+        % Arrows showing delegation
+        \draw (A) -- (B);
+        \draw (B) -- (C);
+        \draw (C) -- (A);
+    \end{tikzpicture}
+    \caption{Delegation cycle: A delegates to B, B to C, and C back to A.}
+    \label{fig:triangle-cycle}
+\end{figure}
+
+
+Delegation cycles occur when a vote is delegated in such a way that it ends up forming a loop \cite{brill_liquid_2022}, preventing the vote from reaching a final, resolvable destination. For example, if Alice delegates her vote to Bob, Bob delegates to Charlie, and Charlie delegates back to Alice, the votes become trapped in a cycle (seen above) and can be treated as a loss of representation (\cite{christoff2017liquiddemocracyanalysisbinary}).
+
+This issue is particularly problematic because it can nullify votes without the affected users ever realising. In systems where cycles are not explicitly detected and handled, these votes are discarded silently, potentially changing the final outcome of the votes.
+
+Delegation cycles are increasingly likely to emerge in dynamic voting systems, where delegations can be added, removed, or modified at any point in time. Delegations that initially did not form part of a cycle may later contribute to one as other voters add a new delegation or alter an existing one.
+
+\textit{Paragraph on how size of the system affects the possibility of cycles?}
+
+\subsubsection{Abstentions}
+In liquid democracy, abstention is where a voter neither casts a vote nor delegates their vote to another user (\cite{brill_liquid_2022}). This includes both deliberate abstention, where a voter knowingly chooses not to participate, and passive abstention, where a voter may be unaware of an ongoing poll or are unable to engage with it.
+
+\subsubsection{Super-voters}: Individuals who accumulate significant influence may skew results, as seen in the German Pirate Party's experiments with liquid democracy (Sven Becker, 2012).
+
+% \textbf{Limited fall-back options}: Basic delegation models lack mechanisms to handle failure cases like abstention or delegation loops.
+
+\subsection{Existing Variations of Liquid Democracy}
+
+\textbf{Ranked delegation}: Allows voters to specify fall-back delegates in order of preference (Brill et al., 2022).
+
+\textbf{Vote splitting}: Voting power is distributed across multiple delegates to reduce reliance on any single individual (\cite{golz_fluid_2021}).
+
+\textbf{Backup votes}: Voters may provide a direct vote to use in case delegation fails.
+
+\textbf{Cycle resolution mechanisms}: Detect and resolve loops in the delegation graph to preserve vote validity.
+
+\section{vodle}
+Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. These sliders enable users to express degrees of preference rather than make binary choices. The platform aggregates these ratings to derive results that reflect the collective input of the voters in each poll.
+
+\subsection{MaxParC}
+
+\textbf{Maximal Participation and Consensus (MaxParC)}: A proportional decision-making method that encourages widespread involvement and compromise.
+
+\textbf{Conditional commitments}: Voters can condition their support based on how others are expected to vote, supporting consensus-building.
+
+\textbf{Role in Vodle}: MaxParC is used as the primary aggregation mechanism within Vodle.
+
+\subsection{Architecture}
+
+\textbf{Client-server model}: Facilitates real-time voting through a web interface.
+
+\textbf{Poll-based interaction}: Users rate options in predefined polls.
+
+\textbf{Extensibility}: The platform's architecture supports the integration of new decision-making models, such as liquid democracy.
+
+\subsection{Design Philosophy}
+
+\textbf{Minimalism}: Designed to reduce friction and make participation intuitive.
+
+\textbf{Flexibility}: Supports a range of decision models.
+
+\textbf{Legibility}: Users can understand and trust how results are derived.
+
+\section{Summary}
+This chapter reviewed the structure and challenges of liquid democracy, explored enhancements found in recent literature, and outlined Vodle's technical and conceptual foundation. These insights inform the design and implementation decisions discussed in the next chapters.
+

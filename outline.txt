@@ -4,12 +4,19 @@
 	- Motivation
 	- Audience
 	- Project Goal (implement LD into vodle)
-	- Project Outline (Outline of Report)
+	- Project Outline (Outline of Report) (may be unnecessary)
 - Research
+	- Issues with Liquid Democracy
+		- Cycles
+		- Abstentions
+		- Super Voters
 	- Existing Variations of Liquid Democracy
+		- Ranked Delegation
+		- Vote Splitting (Weighted Delegation)
 	- Existing Real World Implementations of Liquid Democracy
-	- Research into vodle's Design Philosophy (Need to Maintain a Consistent User Interface)
+		- Which version they have implemented/ how it works etc.
 	- Research into how the vodle website works (architecture)
+	- Research into vodle's Design Philosophy (Need to Maintain a Consistent User Interface)
 - System Specifications
 	- Project Objectives
 - Methodology

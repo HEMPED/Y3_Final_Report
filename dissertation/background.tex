@@ -5,7 +5,7 @@ This chapter provides background context for the development of a liquid democra
 
 \section{Liquid Democracy}
 
-Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain (\cite{blum_liquid_2016}). A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
+Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain \citep{blum_liquid_2016}. A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
 
 Whilst the transitivity property enables concentration of voting power with trusted individuals, it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating so-called super-voters. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed in the following subsections.
 
@@ -32,7 +32,7 @@ Whilst the transitivity property enables concentration of voting power with trus
 \end{figure}
 
 
-Delegation cycles occur when a vote is delegated in such a way that it ends up forming a loop \cite{brill_liquid_2022}, preventing the vote from reaching a final, resolvable destination. For example, if Alice delegates her vote to Bob, Bob delegates to Charlie, and Charlie delegates back to Alice, the votes become trapped in a cycle (seen above) and can be treated as a loss of representation (\cite{christoff2017liquiddemocracyanalysisbinary}).
+Delegation cycles occur when a vote is delegated in such a way that it ends up forming a loop \citep{brill_liquid_2022}, preventing the vote from reaching a final, resolvable destination. For example, if Alice delegates her vote to Bob, Bob delegates to Charlie, and Charlie delegates back to Alice, the votes become trapped in a cycle (seen above) and can be treated as a loss of representation \citep{christoff2017liquiddemocracyanalysisbinary}.
 
 This issue is particularly problematic because it can nullify votes without the affected users ever realising. In systems where cycles are not explicitly detected and handled, these votes are discarded silently, potentially changing the final outcome of the votes.
 
@@ -41,21 +41,51 @@ Delegation cycles are increasingly likely to emerge in dynamic voting systems, w
 \textit{Paragraph on how size of the system affects the possibility of cycles?}
 
 \subsubsection{Abstentions}
-In liquid democracy, abstention is where a voter neither casts a vote nor delegates their vote to another user (\cite{brill_liquid_2022}). This includes both deliberate abstention, where a voter knowingly chooses not to participate, and passive abstention, where a voter may be unaware of an ongoing poll or are unable to engage with it.
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm]
+        \node[circle, draw] (A) {A};
+        \node[circle, draw, right of=A] (B) {B};
+        \node[circle, draw, right of=B, dashed, fill=gray!20] (C) {C};
 
-\subsubsection{Super-voters}: Individuals who accumulate significant influence may skew results, as seen in the German Pirate Party's experiments with liquid democracy (Sven Becker, 2012).
+        \draw (A) -- (B);
+        \draw (B) -- (C);
+    \end{tikzpicture}
+    \caption{Delegation chain ending in abstention: A delegates to B, B to C. C abstains, causing the votes of A and B to be lost.}
+    \label{fig:delegation-abstention}
+\end{figure}
 
-% \textbf{Limited fall-back options}: Basic delegation models lack mechanisms to handle failure cases like abstention or delegation loops.
+In liquid democracy, abstention is where a voter neither casts a vote nor delegates their vote to another user \citep{brill_liquid_2022}. This includes both deliberate abstention, where a voter knowingly chooses not to participate, and passive abstention, where a voter may be unaware of an ongoing poll or are unable to engage with it.
 
-\subsection{Existing Variations of Liquid Democracy}
+Abstentions are especially impactful when they occur at the end of a larger delegation chain, as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. The voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
 
-\textbf{Ranked delegation}: Allows voters to specify fall-back delegates in order of preference (Brill et al., 2022).
+\subsubsection{Super-voters}
+In liquid democracy, a super-voter is an individual who receives a large number of delegated votes, therefore gaining disproportionate influence over decisions \citep{kling2015votingbehaviourpoweronline}. While this behaviour may reflect voters' genuine preferences, it can lead to a concentration of power that goes against the intended egalitarianism and democratic ideals of liquid democracy.
 
-\textbf{Vote splitting}: Voting power is distributed across multiple delegates to reduce reliance on any single individual (\cite{golz_fluid_2021}).
+Although liquid democracy allows users to alter their delegation at any time, in practice, many voters may not actively monitor or even know how their vote is being used. This can allow a small number of super-voters to dominate outcomes, especially in systems with large delegation chains.
 
-\textbf{Backup votes}: Voters may provide a direct vote to use in case delegation fails.
+Real-world examples of this phenomenon have been documented. In the German Pirate Party's use of LiquidFeedback, certain users received so many delegations that their votes were like "decrees" \citep{sven_becker_liquid_2012,kling2015votingbehaviourpoweronline} even though they were not elected officials. \cite{kling2015votingbehaviourpoweronline} noted that the super-voters generally voted in line with the majority, therefore not drastically affecting the outcome of the votes and contributed to the stability of the system. However, the potential for individuals to single-handedly influence the results remained a concern.
+%This pattern has also been observed in blockchain-based governance systems \citep{hallWhatHappensWhen2024}, where voting tokens (digital representations of voting power) are commonly concentrated among a few delegates, giving them an excessive amount of power.
+%In the case of the Pirate Party, analysis showed that although super-voters held significant theoretical power, they generally voted in line with the majority, therefore not drastically affecting the outcome of the votes. \cite{kling2015votingbehaviourpoweronline} described this behaviour as voting "wisely," noting that while these individuals had the capacity to change outcomes, they typically did not use it to push their own agenda.
+
+This pattern is not limited to traditional online voting platforms. It can also be seen within decentralised autonomous organisations (DAOs) - blockchain-based entities where decisions are made collectively by token holders without central leadership. These organisations use token-based voting to decide on critical issues like protocol upgrades and funding allocations. \cite{hallWhatHappensWhen2024} studied 18 decentralised autonomous organisations (DAOs) and found that voting power was often concentrated in the hands of a few delegates. While most did not control a large share of all available tokens, low participation meant that their share of actual votes cast was disproportionately high. In several DAOs, the top five delegates accounted for over 50\% of all votes cast, and in the DAO Gitcoin, this figure exceeded 90\%.
+\subsection{Variations of Liquid Democracy}
+
+\subsubsection{Ranked delegation}: Allows voters to specify fall-back delegates in order of preference (Brill et al., 2022).
+
+Include different algorithms from Brill paper
+
+\subsubsection{Weighted/ vote splitting}
+Voting power is distributed across multiple delegates to reduce reliance on any single individual (\cite{golz_fluid_2021}).
+
+\subsubsection{Backup votes - kinda unneeded}
+Voters may provide a direct vote to use in case delegation fails.
 
 \textbf{Cycle resolution mechanisms}: Detect and resolve loops in the delegation graph to preserve vote validity.
+
+\section{Previous Implementations of Liquid Democracy}
+\subsection{LiquidFeedback}
+\subsection{Google Votes}
 
 \section{vodle}
 Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. These sliders enable users to express degrees of preference rather than make binary choices. The platform aggregates these ratings to derive results that reflect the collective input of the voters in each poll.

@@ -3,6 +3,13 @@
 
 This chapter provides background context for the development of a liquid democracy system within Vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of Vodle as a platform are explored.
 
+Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters, the following symbols are used:
+\begin{itemize}
+    \item \textbf{Circles} indicate voters who delegate their vote to someone else.
+    \item \textbf{Squares} represent voters who cast their own vote and do not delegate.
+    \item \textbf{Triangles} show voters who abstain - neither voting directly nor delegating to others.
+\end{itemize}
+
 \section{Liquid Democracy}
 
 Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain \citep{blum_liquid_2016}. A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
@@ -46,7 +53,7 @@ Delegation cycles are increasingly likely to emerge in dynamic voting systems, w
     \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm]
         \node[circle, draw] (A) {A};
         \node[circle, draw, right of=A] (B) {B};
-        \node[circle, draw, right of=B, dashed, fill=gray!20] (C) {C};
+        \node[regular polygon, regular polygon sides=3, shape border rotate=0, draw, minimum size=1cm, inner sep=0pt, right of=B] (C) {C};
 
         \draw (A) -- (B);
         \draw (B) -- (C);
@@ -64,7 +71,7 @@ In liquid democracy, a super-voter is an individual who receives a large number 
 
 Although liquid democracy allows users to alter their delegation at any time, in practice, many voters may not actively monitor or even know how their vote is being used. This can allow a small number of super-voters to dominate outcomes, especially in systems with large delegation chains.
 
-Real-world examples of this phenomenon have been documented. In the German Pirate Party's use of LiquidFeedback, certain users received so many delegations that their votes were like "decrees" \citep{sven_becker_liquid_2012,kling2015votingbehaviourpoweronline} even though they were not elected officials. \cite{kling2015votingbehaviourpoweronline} noted that the super-voters generally voted in line with the majority, therefore not drastically affecting the outcome of the votes and contributed to the stability of the system. However, the potential for individuals to single-handedly influence the results remained a concern.
+Real-world examples of this phenomenon have been documented. In the German Pirate Party's use of LiquidFeedback, certain users received so many delegations that their votes were like ``decrees'' \citep{sven_becker_liquid_2012,kling2015votingbehaviourpoweronline} even though they were not elected officials. \cite{kling2015votingbehaviourpoweronline} noted that the super-voters generally voted in line with the majority, therefore not drastically affecting the outcome of the votes and contributed to the stability of the system. However, the potential for individuals to single-handedly influence the results remained a concern.
 %This pattern has also been observed in blockchain-based governance systems \citep{hallWhatHappensWhen2024}, where voting tokens (digital representations of voting power) are commonly concentrated among a few delegates, giving them an excessive amount of power.
 %In the case of the Pirate Party, analysis showed that although super-voters held significant theoretical power, they generally voted in line with the majority, therefore not drastically affecting the outcome of the votes. \cite{kling2015votingbehaviourpoweronline} described this behaviour as voting "wisely," noting that while these individuals had the capacity to change outcomes, they typically did not use it to push their own agenda.
 
@@ -86,32 +93,23 @@ Voters may provide a direct vote to use in case delegation fails.
 \subsection{Google Votes}
 
 \section{vodle}
-Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. These sliders enable users to express degrees of preference rather than make binary choices. The platform aggregates these ratings to derive results that reflect the collective input of the voters in each poll.
+Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. When the poll ends, these ratings are aggregated and the MaxParC rating system is used to determine the final result of the poll.
 
 \subsection{MaxParC}
+Understanding MaxParC is important for this project because it forms the core of how vodle interprets group preferences. Since this work involves modifying vodle's voting behaviour through the integration of liquid democracy, it is essential to understand how MaxParC processes input ratings. In particular, understanding how changes in individual ratings influence the final outcome of a poll helps to frame the implications of delegating or reweighting votes.
+%A clear grasp of MaxParC's underlying principles allows for a more informed and effective integration that maintains the platform's commitment to fairness and consensus.
 
-\textbf{Maximal Participation and Consensus (MaxParC)}: A proportional decision-making method that encourages widespread involvement and compromise.
+Maximum Partial Consensus (MaxParC), the rating system used by vodle, was introduced by \cite{heitzig_fair_2024}. It is a decision-making method designed to address the limitations of traditional voting systems, in particular the potential for majority rule to suppress minority viewpoints.
+The primary objective of MaxParC is to achieve a balance between fairness, consensus, and efficiency in group decision-making.
 
-\textbf{Conditional commitments}: Voters can condition their support based on how others are expected to vote, supporting consensus-building.
-
-\textbf{Role in Vodle}: MaxParC is used as the primary aggregation mechanism within Vodle.
+Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''.
 
 \subsection{Architecture}
 
-\textbf{Client-server model}: Facilitates real-time voting through a web interface.
-
-\textbf{Poll-based interaction}: Users rate options in predefined polls.
-
-\textbf{Extensibility}: The platform's architecture supports the integration of new decision-making models, such as liquid democracy.
-
+\subsubsection{Technologies Used}
+why info is relevant to the project - e.g. need to jsonify data. what makes angular different etc
 \subsection{Design Philosophy}
 
-\textbf{Minimalism}: Designed to reduce friction and make participation intuitive.
-
-\textbf{Flexibility}: Supports a range of decision models.
-
-\textbf{Legibility}: Users can understand and trust how results are derived.
-
 \section{Summary}
-This chapter reviewed the structure and challenges of liquid democracy, explored enhancements found in recent literature, and outlined Vodle's technical and conceptual foundation. These insights inform the design and implementation decisions discussed in the next chapters.
+
 

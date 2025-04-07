@@ -6,7 +6,7 @@ This chapter provides background context for the development of a liquid democra
 Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters, the following symbols are used:
 \begin{itemize}
     \item \textbf{Circles} indicate voters who delegate their vote to someone else.
-    \item \textbf{Squares} represent voters who cast their own vote and do not delegate.
+    \item \textbf{Squares} represent voters who cast their own vote and do not delegate - casting voters.
     \item \textbf{Triangles} show voters who abstain - neither voting directly nor delegating to others.
 \end{itemize}
 
@@ -83,7 +83,7 @@ The challenges discussed in the previous section, such as delegation cycles, vot
 The following subsections present several such variations, along with the algorithms that support them.
 \subsubsection{Ranked Delegation} Ranked delegation improves liquid democracy by allowing voters to list several trusted delegates in order of preference. Instead of choosing just one delegate, a voter can specify a ranked list so that if their top choice is unavailable (due to abstention, involvement in a cycle, or other reasons) the system can use the next delegate specified. This method reduces the risk of losing votes while keeping voters actively involved in the decision making process \citep{brill_liquid_2022}.
 
-Implementing ranked delegation requires a mechanism to decide among multiple possible delegation paths. This is done through a \textit{delegation rule}, a function that, given a ranked delegation instance and a delegating voter, selects a unique path leading to a \textit{casting voter} (one who votes directly rather than delegating or abstaining) \citep{brill_liquid_2022}.
+Implementing ranked delegation requires a mechanism to decide among multiple possible delegation paths. This is done through a \textit{delegation rule}, a function that, given a ranked delegation instance and a delegating voter, selects a unique path leading to a \textit{casting voter} \citep{brill_liquid_2022}.
 
 Several key properties help evaluate these delegation rules:
 
@@ -109,13 +109,24 @@ The literature considers several delegation rules, each with distinct trade-offs
 
 In summary, ranked delegation enhances liquid democracy by reducing the risk of lost votes. The choice of delegation rule not only affects system efficiency but also influences fairness and robustness. While simpler methods such as DFD and BFD are easier to implement, advanced rules like MinSum, Leximax, and BordaBranching offer stronger guarantees and are better suited for practical deployment in platforms such as vodle.
 
-\subsubsection{Weighted/ vote splitting}
-Voting power is distributed across multiple delegates to reduce reliance on any single individual (\cite{golz_fluid_2021}).
+For our implementation, MinSum will be chosen as \dots
+
+\subsubsection{Vote Splitting}
+
+
 
 \section{Implementations of Liquid Democracy}
 \subsection{LiquidFeedback}
 \subsection{Google Votes}
+Google Votes was an experimental implementation of liquid democracy deployed internally at Google. It was built on top of the company's corporate Google+ social network and ran over a three-year period, from 2012 to 2015 \citep{hardt_google_2015}. The platform allowed users to either vote directly or delegate their vote to other employees, with support for transitive delegations. Delegations were category-specific, enabling users to assign trusted colleagues to vote on specific topics such as "food", "coding", or "events".
 
+One of the goals of Google Votes was to reduce barriers to participation while encouraging meaningful contributions. Users could override their delegation at any time and cast a vote directly. Delegation features were introduced gradually and supported through user-friendly interactions, including voting power estimates, delegation advertisements, and notifications whenever a delegate voted on someone's behalf.
+
+Google Votes also addressed transparency through what the authors call the ``Golden Rule of Liquid Democracy'': if a user delegates their vote, they must be able to see how it is used. All votes were visible to the voting group, and users were notified when a delegate voted on their behalf. This helped maintain accountability and encouraged users to monitor their representation.
+
+The system supported various voting styles, including ranked, approval, and score voting, with tally methods like the Schulze and Borda count. One notable application was the ``Mountain View Microkitchen Food Fair'', which received over 62,000 votes from 4,600 users in a single week. While delegated votes accounted for only around 3.6\% of total votes cast, their use grew over time and played a meaningful role in decisions such as food selection and event planning.
+
+Despite not being made public, Google Votes demonstrated that liquid democracy could be applied successfully within a corporate environment, offering a scalable and adaptable model for collaborative decision-making \citep{hardt_google_2015}.
 \section{vodle}
 Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. When the poll ends, these ratings are aggregated and the MaxParC rating system is used to determine the final result of the poll.
 
@@ -126,14 +137,24 @@ Understanding MaxParC is important for this project because it forms the core of
 Maximum Partial Consensus (MaxParC), the rating system used by vodle, was introduced by \cite{heitzig_fair_2024}. It is a decision-making method designed to address the limitations of traditional voting systems, in particular the potential for majority rule to suppress minority viewpoints.
 The primary objective of MaxParC is to achieve a balance between fairness, consensus, and efficiency in group decision-making.
 
-Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''.
+Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''. This can be seen visualised in the illustration below.
 
-\subsection{Architecture}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../common/maxparc.png}
+    \caption{Graphic from \cite{heitzig_fair_2024} representing MaxParC from the view of some voter Alice. Each rating value represents a conditional commitment by Alice to approve
+    the respective option. Approval scores, number of voters that approve the option, are represented by light bars
+    coming in from the right, options are sorted by descending approval score. Alice is counted as approving an option if her rating needle overlaps with
+    the approval score bar.}
+\end{figure}
 
-\subsubsection{Technologies Used}
+\textit{TODO: Make summary better}
+To summarise, any delegation or vote splitting mechanism must be designed so that it only adds to an option's overall rating and never reduces it. This ensures that delegated input remains consistent with MaxParC's conditional approval model and preserves the original intent of the voter.
+\subsection{Technologies Used}
 why info is relevant to the project - e.g. need to jsonify data. what makes angular different etc
 \subsection{Design Philosophy}
 
+\section{Agent Based Modelling}
 \section{Summary}
 
 

@@ -1,2 +1,21 @@
-\chapter{Objectives}
-\label{ch:objectives}
+\chapter{System Specifications}
+\label{ch:specifications}
+Through the background research, we identified several key limitations in traditional liquid democracy systems such as delegation cycles, vote loss through abstentions, and the disproportionate influence of super-voters. We also explored a number of proposed enhancements, including ranked delegation and vote splitting, which offer practical ways to improve the robustness and fairness of delegative voting.
+
+Based on these findings, we propose a set of features that would improve vodle and make the integration of liquid democracy within it more beneficial. These can be formalised into the following core objectives:
+
+\begin{enumerate}
+    \item Design and implement a foundational delegation framework for the vodle platform, enabling users to delegate their votes to other participants.
+
+    \item Extend the core delegation model to support ranked delegation, allowing users to specify an ordered list of preferred delegates.
+
+    \item Implement a vote splitting mechanism to enable users to distribute their voting power among multiple delegates.
+
+    \item Introduce option-specific delegation, allowing users to assign different delegates for different options within a poll.
+\end{enumerate}
+
+In addition, the following extension objective can be identified as it is not completely aligned to the project goal \dots
+
+\begin{enumerate}
+    \item Perform offline agent based simulations to analyse the effectiveness of various delegation system, including those implemented in the project.
+\end{enumerate}

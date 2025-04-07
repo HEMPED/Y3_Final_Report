@@ -19,13 +19,16 @@ To see dissertation pdf go to `/dissertation/dissertation.pdf`
   - Existing Variations of Liquid Democracy
     - Ranked Delegation
     - Weighted Delegation / Vote Splitting
-      - Other versions
+      - Other versions -> don't go into too much detail as it will not be chosen
       - Introduce the one created by Jobst
         - Prove it converges etc.
 	- Existing Real World Implementations of Liquid Democracy
 		- Which variations they have implemented/ how it works etc.
-	- Research into how the vodle website works (architecture)
-	- Research into vodle's Design Philosophy (Need to Maintain a Consistent User Interface)
+  - vodle
+  	- Research into how the vodle website works (architecture)
+    	- How does the current (unfinished) delegation system work and what issues does that propose for implementation
+  	- Research into vodle's Design Philosophy (Need to Maintain a Consistent User Interface)
+	- Agent based modelling
 - Project Objectives
 - Design and Implementation
   - Section for each objective - technical challenges and implementation details

@@ -26,6 +26,7 @@ To see dissertation pdf go to `/dissertation/dissertation.pdf`
 		- Which variations they have implemented/ how it works etc.
 	- Research into how the vodle website works (architecture)
 	- Research into vodle's Design Philosophy (Need to Maintain a Consistent User Interface)
+- Project Objectives
 - Design and Implementation
   - Section for each objective - technical challenges and implementation details
 - Evaluation

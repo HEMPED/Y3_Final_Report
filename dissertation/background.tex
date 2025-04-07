@@ -76,17 +76,44 @@ Real-world examples of this phenomenon have been documented. In the German Pirat
 %In the case of the Pirate Party, analysis showed that although super-voters held significant theoretical power, they generally voted in line with the majority, therefore not drastically affecting the outcome of the votes. \cite{kling2015votingbehaviourpoweronline} described this behaviour as voting "wisely," noting that while these individuals had the capacity to change outcomes, they typically did not use it to push their own agenda.
 
 This pattern is not limited to traditional online voting platforms. It can also be seen within decentralised autonomous organisations (DAOs) - blockchain-based entities where decisions are made collectively by token holders without central leadership. These organisations use token-based voting to decide on critical issues like protocol upgrades and funding allocations. \cite{hallWhatHappensWhen2024} studied 18 decentralised autonomous organisations (DAOs) and found that voting power was often concentrated in the hands of a few delegates. While most did not control a large share of all available tokens, low participation meant that their share of actual votes cast was disproportionately high. In several DAOs, the top five delegates accounted for over 50\% of all votes cast, and in the DAO Gitcoin, this figure exceeded 90\%.
+
 \subsection{Variations of Liquid Democracy}
+The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, a range of enhancements have been proposed that modify how delegations are expressed, resolved, or overridden. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
 
-\subsubsection{Ranked delegation} Allows voters to specify fall-back delegates in order of preference (Brill et al., 2022).
+The following subsections present several such variations, along with the algorithms that support them.
+\subsubsection{Ranked Delegation}
+One way to improve the reliability of liquid democracy is through ranked delegation. Instead of selecting a single delegate, voters can provide an ordered list of trusted individuals. If a higher-ranked delegate cannot cast the vote, due to abstaining, becoming part of a cycle, or being otherwise unavailable, the system attempts to use the next delegate in the list. This structure increases the chance that votes are not lost while preserving the core interaction model for voters \citep{brill_liquid_2022}.
 
-Include different algorithms from Brill paper
+To implement ranked delegation, the system must determine which delegation path to follow when multiple options are available. This is achieved using a delegation rule - a function that takes as input a ranked delegation instance and a delegative voter and outputs a path from that voter to a casting voter (a voter that does not delegate or abstain, casting their own vote) \citep{brill_liquid_2022}.
+
+Several rules have been proposed in the literature, each with distinct properties and trade-offs.
+
+Before examining these rules, it is useful to outline several properties that are commonly used to evaluate them:
+
+\textbf{Guru participation} ensures that a voter who accepts delegated votes (a guru) is never disadvantaged by doing so. That is, receiving additional delegations should not reduce their influence over the outcome \citep{kotsialou_riley_2020}.
+
+\textbf{Confluence} requires that each voter have a single, unambiguous delegation path. This property simplifies the resolution of delegations and enhances system transparency \citep{brill_liquid_2022}.
+
+\textbf{Copy robustness} aims to prevent a specific form of strategic manipulation which occurs when a voter who would normally delegate decides to act as a casting voter and mimics the behaviour of their delegate outside the system (for example, by copying their vote using external communication). In non-copy-robust systems, this behaviour can result in a greater combined influence for both the original delegate and the copier, effectively bypassing the system. A copy-robust rule avoids this problem by ensuring that the combined voting weight of the mimicked behaviour does not exceed what it would have been through proper delegation \citep{brill_liquid_2022,behrens_2015}, giving equal opportunities to all voters.
+
+The main delegation rules that were considered for implementation are:
+
+\textbf{Depth-First Delegation (DFD)} selects the path with the highest-ranked first delegate, even if it results in a long chain. While this rule prioritises individual trust rankings, it fails to satisfy the \textit{guru participation} property, as show by \cite{kotsialou_riley_2020}.
+
+\textbf{Breadth-First Delegation (BFD)} prioritises the shortest available delegation path and uses rankings only to resolve ties. This approach generally results in more direct and predictable delegation chains and satisfies \textit{guru participation} \citep{kotsialou_riley_2020, brill_liquid_2022}, though it may assign votes to lower-ranked delegates.
+
+\textbf{MinSum} strikes a balance between path length and preference by selecting the path with the lowest total sum of edge ranks. This rule is \textit{confluent} and helps avoid both long chains and poorly ranked delegations, making it suitable for general use \citep{brill_liquid_2022}.
+
+\textbf{Diffusion} builds delegation paths in stages, assigning votes layer by layer based on the lowest available rank at each step. This approach avoids poor delegations but can occasionally produce unintuitive results due to its tie-breaking method \citep{brill_liquid_2022, colley_smart_2020}.
+
+\textbf{Leximax} addresses this by comparing delegation paths based on their worst-ranked edge. It ensures that poorly ranked delegations are avoided, especially near the beginning of a path, and maintains the \textit{confluence} property \citep{brill_liquid_2022}.
+
+\textbf{BordaBranching} takes a global view of the delegation graph and selects a branching that minimises the total rank across all delegation edges. It satisfies both \textit{guru participation} and \textit{copy robustness}, making it well-suited for robust and equitable systems \citep{brill_liquid_2022}. However, this rule can be computationally intensive to implement.
+
+In summary, ranked delegation significantly improves the reliability of liquid democracy, as it results in a lower chance of a delegated vote being nullified. The choice of delegation rule influences not only system efficiency but also the fairness of outcomes. While simpler methods such as DFD and BFD are easier to implement, advanced rules like MinSum, Leximax, and BordaBranching offer stronger guarantees and are better suited to practical deployment in platforms such as vodle.
 
 \subsubsection{Weighted/ vote splitting}
 Voting power is distributed across multiple delegates to reduce reliance on any single individual (\cite{golz_fluid_2021}).
-
-\subsubsection{Backup votes - kinda unneeded}
-Voters may provide a direct vote to use in case delegation fails.
 
 \section{Implementations of Liquid Democracy}
 \subsection{LiquidFeedback}

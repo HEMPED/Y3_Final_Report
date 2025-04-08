@@ -1,6 +1,5 @@
 \chapter{Research}
 \label{ch:background}
-
 This chapter provides background context for the development of a liquid democracy system within Vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of Vodle as a platform are explored.
 
 Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters, the following symbols are used:
@@ -14,7 +13,7 @@ Throughout this chapter, several diagrams are used to illustrate how votes move 
 
 Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain \citep{blum_liquid_2016}. A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
 
-Whilst the transitivity property enables concentration of voting power with trusted individuals, it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating so-called super-voters. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed in the following subsections.
+Whilst the transitivity property enables concentration of voting power with trusted individuals, it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating ``super-voters''. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed in the following subsections.
 
 %\cite{ford_delegative_2002} argues that direct democracy becomes ineffective at scale due to the diversity in participants' knowledge and interest. Without mechanisms to channel influence through trusted intermediaries, the collective outcome may reflect average rather than informed decision-making. Liquid democracy addresses this by enabling voters to shift influence toward participants with greater expertise or engagement.
 
@@ -44,9 +43,6 @@ Delegation cycles occur when a vote is delegated in such a way that it ends up f
 This issue is particularly problematic because it can nullify votes without the affected users ever realising. In systems where cycles are not explicitly detected and handled, these votes are discarded silently, potentially changing the final outcome of the votes.
 
 Delegation cycles are increasingly likely to emerge in dynamic voting systems, where delegations can be added, removed, or modified at any point in time. Delegations that initially did not form part of a cycle may later contribute to one as other voters add a new delegation or alter an existing one.
-
-\textit{Paragraph on how size of the system affects the possibility of cycles?}
-
 \subsubsection{Abstentions}
 \begin{figure}[h]
     \centering
@@ -115,18 +111,37 @@ For our implementation, MinSum will be chosen as \dots
 
 
 
-\section{Implementations of Liquid Democracy}
+\section{Existing Implementations of Liquid Democracy}
+To understand how liquid democracy can be practically integrated into vodle, it is important to examine how similar systems have been implemented in real-world contexts. 
+%By studying the design choices, successes, and limitations of past deployments, we can identify best practices and avoid repeating known pitfalls.
+This section explores two implementations, LiquidFeedback and Google Votes, that offer valuable insights into the technical, social, and usability challenges associated with applying liquid democracy at scale.
 \subsection{LiquidFeedback}
+LiquidFeedback is one of the earliest and most influential real-world implementations of liquid democracy. Developed as an open-source platform, it was notably adopted by the German Pirate Party in 2010 to facilitate internal policy-making through online participation \citep{behrens_liquidfeedback_2014}. The platform allowed members to submit proposals, debate them in structured phases, and vote either directly or via transitive delegation.
+
+In LiquidFeedback, users could choose different delegates for different topics, allowing them to assign their vote to someone they trusted on a specific issue. These choices remained in place until the user changed them, which meant that certain individuals could gradually accumulate more influence if others did not update their delegations. When multiple proposals were put forward, the system used a ranking-based voting method (such as the Schulze method) to decide which one should win. This approach compares each proposal against the others and selects the one that would win the most head-to-head matchups. Importantly, the system only accepted a proposal if it clearly beat the alternative of doing nothing, helping to avoid unnecessary or unpopular changes.
+
+In practice, the Pirate Party's use of LiquidFeedback revealed several key dynamics relevant to this project. The platform was successful in enabling large-scale participation and crowdsourced policy formation, but it also demonstrated common risks of liquid democracy. Such as the existence of super-voters, as discussed previously.
+
+Another practical issue was the complexity of the system. LiquidFeedback was difficult to understand for many users, especially those unfamiliar with concepts like transitive delegation or multi-stage voting which limited its accessibility and contributed to declining engagement over time.
+
+For a platform like vodle, the experience of LiquidFeedback highlights several important design considerations. First, user interfaces must be intuitive enough to allow voters to participate without needing deep technical knowledge. Second, mechanisms like ranked delegation or vote splitting could help address the concentration of power observed in fixed, single-delegate models. Finally, ensuring that votes lead to visible and actionable outcomes is critical for sustained engagement.
+
+%Overall, LiquidFeedback serves as both a proof of concept and a cautionary tale; demonstrating that liquid democracy can work at scale, but that thoughtful implementation is essential to avoid replicating the very problems it seeks to solve.
 \subsection{Google Votes}
-Google Votes was an experimental implementation of liquid democracy deployed internally at Google. It was built on top of the company's corporate Google+ social network and ran over a three-year period, from 2012 to 2015 \citep{hardt_google_2015}. The platform allowed users to either vote directly or delegate their vote to other employees, with support for transitive delegations. Delegations were category-specific, enabling users to assign trusted colleagues to vote on specific topics such as "food", "coding", or "events".
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../common/google_votes.png}
+    \caption{Screenshot taken from \cite{hardt_google_2015} showing the user interface of Google Votes.}
+\end{figure}
 
-One of the goals of Google Votes was to reduce barriers to participation while encouraging meaningful contributions. Users could override their delegation at any time and cast a vote directly. Delegation features were introduced gradually and supported through user-friendly interactions, including voting power estimates, delegation advertisements, and notifications whenever a delegate voted on someone's behalf.
+Google Votes was an internal experiment at Google designed to explore the practical application of liquid democracy within a corporate environment. Built on top of the company's internal Google+ social network, it operated between 2012 and 2015 and allowed employees to participate in decision-making by either voting directly or delegating their vote to a colleague \citep{hardt_google_2015}.
 
-Google Votes also addressed transparency through what the authors call the ``Golden Rule of Liquid Democracy'': if a user delegates their vote, they must be able to see how it is used. All votes were visible to the voting group, and users were notified when a delegate voted on their behalf. This helped maintain accountability and encouraged users to monitor their representation.
+Delegations in Google Votes were category-specific, meaning that users could choose different delegates for different areas of interest, such as food, events, or technical infrastructure. These delegations were persistent but could be overridden at any time, giving users flexibility to either rely on trusted experts or vote independently as needed. The system supported transitive delegation and allowed users to reclaim control by casting their own vote, even after delegating.
 
-The system supported various voting styles, including ranked, approval, and score voting, with tally methods like the Schulze and Borda count. One notable application was the ``Mountain View Microkitchen Food Fair'', which received over 62,000 votes from 4,600 users in a single week. While delegated votes accounted for only around 3.6\% of total votes cast, their use grew over time and played a meaningful role in decisions such as food selection and event planning.
+The platform placed strong emphasis on usability and transparency. Delegation features were rolled out incrementally, with additional tools such as voting power estimates and delegation advertisements helping users understand their influence. One key design principle was what the authors called the ``Golden Rule of Liquid Democracy'': if a user delegates their vote, they should be able to see how it is being used. To that end, users received notifications when their delegate voted, and all votes were visible to the relevant group. This encouraged accountability and gave voters confidence that their delegated votes were being used appropriately.
 
-Despite not being made public, Google Votes demonstrated that liquid democracy could be applied successfully within a corporate environment, offering a scalable and adaptable model for collaborative decision-making \citep{hardt_google_2015}.
+While Google Votes was never made publicly available, it served as a successful demonstration of liquid democracy in a structured, real-world setting. It showed that delegative voting could improve engagement and decision-making within large organisations, especially when designed with attention to user experience. For Vodle, the system provides a concrete example of how features like topic-specific delegation, transparency tools, and real-time voting feedback can make liquid democracy more practical and accessible.
+\section{Agent Based Modelling}
 \section{vodle}
 Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. When the poll ends, these ratings are aggregated and the MaxParC rating system is used to determine the final result of the poll.
 
@@ -137,7 +152,7 @@ Understanding MaxParC is important for this project because it forms the core of
 Maximum Partial Consensus (MaxParC), the rating system used by vodle, was introduced by \cite{heitzig_fair_2024}. It is a decision-making method designed to address the limitations of traditional voting systems, in particular the potential for majority rule to suppress minority viewpoints.
 The primary objective of MaxParC is to achieve a balance between fairness, consensus, and efficiency in group decision-making.
 
-Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''. This can be seen visualised in the illustration below.
+Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''. This can be visualised in the illustration below.
 
 \begin{figure}[h!]
     \centering
@@ -148,13 +163,12 @@ Each voter rates an option from $0$ to $100$ ($x$), representing their willingne
     the approval score bar.}
 \end{figure}
 
-\textit{TODO: Make summary better}
+\textit{TODO: Make summary better} \\
 To summarise, any delegation or vote splitting mechanism must be designed so that it only adds to an option's overall rating and never reduces it. This ensures that delegated input remains consistent with MaxParC's conditional approval model and preserves the original intent of the voter.
 \subsection{Technologies Used}
 why info is relevant to the project - e.g. need to jsonify data. what makes angular different etc
+\subsection{Existing Partial Implementation of Liquid Democracy}
 \subsection{Design Philosophy}
-
-\section{Agent Based Modelling}
 \section{Summary}
 
 

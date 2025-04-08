@@ -1,21 +1,33 @@
 \chapter{System Specifications}
 \label{ch:specifications}
-Through the background research, we identified several key limitations in traditional liquid democracy systems such as delegation cycles, vote loss through abstentions, and the disproportionate influence of super-voters. We also explored a number of proposed enhancements, including ranked delegation and vote splitting, which offer practical ways to improve the robustness and fairness of delegative voting.
+%Through the background research, we identified several key limitations in traditional liquid democracy systems such as delegation cycles, vote loss through abstentions, and the disproportionate influence of super-voters. We also explored a number of proposed enhancements, including ranked delegation and vote splitting, which offer practical ways to improve the fairness delegative voting.
+The background research as well as the project's goal and motivation have laid out the objectives for the project. This section outlines the objectives.
+%Based on these findings, a set of features that would improve vodle and make the integration of liquid democracy within it more beneficial. These can be formalised into the following core objectives:
+\section{Project Objectives - TODO: add references to the research etc.}
+Objectives are split into core and extended objectives. Core objectives are prioritised as they aligned more closely to the project's main goal.
 
-Based on these findings, we propose a set of features that would improve vodle and make the integration of liquid democracy within it more beneficial. These can be formalised into the following core objectives:
-
+Core Objectives:
 \begin{enumerate}
-    \item Design and implement a foundational delegation framework for the vodle platform, enabling users to delegate their votes to other participants.
+    % \item Design and implement a foundational delegation framework for the vodle platform, enabling users to delegate their votes to other participants.
+    \item \textbf{Implement a Core Delegation Model into vodle: } Build upon the existing, partially implemented delegation code within the vodle platform to create a fully functional system, including resolving key challenges such as cyclic delegations.
 
-    \item Extend the core delegation model to support ranked delegation, allowing users to specify an ordered list of preferred delegates.
+    % \item Extend the core delegation model to support ranked delegation, allowing users to specify an ordered list of preferred delegates.
+    \item \textbf{Implement Ranked Delegation into vodle: } Add a backup delegation mechanism to vodle, allowing users to specify an ordered list of up to 3 delegates, and using the MinSum algorithm to determine the activated delegation paths.
 
-    \item Implement a vote splitting mechanism to enable users to distribute their voting power among multiple delegates.
+    % \item Implement a vote splitting mechanism to enable users to distribute their voting power among multiple delegates.
+    \item \textbf{Implement a Vote Splitting Delegation Variation into vodle: } Add functionality to vodle to delegate fractions of their rating to different delegates. Use the \textit{will come back to when research written up} system to calculate final ratings.
 
-    \item Introduce option-specific delegation, allowing users to assign different delegates for different options within a poll.
+    % \item Introduce option-specific delegation, allowing users to assign different delegates for different options within a poll.
+    \item \textbf{Implement Ability to Delegate Options to Different Users}: Allow users to delegate the ratings of specific options to different delegates.
 \end{enumerate}
 
-In addition, the following extension objective can be identified as it is not completely aligned to the project goal \dots
-
+Extension Objective:
 \begin{enumerate}
-    \item Perform offline agent based simulations to analyse the effectiveness of various delegation system, including those implemented in the project.
+    % \item Perform offline agent based simulations to analyse the effectiveness of various delegation system, including those implemented in the project.
+    \item \textbf{Simulate Delegation Mechanisms: } Perform agent-based modelling to analyse the effectiveness of various delegation systems, especially those planned to be implemented into vodle (Objectives 1-3).
 \end{enumerate}
+
+\section{Project Requirements}
+intro - talk about why we need to break down objectives further, define functional and non functional requirements.
+
+break each objective down into F and NF.

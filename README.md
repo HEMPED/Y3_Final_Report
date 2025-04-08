@@ -1,5 +1,5 @@
-To see dissertation pdf go to `/dissertation/dissertation.pdf`
-[ or click this](./dissertation/dissertation.pdf)
+To see dissertation pdf go to `./dissertation/dissertation.pdf` \
+[or click this](./dissertation/dissertation.pdf)
 
 # Report Outline
 
@@ -29,7 +29,10 @@ To see dissertation pdf go to `/dissertation/dissertation.pdf`
     	- How does the current (unfinished) delegation system work and what issues does that propose for implementation
   	- Research into vodle's Design Philosophy (Need to Maintain a Consistent User Interface)
 	- Agent based modelling
-- Project Objectives
+- System Specifications
+  - Project Objectives
+  - Project Requirements
+    - Break down objectives into measurable functional and non functional requirements.
 - Design and Implementation
   - Section for each objective - technical challenges and implementation details
 - Evaluation
@@ -37,7 +40,7 @@ To see dissertation pdf go to `/dissertation/dissertation.pdf`
 	- User Testing
 	- Feedback from Customer (Jobst)
 - Project Management
-  - Methodology
+  - Methodology - could separate into its own chapter
     - Talk about specific approach - agile, iterative etc
     - Plan - Gantt chart
     - Risk Assessment

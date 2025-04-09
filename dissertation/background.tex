@@ -19,7 +19,7 @@ Whilst the transitivity property enables concentration of voting power with trus
 
 \subsection{Issues with Liquid Democracy}
 
-\subsubsection{Delegation cycles}
+\subsection*{Delegation cycles}
 \begin{figure}[h]
     \centering
     \begin{tikzpicture}[->, >=stealth, thick, scale=1.5]
@@ -43,7 +43,7 @@ Delegation cycles occur when a vote is delegated in such a way that it ends up f
 This issue is particularly problematic because it can nullify votes without the affected users ever realising. In systems where cycles are not explicitly detected and handled, these votes are discarded silently, potentially changing the final outcome of the votes.
 
 Delegation cycles are increasingly likely to emerge in dynamic voting systems, where delegations can be added, removed, or modified at any point in time. Delegations that initially did not form part of a cycle may later contribute to one as other voters add a new delegation or alter an existing one.
-\subsubsection{Abstentions}
+\subsection*{Abstentions}
 \begin{figure}[h]
     \centering
     \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm]
@@ -62,7 +62,7 @@ In liquid democracy, abstention is where a voter neither casts a vote nor delega
 
 Abstentions are especially impactful when they occur at the end of a larger delegation chain, as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. The voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
 
-\subsubsection{Super-voters}
+\subsection*{Super-voters - TODO: Add diagram}
 In liquid democracy, a super-voter is an individual who receives a large number of delegated votes, therefore gaining disproportionate influence over decisions \citep{kling2015votingbehaviourpoweronline}. While this behaviour may reflect voters' genuine preferences, it can lead to a concentration of power that goes against the intended egalitarianism and democratic ideals of liquid democracy.
 
 Although liquid democracy allows users to alter their delegation at any time, in practice, many voters may not actively monitor or even know how their vote is being used. This can allow a small number of super-voters to dominate outcomes, especially in systems with large delegation chains.
@@ -77,7 +77,7 @@ This pattern is not limited to traditional online voting platforms. It can also 
 The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, a range of enhancements have been proposed that modify how delegations are expressed, resolved, or overridden. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
 
 The following subsections present several such variations, along with the algorithms that support them.
-\subsubsection{Ranked Delegation} Ranked delegation improves liquid democracy by allowing voters to list several trusted delegates in order of preference. Instead of choosing just one delegate, a voter can specify a ranked list so that if their top choice is unavailable (due to abstention, involvement in a cycle, or other reasons) the system can use the next delegate specified. This method reduces the risk of losing votes while keeping voters actively involved in the decision making process \citep{brill_liquid_2022}.
+\subsection*{Ranked Delegation} Ranked delegation improves liquid democracy by allowing voters to list several trusted delegates in order of preference. Instead of choosing just one delegate, a voter can specify a ranked list so that if their top choice is unavailable (due to abstention, involvement in a cycle, or other reasons) the system can use the next delegate specified. This method reduces the risk of losing votes while keeping voters actively involved in the decision making process \citep{brill_liquid_2022}.
 
 Implementing ranked delegation requires a mechanism to decide among multiple possible delegation paths. This is done through a \textit{delegation rule}, a function that, given a ranked delegation instance and a delegating voter, selects a unique path leading to a \textit{casting voter} \citep{brill_liquid_2022}.
 
@@ -107,7 +107,7 @@ In summary, ranked delegation enhances liquid democracy by reducing the risk of 
 
 For our implementation, MinSum will be chosen as \dots
 
-\subsubsection{Vote Splitting}
+\subsection*{Vote Splitting}
 
 
 

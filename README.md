@@ -41,9 +41,10 @@ To see dissertation pdf go to `./dissertation/dissertation.pdf` \
 	- Feedback from Customer (Jobst)
 - Project Management
   - Methodology - could separate into its own chapter
-    - Talk about specific approach - agile, iterative etc
-    - Plan - Gantt chart
+    - Talk about specific approach - agile => feedback from customer, iterative, deliver working features at the end of every cycle
+    - Plan - Gantt chart 
     - Risk Assessment
+       - display in table and explain each risk in detail afterwards.
   - Legal and Ethical
   - Risk Management Reflection
   - Overall Reflection (from my POV) as mentioned on cs310 webpage

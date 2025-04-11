@@ -9,7 +9,6 @@ To see dissertation pdf go to `./dissertation/dissertation.pdf` \
 	- Motivation
 	- Audience
 	- Project Goal (implement LD into vodle)
-	- Project Objectives -> May end up doing after the Background Research section
 	- Project Outline (Outline of Report) (may be unnecessary)
 - Research
   - Issues with Liquid Democracy

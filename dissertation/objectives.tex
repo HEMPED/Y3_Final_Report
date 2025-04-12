@@ -1,12 +1,10 @@
 \chapter{Project Objectives}
 \label{ch:project_objectives}
-%Through the background research, we identified several key limitations in traditional liquid democracy systems such as delegation cycles, vote loss through abstentions, and the disproportionate influence of super-voters. We also explored a number of proposed enhancements, including ranked delegation and vote splitting, which offer practical ways to improve the fairness delegative voting.
-The background research as well as the project's goal and motivation have laid out the objectives for the project. This section outlines the objectives.
-%Based on these findings, a set of features that would improve vodle and make the integration of liquid democracy within it more beneficial. These can be formalised into the following core objectives:
-\section{Project Objectives}
-\label{section:project_objectives}
-Objectives are split into core and extended objectives. Core objectives are prioritised as they aligned more closely to the project's main goal.
+This chapter outlines the core goals that guide the implementation and evaluation of liquid democracy features within vodle. These objectives were derived from the background research and are designed to address the technical and theoretical challenges identified with traditional delegation systems.
 
+To manage the project effectively, the objectives are divided into two categories: \textbf{core objectives}, which form the backbone of the implementation and are essential to meeting the project's main goals, and \textbf{extension objectives}, which build on the core features to provide additional insight or value. 
+
+Each objective is later broken down into specific functional and non-functional requirements. This structure helps to clarify expectations, guide implementation, and provide clear criteria for evaluating whether each objective has been met.
 Core Objectives:
 \begin{enumerate}
     \item \textbf{Implement a Core Delegation Model into Vodle: } Build upon the existing, partially implemented delegation code within the vodle platform to create a fully functional system, including resolving key challenges such as cyclic delegations.
@@ -27,7 +25,7 @@ Extension Objective:
 %intro - talk about why we need to break down objectives further, define functional and non functional requirements.
 The project objectives represent high-level goals that must be translated into specific, actionable requirements. This process is essential for clarifying the scope of the work, ensuring comprehensive coverage of each objective, and establishing a structured foundation for both implementation and evaluation.
 
-To support this, requirements are organised into two categories: functional (F) and non-functional (NF). Functional requirements describe the core behaviours and features the system must support, while non-functional requirements define performance, usability, and other quality-related constraints. Distinguishing between these categories helps ensure that both the system's functionality and overall user experience are properly addressed.
+To support this, requirements are organised into two categories: functional (F) and non-functional (NF). Functional requirements describe the core behaviours and features the system must support, while non-functional requirements define performance, usability, and other quality-related constraints \cite{sommervill_2016}. Distinguishing between these categories helps ensure that both the system's functionality and overall user experience are properly addressed.
 
 Each requirement is formulated to be measurable and testable. This allows for objective evaluation during development, facilitates verification against the project goals, and helps identify areas for improvement as the system evolves.
 
@@ -119,3 +117,26 @@ Each requirement is formulated to be measurable and testable. This allows for ob
     \item \textbf{NFR2:} The delegation data must be serialised in a format compatible with CouchDB (e.g., JSON-encoded) to maintain compatibility with vodle's storage system.
 \end{itemize}
 \subsection{Simulate Delegation Mechanisms}
+\subsubsection{Functional Requirements}
+\begin{itemize}
+    \item \textbf{FR1:} The simulation system shall model individual agents representing voters, each capable of voting, abstaining, or delegating their vote according to a selected delegation rule.
+
+    \item \textbf{FR2:} The system shall support multiple delegation mechanisms, including standard transitive delegation, ranked delegation (with the MinSum delegation rule), and vote splitting.
+
+    \item \textbf{FR3:} The system shall allow configuration of simulation parameters such as number of agents, delegation probabilities and abstention rates.
+
+    \item \textbf{FR4:} The system shall track and record key metrics such as vote concentration, number of super-voters, average chain length, vote loss due to abstentions or cycles, and decision quality.
+
+    \item \textbf{FR5:} The system shall output simulation results in a structured format (e.g. CSV or JSON) for further analysis.
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+\begin{itemize}
+    \item \textbf{NFR1:} The simulation framework must be lightweight and easy to extend, enabling rapid experimentation with new delegation rules or metrics.
+
+    \item \textbf{NFR2:} The system shall be developed using Mesa to take advantage of existing data science libraries such as NumPy, Pandas, and Matplotlib for analysis and visualisation.
+
+    \item \textbf{NFR4:} The simulation design shall support reproducibility by enabling fixed random seeds and storing configuration settings alongside output data.
+
+\end{itemize}
+

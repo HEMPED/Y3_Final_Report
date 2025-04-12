@@ -1,6 +1,6 @@
-\chapter{Research}
+\chapter{Background Research}
 \label{ch:background}
-This chapter provides background context for the development of a liquid democracy system within Vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of Vodle as a platform are explored.
+This chapter provides background context for the development of a liquid democracy system within vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of vodle as a platform are explored.
 
 Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters, the following symbols are used:
 \begin{itemize}
@@ -111,6 +111,7 @@ In summary, ranked delegation enhances liquid democracy by reducing the risk of 
 For our implementation, MinSum will be chosen as \dots
 
 \subsection*{Vote Splitting}
+\label{sub-section:vote-splitting}
 
 
 
@@ -143,11 +144,11 @@ Delegations in Google Votes were category-specific, meaning that users could cho
 
 The platform placed strong emphasis on usability and transparency. Delegation features were rolled out incrementally, with additional tools such as voting power estimates and delegation advertisements helping users understand their influence. One key design principle was what the authors called the ``Golden Rule of Liquid Democracy'': if a user delegates their vote, they should be able to see how it is being used. To that end, users received notifications when their delegate voted, and all votes were visible to the relevant group. This encouraged accountability and gave voters confidence that their delegated votes were being used appropriately.
 
-While Google Votes was never made publicly available, it served as a successful demonstration of liquid democracy in a structured, real-world setting. It showed that delegative voting could improve engagement and decision-making within large organisations, especially when designed with attention to user experience. For Vodle, the system provides a concrete example of how features like topic-specific delegation, transparency tools, and real-time voting feedback can make liquid democracy more practical and accessible.
+While Google Votes was never made publicly available, it served as a successful demonstration of liquid democracy in a structured, real-world setting. It showed that delegative voting could improve engagement and decision-making within large organisations, especially when designed with attention to user experience. For vodle, the system provides a concrete example of how features like topic-specific delegation, transparency tools, and real-time voting feedback can make liquid democracy more practical and accessible.
 \section{Agent Based Modelling}
 Agent-based modelling (ABM) is a computational approach used to simulate the actions and interactions of autonomous agents in order to assess their effects on a system as a whole. It is particularly suited for exploring complex, dynamic systems where behaviour emerges from local interactions between individual entities (agents) rather than being dictated by central control. ABM has been widely applied in domains such as economics, sociology, and ecology to study decentralised systems, market dynamics, and collective behaviours \citep{bonabeau2002agent}.
 
-The need to explore ABM arises due to the project's goal of introducing a vote-splitting mechanism that hasn't been explored before into Vodle. Traditional analysis alone may not effectively capture the dynamic interactions or unintended consequences that can emerge from this novel feature. Through ABM, it is possible to simulate realistic voting scenarios, track delegation chains, identify potential power imbalances, and anticipate challenges. These simulations can reveal performance insights and inform design decisions before implementing the mechanisms within the live platform.
+The need to explore ABM arises due to the project's goal of introducing a vote-splitting mechanism that hasn't been explored before into vodle. Traditional analysis alone may not effectively capture the dynamic interactions or unintended consequences that can emerge from this novel feature. Through ABM, it is possible to simulate realistic voting scenarios, track delegation chains, identify potential power imbalances, and anticipate challenges. These simulations can reveal performance insights and inform design decisions before implementing the mechanisms within the live platform.
 
 Several widely used ABM frameworks exist, each with their own strengths and drawbacks relevant to this project:
 \begin{itemize}
@@ -157,7 +158,7 @@ Several widely used ABM frameworks exist, each with their own strengths and draw
     \item \textbf{Agents.jl} \citep{agentsjl} is a high-performance agent-based modelling framework written in Julia. Due to Julia's speed and efficiency, it is suitable for large-scale and computationally demanding simulations. The framework is designed to be user-friendly, with a syntax that is approachable for those familiar with scientific computing. However, the Julia ecosystem is less mature compared to Python's, which may limit the availability of additional libraries and resources. 
 \end{itemize}
 Given the time constraints of this project, Mesa offers a practical and efficient solution. Its Python-based interface and straightforward setup allow for rapid development without the overhead of learning a new framework. This ease of use enables more time to be spent designing meaningful experiments and analysing results, rather than configuring tooling. Therefore, Mesa is the best suited framework for this project.
-\section{vodle}
+\section{Vodle}
 Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. When the poll ends, these ratings are aggregated and the MaxParC rating system is used to determine the final result of the poll.
 
 \subsection{MaxParC - TODO: summary}
@@ -180,14 +181,13 @@ Each voter rates an option from $0$ to $100$ ($x$), representing their willingne
 
 To summarise, any delegation or vote splitting mechanism must be designed so that it only adds to an option's overall rating and never reduces it. This ensures that delegated input remains consistent with MaxParC's conditional approval model and preserves the original intent of the voter.
 \subsection{Technologies Used}
-% why info is relevant to the project - e.g. need to jsonify data. what makes angular different etc \\
 Understanding vodle's technology stack is crucial to successfully integrate liquid democracy features into the existing platform. Since the project involves adding complex delegation and voting logic, it's important to appreciate the constraints and benefits of the technologies currently used in vodle, as they directly influence the design and implementation choices.
 
 \subsection*{Angular}
 Vodle is built with Angular \citep{angular}, a TypeScript-based frontend framework created by Google. Angular's modularity and structured component system provides a strong foundation for incremental development, essential when introducing new features such as ranked delegation that build upon existing components. Its clear separation of concerns helps maintain readable and maintainable code, simplifying debugging and future enhancements. This is particularly beneficial as the delegation logic is expected to grow in complexity later in the project.
 
 \subsection*{Ionic Framework}
-The Ionic \citep{ionic} framework complements Angular by enabling the creation of responsive, mobile-compatible applications from a single codebase. Given Vodle's goal of broad user participation, Ionic ensures that the newly implemented liquid democracy functionalities remain consistent and accessible across both desktop and mobile devices. This cross-platform compatibility encourages greater user engagement and facilitates testing and feedback on various device types, critical for verifying usability and user interaction with delegation features.
+The Ionic \citep{ionic} framework complements Angular by enabling the creation of responsive, mobile-compatible applications from a single codebase. Given vodle's goal of broad user participation, Ionic ensures that the newly implemented liquid democracy functionalities remain consistent and accessible across both desktop and mobile devices. This cross-platform compatibility encourages greater user engagement and facilitates testing and feedback on various device types, critical for verifying usability and user interaction with delegation features.
 
 \subsection*{CouchDB}
 CouchDB \citep{couchdb} is used as vodle's primary data store and communicates directly with the client through HTTP requests, eliminating the need for a dedicated backend server. This architecture places significant computational responsibilities on the client-side Angular application, including the handling of delegation chains, cycle detection, and the computation of final vote outcomes. Furthermore, since CouchDB stores data exclusively as JSON-formatted strings, complex delegation structures and voting relationships must be carefully serialised and de-serialised on the client side.

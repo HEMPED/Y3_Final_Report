@@ -1,21 +1,21 @@
-\chapter{System Specifications}
-\label{ch:specifications}
+\chapter{Project Objectives}
+\label{ch:project_objectives}
 %Through the background research, we identified several key limitations in traditional liquid democracy systems such as delegation cycles, vote loss through abstentions, and the disproportionate influence of super-voters. We also explored a number of proposed enhancements, including ranked delegation and vote splitting, which offer practical ways to improve the fairness delegative voting.
 The background research as well as the project's goal and motivation have laid out the objectives for the project. This section outlines the objectives.
 %Based on these findings, a set of features that would improve vodle and make the integration of liquid democracy within it more beneficial. These can be formalised into the following core objectives:
-\section{Project Objectives.}
+\section{Project Objectives}
 \label{section:project_objectives}
 Objectives are split into core and extended objectives. Core objectives are prioritised as they aligned more closely to the project's main goal.
 
 Core Objectives:
 \begin{enumerate}
-    \item \textbf{Implement a Core Delegation Model into vodle: } Build upon the existing, partially implemented delegation code within the vodle platform to create a fully functional system, including resolving key challenges such as cyclic delegations.
+    \item \textbf{Implement a Core Delegation Model into Vodle: } Build upon the existing, partially implemented delegation code within the vodle platform to create a fully functional system, including resolving key challenges such as cyclic delegations.
 
-    \item \textbf{Implement Ranked Delegation into vodle: } Add a backup delegation mechanism to vodle, allowing users to specify an ordered list of up to 3 delegates, and using the MinSum algorithm to determine the activated delegation paths.
+    \item \textbf{Implement Ranked Delegation into Vodle: } Add a backup delegation mechanism to vodle, allowing users to specify an ordered list of up to 3 delegates, and using the MinSum algorithm to determine the activated delegation paths.
 
-    \item \textbf{Implement a Vote Splitting Delegation Variation into vodle: } Add functionality to vodle to delegate fractions of their rating to different delegates. Use the \textit{will come back to when research written up} system to calculate final ratings.
+    \item \textbf{Implement a Vote Splitting Delegation Mechanism into Vodle: } Add functionality to vodle to delegate fractions of their rating to different delegates. Use the \textit{will come back to when research written up} system to calculate final ratings.
 
-    \item \textbf{Implement Ability to Delegate Options to Different Users}: Allow users to delegate the ratings of specific options to different delegates.
+    \item \textbf{Implement the Ability to Delegate Individual Options to Different Users}: Allow users to delegate the ratings of specific options to different delegates.
 \end{enumerate}
 
 Extension Objective:
@@ -24,11 +24,98 @@ Extension Objective:
 \end{enumerate}
 
 \section{Project Requirements}
-intro - talk about why we need to break down objectives further, define functional and non functional requirements.
+%intro - talk about why we need to break down objectives further, define functional and non functional requirements.
+The project objectives represent high-level goals that must be translated into specific, actionable requirements. This process is essential for clarifying the scope of the work, ensuring comprehensive coverage of each objective, and establishing a structured foundation for both implementation and evaluation.
 
-break each objective down into F and NF.
-\subsection{Implement a Core Delegation Model into vodle}
-\subsection{Implement Ranked Delegation into vodle}
-\subsection{Implement a Vote Splitting Delegation Variation into vodle}
-\subsection{Implement Ability to Delegate Options to Different Users}
+To support this, requirements are organised into two categories: functional (F) and non-functional (NF). Functional requirements describe the core behaviours and features the system must support, while non-functional requirements define performance, usability, and other quality-related constraints. Distinguishing between these categories helps ensure that both the system's functionality and overall user experience are properly addressed.
+
+Each requirement is formulated to be measurable and testable. This allows for objective evaluation during development, facilitates verification against the project goals, and helps identify areas for improvement as the system evolves.
+
+\subsection{Implement a Core Delegation Model into Vodle}
+\subsubsection{Functional Requirements}
+\begin{itemize}
+    \item \textbf{FR1:} The system shall correctly handle the delegation process from invitation to acceptance.
+    \begin{itemize}
+        \item \textbf{FR1.1:} The system shall allow users to invite others to act as their delegate.
+        \item \textbf{FR1.2:} The system shall allow invited users to accept delegation requests.
+        \item \textbf{FR1.3:} The system shall prevent users from accepting their own delegation invitations.
+        \item \textbf{FR1.4:} The system shall detect and prevent the formation of delegation cycles.
+    \end{itemize}
+
+    \item \textbf{FR2:} The system shall provide users with a clear view of their current delegations, including the ability to revoke any delegation at any time.
+
+    \item \textbf{FR3:} The system shall resolve delegations transitively, such that if User A delegates to B and B delegates to C, User C is the final casting voter for A's vote.
+
+    \item \textbf{FR4:} The system shall allow users to override a delegate's decision for specific poll options by submitting a direct vote.
+    
+    \item \textbf{FR5:} The user interface for delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+\begin{itemize}
+    \item \textbf{NFR1:} All delegation-related data must be stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
+    \item \textbf{NFR2:} Any changes to the database schema must be backward compatible, ensuring that existing data is not lost or corrupted during the upgrade process.
+    \item \textbf{NFR3:} Any additional data stored in the database must be encrypted, using the same encryption method as the existing data, to ensure user privacy and security.
+    \item \textbf{NFR3:} The system shall preserve user privacy by ensuring that individual voting preferences and delegation choices are not visible to other users. The only information visible to a delegated user shall be the final vote cast on their behalf.
+\end{itemize}
+
+\subsection{Implement Ranked Delegation into Vodle}
+
+\subsubsection{Functional Requirements}
+\begin{itemize}
+    \item \textbf{FR1:} The system shall allow users to specify a ranked list of up to 3 delegates for each poll, with the ranking applying to all options within that poll.
+    
+    \item \textbf{FR2:} The system shall apply the MinSum delegation rule to resolve each voter's delegation path based on their ranked list of delegates.
+    
+    \item \textbf{FR3:} The system shall allow users to override the ranked delegation by submitting a direct vote for specific poll options.
+    
+    \item \textbf{FR4:} The system shall provide users with a clear view of their ranked delegation choices, including the ability to alter the rankings or revoke them at any time.
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+\begin{itemize}
+    \item \textbf{NFR1:} The system shall ensure that the ranked delegation process does not introduce significant latency in the voting process, maintaining a response time of less than 2 seconds for delegation-related actions.
+
+    \item \textbf{NFR2:} The user interface for ranked delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
+    
+    \item \textbf{NFR3:} The system shall ensure that any data related to ranked delegation is stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
+\end{itemize}
+\subsection{Implement a Vote Splitting Delegation Mechanism into Vodle}
+\subsubsection{Functional Requirements}
+\begin{itemize}
+    \item \textbf{FR1:} The system shall allow users to delegate their vote to multiple delegates simultaneously for a single poll.
+
+    \item \textbf{FR2:} The system shall allow users to assign a weight to each delegate such that the total weight does not exceed 0.99.
+
+    \item \textbf{FR3:} The system shall use the algorithm described in \ref{sub-section:vote-splitting} to calculate the final rating for each option based on the weights assigned to each delegate.
+
+    \item \textbf{FR5:} The system shall provide users with a visual interface to edit the weights assigned to each delegate, with either sliders or numeric inputs for easy adjustment.
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+\begin{itemize}
+    \item \textbf{NFR1:} The system shall ensure that vote-splitting calculations are performed entirely on the client side to comply with vodle's CouchDB architecture.
+
+    \item \textbf{NFR2:} Delegation weights and related data must be serialised as JSON strings to ensure compatibility with the CouchDB backend.
+
+    \item \textbf{NFR3:} The user interface for vote splitting shall be intuitive and allow users to adjust weights easily, using sliders or numeric inputs.
+\end{itemize}
+\subsection{Implement the Ability to Delegate Individual Options to Different Users}
+\subsubsection{Functional Requirements}
+\begin{itemize}
+    \item \textbf{FR1:} The system shall allow users to assign different delegates for each individual option or subset of options within a poll.
+
+    \item \textbf{FR2:} The system shall ensure that each delegated option is resolved independently, using the appropriate delegate's vote for that option.
+
+    \item \textbf{FR3:} The system shall allow users to override a delegate's vote for a specific option by submitting their own rating.
+
+    \item \textbf{FR4:} The system shall provide a user interface for viewing or revoking each individual delegation.
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+\begin{itemize}
+    \item \textbf{NFR1:} The delegation interface must be intuitive and clearly indicate which delegate is assigned to each option, ensuring ease of use even for users unfamiliar with delegation models.
+
+    \item \textbf{NFR2:} The delegation data must be serialised in a format compatible with CouchDB (e.g., JSON-encoded) to maintain compatibility with vodle's storage system.
+\end{itemize}
 \subsection{Simulate Delegation Mechanisms}

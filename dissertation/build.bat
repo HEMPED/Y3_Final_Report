@@ -1,4 +1,5 @@
 @echo off
+cls
 setlocal
 
 echo [1/4] Running pdflatex...

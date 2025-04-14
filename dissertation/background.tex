@@ -178,25 +178,41 @@ Given the time constraints of this project, Mesa offers a practical and efficien
 \section{Vodle}
 Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. When the poll ends, these ratings are aggregated and the MaxParC rating system is used to determine the final result of the poll.
 
-\subsection{MaxParC - TODO: summary}
-Understanding MaxParC is important for this project because it forms the core of how vodle interprets group preferences. Since this work involves modifying vodle's voting behaviour through the integration of liquid democracy, it is essential to understand how MaxParC processes input ratings. In particular, understanding how changes in individual ratings influence the final outcome of a poll helps to frame the implications of delegating or reweighting votes.
-%A clear grasp of MaxParC's underlying principles allows for a more informed and effective integration that maintains the platform's commitment to fairness and consensus.
+% \subsection{MaxParC - TODO: summary}
+% Understanding MaxParC is important for this project because it forms the core of how vodle interprets group preferences. Since this work involves modifying vodle's voting behaviour through the integration of liquid democracy, it is essential to understand how MaxParC processes input ratings. In particular, understanding how changes in individual ratings influence the final outcome of a poll helps to frame the implications of delegating or reweighting votes.
+% %A clear grasp of MaxParC's underlying principles allows for a more informed and effective integration that maintains the platform's commitment to fairness and consensus.
 
-Maximum Partial Consensus (MaxParC), the rating system used by vodle, was introduced by \cite{heitzig_fair_2024}. It is a decision-making method designed to address the limitations of traditional voting systems, in particular the potential for majority rule to suppress minority viewpoints.
-The primary objective of MaxParC is to achieve a balance between fairness, consensus, and efficiency in group decision-making.
+% Maximum Partial Consensus (MaxParC), the rating system used by vodle, was introduced by \cite{heitzig_fair_2024}. It is a decision-making method designed to address the limitations of traditional voting systems, in particular the potential for majority rule to suppress minority viewpoints.
+% The primary objective of MaxParC is to achieve a balance between fairness, consensus, and efficiency in group decision-making.
 
-Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''. This can be visualised in the illustration below.
+% Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''. This can be visualised in the illustration below.
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.8\linewidth]{../common/maxparc.png}
+%     \caption{Graphic from \cite{heitzig_fair_2024} representing MaxParC from the view of some voter Alice. Each rating value represents a conditional commitment by Alice to approve
+%     the respective option. Approval scores, number of voters that approve the option, are represented by light bars
+%     coming in from the right, options are sorted by descending approval score. Alice is counted as approving an option if her rating needle overlaps with
+%     the approval score bar.}
+% \end{figure}
+
+% To summarise, any delegation or vote splitting mechanism must be designed so that it only adds to an option's overall rating and never reduces it. This ensures that delegated input remains consistent with MaxParC's conditional approval model and preserves the original intent of the voter.
+
+\subsection{MaxParC - TODO: rework the summary}
+MaxParC (Maximum Partial Consensus) is the core rating system used in vodle to aggregate user preferences and determine poll outcomes. Introduced by \cite{heitzig_fair_2024}, MaxParC was designed to address common limitations of traditional voting systems, particularly the tendency for majority rule to overlook minority preferences. Its goal is to balance fairness, consensus, and efficiency in collective decision-making.
+
+In MaxParC, each user rates an option on a scale from $0$ to $100$. This rating reflects the user's willingness to approve that option based on how many other users also support it. Specifically, a rating of $x$ means that the voter will approve the option if fewer than $x\%$ of participants disapprove. A rating of $0$ means the option is never approved, while $100$ means it is always approved regardless of others' opinions. This structure transforms a simple rating into a conditional approval, enabling nuanced expressions of support across the group.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{../common/maxparc.png}
-    \caption{Graphic from \cite{heitzig_fair_2024} representing MaxParC from the view of some voter Alice. Each rating value represents a conditional commitment by Alice to approve
-    the respective option. Approval scores, number of voters that approve the option, are represented by light bars
-    coming in from the right, options are sorted by descending approval score. Alice is counted as approving an option if her rating needle overlaps with
-    the approval score bar.}
+    \caption{Visual representation of MaxParC from the perspective of a voter (Alice). Ratings represent conditional approval thresholds. An option is counted as approved by Alice if the approval bar (light grey) overlaps with her rating needle. Graphic taken directly from \cite{heitzig_fair_2024}.}
 \end{figure}
 
-To summarise, any delegation or vote splitting mechanism must be designed so that it only adds to an option's overall rating and never reduces it. This ensures that delegated input remains consistent with MaxParC's conditional approval model and preserves the original intent of the voter.
+Understanding how MaxParC processes ratings is essential for this project, as the proposed vote splitting mechanism must operate within its conditional approval framework. When a user splits their vote among multiple delegates, the system must ensure that their own rating continues to contribute appropriately. Specifically, if a user delegates $x\%$ of their rating to others, their final rating must not fall below $(100-x)\%$ of their original input. This constraint guarantees that the user's approval remains proportionally represented, even when part of their voting power is passed on to others.
+
+Integrating liquid democracy into vodle therefore requires careful design to align with MaxParC's logic, ensuring both technical compatibility and conceptual consistency.
+
 \subsection{Technologies Used}
 Understanding vodle's technology stack is crucial to successfully integrate liquid democracy features into the existing platform. Since the project involves adding complex delegation and voting logic, it's important to appreciate the constraints and benefits of the technologies currently used in vodle, as they directly influence the design and implementation choices.
 
@@ -212,9 +228,10 @@ CouchDB \citep{couchdb} is used as vodle's primary data store and communicates d
 The lack of server-side computation means the delegation algorithms must be designed with client-side efficiency in mind, ensuring performance remains acceptable even as delegation complexity increases. Thus, the choice of algorithms for liquid democracy features, such as those managing delegation paths and vote resolution, is directly influenced by CouchDB's architectural constraints.
 
 These technological considerations shape the practical implementation of liquid democracy within vodle, highlighting the need for efficient client-side processing, careful data management, and cross-platform consistency.
+
 \subsection{Partially Implemented Delegation in Vodle}
 
-The current version of vodle includes a partially implemented delegation feature that allows users to delegate their vote to another participant in a given poll. This implementation provides the basic structure required for one-step delegation but lacks robustness in handling more complex delegation scenarios.
+The current version of vodle includes a partially implemented delegation feature that allows users to delegate their vote to another participant in a given poll. Whilst this implementation provides the basic structure required for one-step delegation, it lacks robustness in consistently handling more complex delegation scenarios such as cycles.
 
 \subsubsection*{Delegation Workflow}
 
@@ -224,14 +241,15 @@ The current version of vodle includes a partially implemented delegation feature
 
 User A can initiate a delegation by inviting another participant (User B) to act as their delegate. The system then generates a unique delegation link tied to the relevant poll and user A. This link can be copied manually, sent via email, or shared using a device-specific sharing interface.
 
-\begin{figure} [H]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.2\linewidth]{../common/initial_vodle_screenshots/deldialog.png}
-    \caption{Screenshot of popup window for creating a delegation link.}
+    \caption{\textbf{Creating a Delegation:} The user (User A) initiates a delegation request by entering the nickname of their chosen delegate (User B) and how the sender will be identified (User A). The link is then generated and can be shared with User B with the options provided.}
     \label{fig:deldialog_initial}
 \end{figure}
 
-\textbf{Insert Code Snippet:} Function for creating a delegation link and storing it in the CouchDB database.
+\begin{figure}[H]
+\centering
 \begin{minted}{typescript}
 function createDelegationLink(pollId: string, userId: string): string {
     const delegationLink = generateUniqueLink(pollId, userId);
@@ -245,40 +263,53 @@ function createDelegationLink(pollId: string, userId: string): string {
     return delegationLink;
 }
 \end{minted}
+\caption{Code snippet for creating a delegation link. The function generates a unique link and stores the delegation data in CouchDB.}
+\end{figure}
 
 \item \textbf{Accepting the Delegation}
 
 User B must manually accept the delegation. When the link is opened, the system prompts them with an acceptance dialog. Once accepted, the delegation document stored in CouchDB is updated with a new status (e.g., ``accepted''), confirming that User B is now the official delegate for User A in that poll.
 
-\textbf{Insert Screenshot:} Acceptance screen presented to User B.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/delaccept.png}
+    \caption{\textbf{Accepting a Delegation:} The user (User B) is prompted to accept or reject User A's delegation request.}
+    \label{fig:delaccept_initial}
+\end{figure}
 
 \textbf{Insert Code Snippet:} Function for accepting a delegation and updating its status.
 
 \item \textbf{Final User Interface Changes}
 
-Once the delegation is accepted, the user interface for both User A and User B is updated to reflect the new delegation status. User A's voting interface will indicate that their vote has been delegated, while User B's interface will show that they are now acting as a delegate for another user.
+After a successful delegation User A's interface will show that their vote is delegated to User B. Their interface will also show that they can revoke their delegation at any time by pressing the revoke button or override User B's vote for a specific option by pressing the toggle next to its corresponding slider.
 
-After a successful delegation:
-\begin{itemize}
-    \item User A sees a message indicating that their vote has been delegated and can no longer interact with the voting interface for that poll.
-    
-    \textbf{Insert Screenshot:} User A's view after delegation.
+User B's interface will show how many votes they are currently casting on behalf of other users in addition to the invitations they have received.
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/userA_after.png}
 
-    \item User B is notified that they are voting on behalf of another user. The interface reflects this with visual indicators showing the number of users their vote is used for.
-    
-    \textbf{Insert Screenshot:} User B's view while acting as a delegate.
-\end{itemize}
+    \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/userB_after.png}
+    \caption{\textbf{User Interfaces After Delegation:} The top image shows User A's interface after the delegation is accepted, indicating that their vote is now delegated to User B. The bottom image shows User B's interface, which reflects that they are now voting on behalf of User A.}
+    \label{fig:delaccept_initial}
+\end{figure}
 
 \end{enumerate}
 
 \subsubsection*{Current Limitations}
 
-Although the current system includes logic intended to prevent delegation cycles, it does not function reliably in all cases. While it can block simple cases like direct self-delegation, more complex cycles involving multiple users are not consistently detected. For instance, in a chain where User A delegates to B, B to C, and C back to A, the system may fail to recognise the cycle depending on \dots
+Although the current system includes logic intended to prevent delegation cycles, it does not function reliably in all cases. While it can block simple cases like direct self-delegation, more complex cycles involving multiple users are not consistently detected. For instance, in a chain where User A delegates to B, B to C, and C back to A, the system may fail to recognise the cycle due to \dots
 
-\textbf{Insert Code Snippet:} Example showing the existing cycle detection logic and where it may fail.
-
-This inconsistency can result in cycles forming unnoticed, potentially leading to lost votes or undefined behaviour in the voting system. Improving this cycle detection mechanism is a key part of this project.
+\textit{How much detail is needed here? ask markus}
 \subsection{Design Philosophy}
+
+
 \section{Summary}
+The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle. Initially, the research highlighted critical limitations in traditional liquid democracy systems, such as the formation of delegation cycles, the risks associated with abstentions, and the disproportionate influence of super-voters. These insights showed the need for implementing delegation mechanisms that are capable of addressing these challenges effectively.
 
+Research into these mechanisms revealed several promising methods. Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness. Vote splitting was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates. Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from platforms like Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
 
+To ensure a thorough evaluation of these delegation mechanisms before full-scale integration, agent-based modelling was selected as a suitable method, with the Mesa framework identified as the most practical choice due to its ease of use, Python compatibility, and flexibility for rapid experimentation.
+
+The technological constraints of vodle itself, especially the reliance on client-side processing due to the CouchDB architecture, demonstrated the need for efficient, lightweight implementation strategies.
+
+These insights collectively define the project's objectives, which are structured and detailed in the following chapter. The objectives are designed explicitly to address the limitations uncovered in the research, ensuring the integration of liquid democracy into vodle is practical, user-friendly, and aligned with established best practices.

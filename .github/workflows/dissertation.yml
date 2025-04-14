@@ -3,9 +3,9 @@ name: dissertation
 on:
   push:
     paths:
-    - '.github/workflows/dissertation.yml'
-    - 'dissertation/**'
-    - 'common/**'
+      - '.github/workflows/dissertation.yml'
+      - 'dissertation/**'
+      - 'common/**'
   pull_request:
   workflow_dispatch:
 
@@ -14,18 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Compile report
+      - name: Install pygments (for minted)
+        run: sudo apt-get install -y python3-pygments
+
+      - name: Compile LaTeX document
         uses: dante-ev/latex-action@v0.2.0
         with:
           working_directory: dissertation
           root_file: dissertation.tex
-          args: -f -bibtex -pdflatex -latexoption=-file-line-error -latexoption=-interaction=nonstopmode -latexoption=-shell-escape -latexoption=-synctex=1
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dissertation.pdf
-          path: dissertation/dissertation.pdf
+          args: >
+            -pdf
+            -bibtex
+            -file-line-error
+            -interaction=nonstopmode
+            -shell-escape

@@ -45,6 +45,8 @@ Delegation cycles occur when a vote is delegated in such a way that it ends up f
 
 This issue is particularly problematic because it can nullify votes without the affected users ever realising. In systems where cycles are not explicitly detected and handled, these votes are discarded silently, potentially changing the final outcome of the votes.
 
+A simplistic method to prevent cycles is to check whether a delegation would create a cycle before allowing it. For example, if Alice tries to delegate her vote to Bob, the system checks whether Bob has already directly or indirectly delegated their vote to Alice. If so, the delegation is rejected. However, this approach can be cumbersome and may lead to a poor user experience, as users may not understand why their delegation was denied.
+
 Delegation cycles are increasingly likely to emerge in dynamic voting systems, where delegations can be added, removed, or modified at any point in time. Delegations that initially did not form part of a cycle may later contribute to one as other voters add a new delegation or alter an existing one.
 \subsection*{Abstentions}
 \begin{figure}[h]
@@ -65,7 +67,22 @@ In liquid democracy, abstention is where a voter neither casts a vote nor delega
 
 Abstentions are especially impactful when they occur at the end of a larger delegation chain, as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. The voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
 
-\subsection*{Super-voters - TODO: Add diagram}
+\subsection*{Super-voters}
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm, square/.style={regular polygon,regular polygon sides=4}]
+        \node[circle, draw] (A) {A};
+        \node[circle, draw, right of=A] (B) {B};
+        \node[square, draw, minimum size=1cm, inner sep=0pt, right of=B] (C) {C};
+        \node[square, draw, minimum size=1cm, inner sep=0pt, right of=C] (D) {D};
+        \node[square, draw, minimum size=1cm, inner sep=0pt, right of=D] (E) {E};
+
+        \draw (A) -- (B);
+        \draw (B) -- (C);
+    \end{tikzpicture}
+    \caption{Super-voter: A delegates to B, B to C. No matter which vote D or E cast, C's vote will always determine the outcome as it has a weight of 3.}
+    \label{fig:delegation-supervoter}
+\end{figure}
 In liquid democracy, a super-voter is an individual who receives a large number of delegated votes, therefore gaining disproportionate influence over decisions \citep{kling2015votingbehaviourpoweronline}. While this behaviour may reflect voters' genuine preferences, it can lead to a concentration of power that goes against the intended egalitarianism and democratic ideals of liquid democracy.
 
 Although liquid democracy allows users to alter their delegation at any time, in practice, many voters may not actively monitor or even know how their vote is being used. This can allow a small number of super-voters to dominate outcomes, especially in systems with large delegation chains.
@@ -108,7 +125,7 @@ The literature considers several delegation rules, each with distinct trade-offs
 
 In summary, ranked delegation enhances liquid democracy by reducing the risk of lost votes. The choice of delegation rule not only affects system efficiency but also influences fairness and robustness. While simpler methods such as DFD and BFD are easier to implement, advanced rules like MinSum, Leximax, and BordaBranching offer stronger guarantees and are better suited for practical deployment in platforms such as vodle.
 
-For our implementation, MinSum will be chosen as \dots
+For our implementation, MinSum will be chosen as the delegation rule because it offers a good trade-off between delegation quality, computational efficiency, and user interpretability. By selecting the path with the lowest total rank sum, MinSum prioritises well-ranked delegates while avoiding unnecessarily long or indirect delegation chains. This not only improves the quality of representation but also makes it clearer to users why a particular delegate was chosen as the path reflects their stated preferences in a straightforward way. Additionally, MinSum is more computationally efficient than alternatives like BordaBranching, making it a practical choice for deployment within the vodle platform.
 
 \subsection*{Vote Splitting}
 \label{sub-section:vote-splitting}
@@ -132,7 +149,7 @@ For a platform like vodle, the experience of LiquidFeedback highlights several i
 
 %Overall, LiquidFeedback serves as both a proof of concept and a cautionary tale; demonstrating that liquid democracy can work at scale, but that thoughtful implementation is essential to avoid replicating the very problems it seeks to solve.
 \subsection{Google Votes}
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{../common/google_votes.png}
     \caption{Screenshot taken from \cite{hardt_google_2015} showing the user interface of Google Votes.}
@@ -195,7 +212,72 @@ CouchDB \citep{couchdb} is used as vodle's primary data store and communicates d
 The lack of server-side computation means the delegation algorithms must be designed with client-side efficiency in mind, ensuring performance remains acceptable even as delegation complexity increases. Thus, the choice of algorithms for liquid democracy features, such as those managing delegation paths and vote resolution, is directly influenced by CouchDB's architectural constraints.
 
 These technological considerations shape the practical implementation of liquid democracy within vodle, highlighting the need for efficient client-side processing, careful data management, and cross-platform consistency.
-\subsection{Partial Implementation of Liquid Democracy}
+\subsection{Partially Implemented Delegation in Vodle}
+
+The current version of vodle includes a partially implemented delegation feature that allows users to delegate their vote to another participant in a given poll. This implementation provides the basic structure required for one-step delegation but lacks robustness in handling more complex delegation scenarios.
+
+\subsubsection*{Delegation Workflow}
+
+\begin{enumerate}
+
+\item \textbf{Creating a Delegation Link}
+
+User A can initiate a delegation by inviting another participant (User B) to act as their delegate. The system then generates a unique delegation link tied to the relevant poll and user A. This link can be copied manually, sent via email, or shared using a device-specific sharing interface.
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.2\linewidth]{../common/initial_vodle_screenshots/deldialog.png}
+    \caption{Screenshot of popup window for creating a delegation link.}
+    \label{fig:deldialog_initial}
+\end{figure}
+
+\textbf{Insert Code Snippet:} Function for creating a delegation link and storing it in the CouchDB database.
+\begin{minted}{typescript}
+function createDelegationLink(pollId: string, userId: string): string {
+    const delegationLink = generateUniqueLink(pollId, userId);
+    const delegationData = {
+        pollId: pollId,
+        userId: userId,
+        status: "pending",
+        link: delegationLink
+    };
+    storeInCouchDB(delegationData);
+    return delegationLink;
+}
+\end{minted}
+
+\item \textbf{Accepting the Delegation}
+
+User B must manually accept the delegation. When the link is opened, the system prompts them with an acceptance dialog. Once accepted, the delegation document stored in CouchDB is updated with a new status (e.g., ``accepted''), confirming that User B is now the official delegate for User A in that poll.
+
+\textbf{Insert Screenshot:} Acceptance screen presented to User B.
+
+\textbf{Insert Code Snippet:} Function for accepting a delegation and updating its status.
+
+\item \textbf{Final User Interface Changes}
+
+Once the delegation is accepted, the user interface for both User A and User B is updated to reflect the new delegation status. User A's voting interface will indicate that their vote has been delegated, while User B's interface will show that they are now acting as a delegate for another user.
+
+After a successful delegation:
+\begin{itemize}
+    \item User A sees a message indicating that their vote has been delegated and can no longer interact with the voting interface for that poll.
+    
+    \textbf{Insert Screenshot:} User A's view after delegation.
+
+    \item User B is notified that they are voting on behalf of another user. The interface reflects this with visual indicators showing the number of users their vote is used for.
+    
+    \textbf{Insert Screenshot:} User B's view while acting as a delegate.
+\end{itemize}
+
+\end{enumerate}
+
+\subsubsection*{Current Limitations}
+
+Although the current system includes logic intended to prevent delegation cycles, it does not function reliably in all cases. While it can block simple cases like direct self-delegation, more complex cycles involving multiple users are not consistently detected. For instance, in a chain where User A delegates to B, B to C, and C back to A, the system may fail to recognise the cycle depending on \dots
+
+\textbf{Insert Code Snippet:} Example showing the existing cycle detection logic and where it may fail.
+
+This inconsistency can result in cycles forming unnoticed, potentially leading to lost votes or undefined behaviour in the voting system. Improving this cycle detection mechanism is a key part of this project.
 \subsection{Design Philosophy}
 \section{Summary}
 

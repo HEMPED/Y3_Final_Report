@@ -1,5 +1,5 @@
-\chapter{Background Research}
-\label{ch:background}
+\chapter{Background Research}\label{ch:background}
+
 This chapter provides background context for the development of a liquid democracy system within vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of vodle as a platform are explored.
 
 Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters, the following symbols are used:
@@ -248,23 +248,23 @@ User A can initiate a delegation by inviting another participant (User B) to act
     \label{fig:deldialog_initial}
 \end{figure}
 
-\begin{figure}[H]
-\centering
-\begin{minted}{typescript}
-function createDelegationLink(pollId: string, userId: string): string {
-    const delegationLink = generateUniqueLink(pollId, userId);
-    const delegationData = {
-        pollId: pollId,
-        userId: userId,
-        status: "pending",
-        link: delegationLink
-    };
-    storeInCouchDB(delegationData);
-    return delegationLink;
-}
-\end{minted}
-\caption{Code snippet for creating a delegation link. The function generates a unique link and stores the delegation data in CouchDB.}
-\end{figure}
+% \begin{figure}[H]
+% \centering
+% \begin{minted}{typescript}
+% function createDelegationLink(pollId: string, userId: string): string {
+%     const delegationLink = generateUniqueLink(pollId, userId);
+%     const delegationData = {
+%         pollId: pollId,
+%         userId: userId,
+%         status: "pending",
+%         link: delegationLink
+%     };
+%     storeInCouchDB(delegationData);
+%     return delegationLink;
+% }
+% \end{minted}
+% \caption{Code snippet for creating a delegation link. The function generates a unique link and stores the delegation data in CouchDB.}
+% \end{figure}
 
 \item \textbf{Accepting the Delegation}
 
@@ -277,8 +277,6 @@ User B must manually accept the delegation. When the link is opened, the system 
     \label{fig:delaccept_initial}
 \end{figure}
 
-\textbf{Insert Code Snippet:} Function for accepting a delegation and updating its status.
-
 \item \textbf{Final User Interface Changes}
 
 After a successful delegation User A's interface will show that their vote is delegated to User B. Their interface will also show that they can revoke their delegation at any time by pressing the revoke button or override User B's vote for a specific option by pressing the toggle next to its corresponding slider.
@@ -290,7 +288,7 @@ User B's interface will show how many votes they are currently casting on behalf
 
     \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/userB_after.png}
     \caption{\textbf{User Interfaces After Delegation:} The top image shows User A's interface after the delegation is accepted, indicating that their vote is now delegated to User B. The bottom image shows User B's interface, which reflects that they are now voting on behalf of User A.}
-    \label{fig:delaccept_initial}
+    \label{fig:del_view_initial}
 \end{figure}
 
 \end{enumerate}
@@ -301,6 +299,7 @@ Although the current system includes logic intended to prevent delegation cycles
 
 \textit{How much detail is needed here? ask markus}
 \subsection{Design Philosophy}
+Colour pallet - need to maintain consisten design when adding delegation features.
 
 
 \section{Summary}

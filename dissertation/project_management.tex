@@ -43,9 +43,51 @@ Lack of engagement from supervisors or stakeholders & Low & Maintain regular com
 Data loss or corruption & Low & Use Git for version control and take regular local backups. \\
 \hline
 \end{tabular}
-\caption{Key risks identified and mitigation strategies}
-\label{tab:risk-assessment}
+\caption{Key risks identified and their mitigation strategies}\label{tab:risk-assessment}
 \end{table}
+
+The following sections provide a detailed analysis of the risks identified in the risk assessment table (see Table~\ref{tab:risk-assessment}). Each risk is discussed individually, outlining its implications and the strategies proposed to mitigate potential issues.
+
+\subsection*{Breaking the Live Vodle Site During Development}
+
+\textbf{Likelihood:} Medium
+
+\textbf{Description:} Modifications to the existing vodle platform could unintentionally introduce downtime or impair existing functionality on the live website. Any disruptions could negatively impact real users' interactions, leading to dissatisfaction and loss of trust in the platform.
+
+\textbf{Mitigation:} Development activities will utilise Git branching to isolate new code from the production environment. Features will be developed and rigorously tested in local or staging environments before integration with the live deployment. Incremental rollouts and thorough pre-deployment testing will further help identify potential problems early, allowing quick remediation or rollback.
+
+\subsection*{Feature Complexity Exceeds Estimates}
+
+\textbf{Likelihood:} High
+
+\textbf{Description:} Advanced features such as ranked delegation and vote splitting may prove more complex than initially anticipated. Unexpected complexity can lead to delays, reduced functionality, or incomplete implementations, potentially affecting the project's timeline and deliverables.
+
+\textbf{Mitigation:} Core objectives have been clearly defined and prioritised, ensuring focus remains on essential functionality. In cases of higher than anticipated complexity, resources will be redirected towards completing critical core features first, while the extension objective (agent based modelling) can be scaled back or postponed as needed. Regular agile reviews will monitor progress closely, facilitating early identification and management of complexity-related issues.
+
+\subsection*{Lack of Engagement from Supervisors or Stakeholders}
+
+\textbf{Likelihood:} Low
+
+\textbf{Description:} Regular feedback and engagement from supervisors and stakeholders are crucial to ensure alignment with project goals, requirements, and user expectations. Insufficient feedback could result in misaligned implementations or objectives that do not fully meet user needs.
+
+\textbf{Mitigation:} Fortnightly meetings have been scheduled with both the primary supervisor (Markus Brill) and the co-supervisor (Jobst Heitzig), who also fulfils the role of the project customer. This structured schedule ensures consistent opportunities for input and feedback. Additionally, a Telegram group chat is available to handle urgent queries and maintain ongoing dialogue.
+
+\subsection*{Data Loss or Corruption --- Code}
+
+\textbf{Likelihood:} Low
+
+\textbf{Description:} Development activities pose a risk of code loss or corruption due to accidental deletion, unintended changes, or version conflicts. Such incidents could significantly delay development and necessitate additional time for recovery.
+
+\textbf{Mitigation:} Version control will be rigorously maintained using Git, with frequent commits and descriptive commit messages ensuring traceability. Regular backups of the repository will be taken to safeguard against accidental loss, providing straightforward recovery paths when needed.
+
+\subsection*{Data Loss or Corruption --- Database}
+
+\textbf{Likelihood:} Low
+
+\textbf{Description:} While unlikely, corruption of the CouchDB database during development could occur due to improper schema modifications or accidental changes.
+%Given the development nature of the database, such corruption primarily affects development efficiency rather than user data or long-term stability.
+
+\textbf{Mitigation:} No mitigation --- in the event of data corruption, the development database will be reset to its original state. As all data in the database is poll and user specific, it does not impact development as no important data is stored in the production environment.
 
 \section{Legal and Ethical Considerations}
 

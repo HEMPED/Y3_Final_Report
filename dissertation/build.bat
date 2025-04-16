@@ -15,3 +15,6 @@ echo [4/4] Final pass...
 pdflatex -shell-escape dissertation.tex
 
 echo Done. Check dissertation.pdf for output.
+
+echo Calculating wordcount...
+texcount -inc -total dissertation.tex

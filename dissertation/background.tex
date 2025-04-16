@@ -2,7 +2,7 @@
 
 This chapter provides background context for the development of a liquid democracy system within vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of vodle as a platform are explored.
 
-Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters, the following symbols are used:
+Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters within these diagrams, the following symbols are used:
 \begin{itemize}
     % \item \textbf{Circles} indicate voters who \textit{delegate} their vote to someone else.
     % \item \textbf{Squares} represent \textit{casting voters}, those who who cast their own vote and do not delegate.
@@ -16,7 +16,9 @@ Throughout this chapter, several diagrams are used to illustrate how votes move 
 
 Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain \citep{blum_liquid_2016}. A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
 
-Whilst the transitivity property enables concentration of voting power with trusted individuals, it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating ``super-voters''. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed in the following subsections.
+Although transitivity provides greater flexibility to the voters, 
+%Whilst the transitivity property enables concentration of voting power with trusted individuals,
+it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating ``super-voters''. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed later in this chapter.
 
 %\cite{ford_delegative_2002} argues that direct democracy becomes ineffective at scale due to the diversity in participants' knowledge and interest. Without mechanisms to channel influence through trusted intermediaries, the collective outcome may reflect average rather than informed decision-making. Liquid democracy addresses this by enabling voters to shift influence toward participants with greater expertise or engagement.
 
@@ -41,15 +43,15 @@ Whilst the transitivity property enables concentration of voting power with trus
 \end{figure}
 
 
-Delegation cycles occur when a vote is delegated in such a way that it ends up forming a loop \citep{brill_liquid_2022}, preventing the vote from reaching a final, resolvable destination. For example, if Alice delegates her vote to Bob, Bob delegates to Charlie, and Charlie delegates back to Alice, the votes become trapped in a cycle (seen above) and can be treated as a loss of representation \citep{christoff2017liquiddemocracyanalysisbinary}.
+Delegation cycles occur when a vote is delegated in such a way that it ends up forming a loop \citep{brill_liquid_2022}, preventing the vote from reaching a final casting voter. For example, if Alice delegates her vote to Bob, Bob delegates to Charlie, and Charlie delegates back to Alice, the votes become trapped in a cycle (seen above) and can be treated as a loss of representation \citep{christoff2017liquiddemocracyanalysisbinary}.
 
-This issue is particularly problematic because it can nullify votes without the affected users ever realising. In systems where cycles are not explicitly detected and handled, these votes are discarded silently, potentially changing the final outcome of the votes.
+This issue is particularly problematic because it can nullify votes without the affected users ever realising. In systems where cycles are not explicitly detected and handled, these votes could be discarded silently, potentially changing the final outcome of the votes.
 
 A simplistic method to prevent cycles is to check whether a delegation would create a cycle before allowing it. For example, if Alice tries to delegate her vote to Bob, the system checks whether Bob has already directly or indirectly delegated their vote to Alice. If so, the delegation is rejected. However, this approach can be cumbersome and may lead to a poor user experience, as users may not understand why their delegation was denied.
 
 Delegation cycles are increasingly likely to emerge in dynamic voting systems, where delegations can be added, removed, or modified at any point in time. Delegations that initially did not form part of a cycle may later contribute to one as other voters add a new delegation or alter an existing one.
 \subsection*{Abstentions}
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm]
         \node[circle, draw] (A) {A};
@@ -63,9 +65,9 @@ Delegation cycles are increasingly likely to emerge in dynamic voting systems, w
     \label{fig:delegation-abstention}
 \end{figure}
 
-In liquid democracy, abstention is where a voter neither casts a vote nor delegates their vote to another user \citep{brill_liquid_2022}. This includes both deliberate abstention, where a voter knowingly chooses not to participate, and passive abstention, where a voter may be unaware of an ongoing poll or are unable to engage with it.
+A voter abstains by neither casting a vote nor delegating it to another user \citep{brill_liquid_2022}. This includes both deliberate abstention, where a voter knowingly chooses not to participate, and passive abstention, where a voter may be unaware of an ongoing poll or are unable to engage with it.
 
-Abstentions are especially impactful when they occur at the end of a larger delegation chain, as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. The voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
+Abstentions are especially impactful when they occur at the end of a larger delegation chain, as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. Additionally, the voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
 
 \subsection*{Super-voters}
 \begin{figure}[h]
@@ -85,23 +87,27 @@ Abstentions are especially impactful when they occur at the end of a larger dele
 \end{figure}
 In liquid democracy, a super-voter is an individual who receives a large number of delegated votes, therefore gaining disproportionate influence over decisions \citep{kling2015votingbehaviourpoweronline}. While this behaviour may reflect voters' genuine preferences, it can lead to a concentration of power that goes against the intended egalitarianism and democratic ideals of liquid democracy.
 
-Although liquid democracy allows users to alter their delegation at any time, in practice, many voters may not actively monitor or even know how their vote is being used. This can allow a small number of super-voters to dominate outcomes, especially in systems with large delegation chains.
+Even if a particular implementation of liquid democracy allows users to alter their delegation at any time, in practice, many voters may not actively monitor or even know how their vote is being used. This can allow a small number of super-voters to dominate outcomes, especially in systems that do nothing to prevent large delegation chains.
 
-Real-world examples of this phenomenon have been documented. In the German Pirate Party's use of LiquidFeedback, certain users received so many delegations that their votes were like ``decrees'' \citep{sven_becker_liquid_2012,kling2015votingbehaviourpoweronline} even though they were not elected officials. \cite{kling2015votingbehaviourpoweronline} noted that the super-voters generally voted in line with the majority, therefore not drastically affecting the outcome of the votes and contributed to the stability of the system. However, the potential for individuals to single-handedly influence the results remained a concern.
+Real-world examples of this phenomenon have been documented. In the German Pirate Party's use of LiquidFeedback, certain users received so many delegations that their votes were like ``decrees'' \citep{sven_becker_liquid_2012,kling2015votingbehaviourpoweronline} even though they were not elected officials.
+Despite \cite{kling2015votingbehaviourpoweronline} noting that super-voters generally voted in line with the majority and therefore did not drastically affect the outcome of the votes, the potential for individuals to single-handedly influence results still remains a concern.
+%\cite{kling2015votingbehaviourpoweronline} noted that the super-voters generally voted in line with the majority, therefore not drastically affecting the outcome of the votes and contributed to the stability of the system. However, the potential for individuals to single-handedly influence the results remained a concern.
 %This pattern has also been observed in blockchain-based governance systems \citep{hallWhatHappensWhen2024}, where voting tokens (digital representations of voting power) are commonly concentrated among a few delegates, giving them an excessive amount of power.
 %In the case of the Pirate Party, analysis showed that although super-voters held significant theoretical power, they generally voted in line with the majority, therefore not drastically affecting the outcome of the votes. \cite{kling2015votingbehaviourpoweronline} described this behaviour as voting "wisely," noting that while these individuals had the capacity to change outcomes, they typically did not use it to push their own agenda.
 
 This pattern is not limited to traditional online voting platforms. It can also be seen within decentralised autonomous organisations (DAOs) - blockchain-based entities where decisions are made collectively by token holders without central leadership. These organisations use token-based voting to decide on critical issues like protocol upgrades and funding allocations. \cite{hallWhatHappensWhen2024} studied 18 decentralised autonomous organisations (DAOs) and found that voting power was often concentrated in the hands of a few delegates. While most did not control a large share of all available tokens, low participation meant that their share of actual votes cast was disproportionately high. In several DAOs, the top five delegates accounted for over 50\% of all votes cast, and in the DAO Gitcoin, this figure exceeded 90\%.
 
 \subsection{Variations of Liquid Democracy}
-The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, a range of enhancements have been proposed that modify how delegations are expressed, resolved, or overridden. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
+The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, enhancements have been proposed that modify how delegations function. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
 
-The following subsections present several such variations, along with the algorithms that support them.
-\subsection*{Ranked Delegation} Ranked delegation improves liquid democracy by allowing voters to list several trusted delegates in order of preference. Instead of choosing just one delegate, a voter can specify a ranked list so that if their top choice is unavailable (due to abstention, involvement in a cycle, or other reasons) the system can use the next delegate specified. This method reduces the risk of losing votes while keeping voters actively involved in the decision making process \citep{brill_liquid_2022}.
+The following subsections present several such variations, along with the algorithms that can be used to implement them.
+\subsection*{Ranked Delegation}
+Ranked delegation improves liquid democracy by allowing voters to list several trusted delegates in order of preference. Instead of choosing just one delegate, a voter can specify a ranked list so that if their top choice is unavailable (e.g. due to abstention or being a part of a delegation cycle) the system can use the next delegate specified.
 
-Implementing ranked delegation requires a mechanism to decide among multiple possible delegation paths. This is done through a \textit{delegation rule}, a function that, given a ranked delegation instance and a delegating voter, selects a unique path leading to a \textit{casting voter} \citep{brill_liquid_2022}.
+Implementing ranked delegation requires a mechanism to decide among multiple possible delegation paths -- a route that a vote can take through the delegation graph to reach a casting voter.
+This is done through a \textit{delegation rule}, a function that, given a ranked delegation instance and a delegating voter, selects a unique path leading to a \textit{casting voter} \citep{brill_liquid_2022}.
 
-Several key properties help evaluate these delegation rules:
+The following key properties help evaluate these delegation rules:
 
 \begin{itemize}
     \item \textbf{Guru Participation:} Ensures that a voter accepting delegated votes (a ``guru'') is never worse off by doing so. Receiving additional delegations should not decrease their influence over the final outcome \citep{kotsialou_riley_2020}. 
@@ -115,7 +121,7 @@ The literature considers several delegation rules, each with distinct trade-offs
 
 \textbf{Breadth-First Delegation (BFD):} Chooses the shortest available delegation path and uses rankings only to resolve ties. This approach usually produces direct, predictable chains and satisfies guru participation, although it might sometimes assign a vote to a lower-ranked delegate \citep{kotsialou_riley_2020, brill_liquid_2022}.
 
-\textbf{MinSum:} Balances path length and delegation quality by selecting the path with the lowest total sum of edge ranks. Being confluent, MinSum avoids both unnecessarily long chains and poorly ranked delegations \citep{brill_liquid_2022}.
+\textbf{MinSum:} Balances path length and delegation quality by selecting the path with the lowest total sum of edge ranks. Due to this, MinSum avoids both unnecessarily long chains and poorly ranked delegations \citep{brill_liquid_2022}.
 
 \textbf{Diffusion:} Constructs delegation paths in stages by assigning votes layer by layer based on the lowest available rank at each step. This method tends to avoid poor delegations but can sometimes produce unintuitive outcomes due to its tie-breaking procedure \citep{brill_liquid_2022}.
 
@@ -125,15 +131,13 @@ The literature considers several delegation rules, each with distinct trade-offs
 
 In summary, ranked delegation enhances liquid democracy by reducing the risk of lost votes. The choice of delegation rule not only affects system efficiency but also influences fairness and robustness. While simpler methods such as DFD and BFD are easier to implement, advanced rules like MinSum, Leximax, and BordaBranching offer stronger guarantees and are better suited for practical deployment in platforms such as vodle.
 
-For our implementation, MinSum will be chosen as the delegation rule because it offers a good trade-off between delegation quality, computational efficiency, and user interpretability. By selecting the path with the lowest total rank sum, MinSum prioritises well-ranked delegates while avoiding unnecessarily long or indirect delegation chains. This not only improves the quality of representation but also makes it clearer to users why a particular delegate was chosen as the path reflects their stated preferences in a straightforward way. Additionally, MinSum is more computationally efficient than alternatives like BordaBranching, making it a practical choice for deployment within the vodle platform.
+For our implementation, MinSum will be chosen as the delegation rule because it offers a good trade-off between delegation quality, computational efficiency, and user interpretability. By selecting the path with the lowest total rank sum, MinSum prioritises higher ranked delegates while avoiding unnecessarily long or indirect delegation chains. This not only improves the quality of representation but also makes it clearer to users why a particular delegate was chosen as the path reflects their stated preferences in a straightforward way. Additionally, MinSum is more computationally efficient than alternatives like BordaBranching, making it a practical choice for deployment within the vodle platform.
 
-\subsection*{Vote Splitting}
-\label{sub-section:vote-splitting}
-
-
+\subsection*{Vote Splitting}\label{sub-section:vote-splitting}
+introduce algorithm, maybe proofs as well?
 
 \section{Existing Implementations of Liquid Democracy}
-To understand how liquid democracy can be practically integrated into vodle, it is important to examine how similar systems have been implemented in real-world contexts. 
+To understand how liquid democracy can be integrated into vodle, it is important to examine how similar systems have been implemented in real-world contexts. 
 %By studying the design choices, successes, and limitations of past deployments, we can identify best practices and avoid repeating known pitfalls.
 This section explores two implementations, LiquidFeedback and Google Votes, that offer valuable insights into the technical, social, and usability challenges associated with applying liquid democracy at scale.
 \subsection{LiquidFeedback}
@@ -145,7 +149,7 @@ In practice, the Pirate Party's use of LiquidFeedback revealed several key dynam
 
 Another practical issue was the complexity of the system. LiquidFeedback was difficult to understand for many users, especially those unfamiliar with concepts like transitive delegation or multi-stage voting which limited its accessibility and contributed to declining engagement over time \citep{kling2015votingbehaviourpoweronline}.
 
-For a platform like vodle, the experience of LiquidFeedback highlights several important design considerations. First, user interfaces must be intuitive enough to allow voters to participate without needing deep technical knowledge. Second, the user must be know the status of their delegation at a glance - improving the understanding of the platform. Finally, ensuring that votes lead to visible and actionable outcomes is critical for sustained engagement.
+For a platform like vodle, the experience of LiquidFeedback highlights several important design considerations. First, user interfaces must be intuitive enough to allow voters to participate without needing deep technical knowledge. Second, the user must be know the status of their delegation at a glance - improving the understanding of the platform. Finally, ensuring that votes lead to visible and actionable outcomes is critical for maintaining user engagement.
 
 %Overall, LiquidFeedback serves as both a proof of concept and a cautionary tale; demonstrating that liquid democracy can work at scale, but that thoughtful implementation is essential to avoid replicating the very problems it seeks to solve.
 \subsection{Google Votes}
@@ -159,7 +163,7 @@ Google Votes was an internal experiment at Google designed to explore the practi
 
 Delegations in Google Votes were category-specific, meaning that users could choose different delegates for different areas of interest, such as food, events, or technical infrastructure. These delegations were persistent but could be overridden at any time, giving users flexibility to either rely on trusted experts or vote independently as needed. The system supported transitive delegation and allowed users to reclaim control by casting their own vote, even after delegating.
 
-The platform placed strong emphasis on usability and transparency. Delegation features were rolled out incrementally, with additional tools such as voting power estimates and delegation advertisements helping users understand their influence. One key design principle was what the authors called the ``Golden Rule of Liquid Democracy'': if a user delegates their vote, they should be able to see how it is being used. To that end, users received notifications when their delegate voted, and all votes were visible to the relevant group. This encouraged accountability and gave voters confidence that their delegated votes were being used appropriately.
+The platform placed strong emphasis on usability and transparency. Delegation features were rolled out incrementally, with additional tools such as voting power estimates and delegation advertisements helping users understand their influence. One key design principle was what the authors called the ``Golden Rule of Liquid Democracy'': if a user delegates their vote, they should be able to see how it is being used. To accomplish this, users received notifications when their delegate voted, and all votes were visible to the relevant group. This encouraged accountability and gave voters confidence that their delegated votes were being used appropriately.
 
 While Google Votes was never made publicly available, it served as a successful demonstration of liquid democracy in a structured, real-world setting. It showed that delegative voting could improve engagement and decision-making within large organisations, especially when designed with attention to user experience. For vodle, the system provides a concrete example of how features like topic-specific delegation, transparency tools, and real-time voting feedback can make liquid democracy more practical and accessible.
 \section{Agent Based Modelling}
@@ -174,7 +178,7 @@ Several widely used ABM frameworks exist, each with their own strengths and draw
     \item \textbf{Mesa} \citep{kazil_utilizing_2020} is an open-source framework written in Python and specifically designed for agent-based modelling. Its advantage lies in its integration with Python's ecosystem of data science libraries. Simulations built with Mesa can easily make use of tools such as NumPy and pandas for efficient data processing, and Matplotlib or Seaborn for visualising model outputs. This compatibility allows for rapid analysis and iteration, while also significantly lowering the learning curve for developers already familiar with Python. Mesa offers a practical balance between usability and computational flexibility, making it well-suited for customisable and moderately large simulations.
     \item \textbf{Agents.jl} \citep{agentsjl} is a high-performance agent-based modelling framework written in Julia. Due to Julia's speed and efficiency, it is suitable for large-scale and computationally demanding simulations. The framework is designed to be user-friendly, with a syntax that is approachable for those familiar with scientific computing. However, the Julia ecosystem is less mature compared to Python's, which may limit the availability of additional libraries and resources. 
 \end{itemize}
-Given the time constraints of this project, Mesa offers a practical and efficient solution. Its Python-based interface and straightforward setup allow for rapid development without the overhead of learning a new framework. This ease of use enables more time to be spent designing meaningful experiments and analysing results, rather than configuring tooling. Therefore, Mesa is the best suited framework for this project.
+Given the time constraints of this project, Mesa offers a practical and efficient solution. Its Python-based interface and straightforward setup allow for rapid development without the overhead of learning a new framework. This ease of use enables more time to be spent designing meaningful experiments and analysing results, rather than configuring tooling.
 \section{Vodle}
 Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. When the poll ends, these ratings are aggregated and the MaxParC rating system is used to determine the final result of the poll.
 
@@ -201,14 +205,15 @@ Vodle is a web-based platform for participatory group decision-making. Users par
 \subsection{MaxParC - TODO: rework the summary}
 MaxParC (Maximum Partial Consensus) is the core rating system used in vodle to aggregate user preferences and determine poll outcomes. Introduced by \cite{heitzig_fair_2024}, MaxParC was designed to address common limitations of traditional voting systems, particularly the tendency for majority rule to overlook minority preferences. Its goal is to balance fairness, consensus, and efficiency in collective decision-making.
 
-In MaxParC, each user rates an option on a scale from $0$ to $100$. This rating reflects the user's willingness to approve that option based on how many other users also support it. Specifically, a rating of $x$ means that the voter will approve the option if fewer than $x\%$ of participants disapprove. A rating of $0$ means the option is never approved, while $100$ means it is always approved regardless of others' opinions. This structure transforms a simple rating into a conditional approval, enabling nuanced expressions of support across the group.
+In MaxParC, each user rates an option on a scale from $0$ to $100$. This rating reflects the user's willingness to approve that option based on how many other users also support it. Specifically, a rating of $x$ means that the voter will approve the option if fewer than $x\%$ of participants disapprove. A rating of $0$ means the option is never approved, while $100$ means it is always approved regardless of others' opinions. This structure transforms a simple rating into a conditional approval, allowing for a more nuanced expression of preferences with the potential for compromise.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{../common/maxparc.png}
-    \caption{Visual representation of MaxParC from the perspective of a voter (Alice). Ratings represent conditional approval thresholds. An option is counted as approved by Alice if the approval bar (light grey) overlaps with her rating needle. Graphic taken directly from \cite{heitzig_fair_2024}.}
+    \caption{Visual representation of MaxParC from the perspective of a voter (Alice). Ratings represent conditional approval thresholds. An option is counted as approved by Alice if the approval bar (light grey) overlaps with her rating needle. Graphic from \cite{heitzig_fair_2024}.}
 \end{figure}
 
+\textit{TODO: rework this section to be more concise and clear or remove}
 Understanding how MaxParC processes ratings is essential for this project, as the proposed vote splitting mechanism must operate within its conditional approval framework. When a user splits their vote among multiple delegates, the system must ensure that their own rating continues to contribute appropriately. Specifically, if a user delegates $x\%$ of their rating to others, their final rating must not fall below $(100-x)\%$ of their original input. This constraint guarantees that the user's approval remains proportionally represented, even when part of their voting power is passed on to others.
 
 Integrating liquid democracy into vodle therefore requires careful design to align with MaxParC's logic, ensuring both technical compatibility and conceptual consistency.
@@ -217,21 +222,22 @@ Integrating liquid democracy into vodle therefore requires careful design to ali
 Understanding vodle's technology stack is crucial to successfully integrate liquid democracy features into the existing platform. Since the project involves adding complex delegation and voting logic, it's important to appreciate the constraints and benefits of the technologies currently used in vodle, as they directly influence the design and implementation choices.
 
 \subsection*{Angular}
-Vodle is built with Angular \citep{angular}, a TypeScript-based frontend framework created by Google. Angular's modularity and structured component system provides a strong foundation for incremental development, essential when introducing new features such as ranked delegation that build upon existing components. Its clear separation of concerns helps maintain readable and maintainable code, simplifying debugging and future enhancements. This is particularly beneficial as the delegation logic is expected to grow in complexity later in the project.
+Vodle is built with Angular \citep{angular}, a TypeScript-based frontend framework created by Google. Angular's modularity and structured component system provides a strong foundation for incremental development, essential when introducing new features such as ranked delegation that build upon existing components. Its clear separation of concerns helps maintain readable and maintainable code, simplifying debugging and future enhancements. This is particularly beneficial as the delegation logic is expected to grow in complexity and build upon existing components as the project progresses.
 
 \subsection*{Ionic Framework}
-The Ionic \citep{ionic} framework complements Angular by enabling the creation of responsive, mobile-compatible applications from a single codebase. Given vodle's goal of broad user participation, Ionic ensures that the newly implemented liquid democracy functionalities remain consistent and accessible across both desktop and mobile devices. This cross-platform compatibility encourages greater user engagement and facilitates testing and feedback on various device types, critical for verifying usability and user interaction with delegation features.
+The Ionic \citep{ionic} framework complements Angular by enabling the creation of responsive, mobile-compatible applications from a single codebase. Given vodle's goal of broad user participation, Ionic ensures that its functionalities remain consistent and accessible across both desktop and mobile devices. %need to make sure its compatible 
+For this project, new delegation features must be designed to work seamlessly within the existing Ionic framework, ensuring that they are visually appealing and user-friendly on all platforms, including mobile devices.
 
 \subsection*{CouchDB}
-CouchDB \citep{couchdb} is used as vodle's primary data store and communicates directly with the client through HTTP requests, eliminating the need for a dedicated backend server. This architecture places significant computational responsibilities on the client-side Angular application, including the handling of delegation chains, cycle detection, and the computation of final vote outcomes. Furthermore, since CouchDB stores data exclusively as JSON-formatted strings, complex delegation structures and voting relationships must be carefully serialised and de-serialised on the client side.
+CouchDB \citep{couchdb} is vodle's primary data storage method and communicates directly with the client through HTTP requests, meaning there is no dedicated backend. This architecture places significant computational responsibilities on the client-side Angular application, including the handling of delegation chains, cycle detection, and the computation of final vote outcomes. Furthermore, since CouchDB stores data exclusively as JSON-formatted strings, complex delegation structures and voting relationships must be serialised and de-serialised on the client side.
 
-The lack of server-side computation means the delegation algorithms must be designed with client-side efficiency in mind, ensuring performance remains acceptable even as delegation complexity increases. Thus, the choice of algorithms for liquid democracy features, such as those managing delegation paths and vote resolution, is directly influenced by CouchDB's architectural constraints.
+The lack of server-side computation means the delegation algorithms must be designed with client-side efficiency in mind, ensuring performance remains acceptable even as delegation complexity increases. Thus, the choice of algorithms for liquid democracy features, such as those to resolve conflicting delegation paths, is directly influenced by CouchDB's architectural constraints.
 
 These technological considerations shape the practical implementation of liquid democracy within vodle, highlighting the need for efficient client-side processing, careful data management, and cross-platform consistency.
 
 \subsection{Partially Implemented Delegation in Vodle}
 
-The current version of vodle includes a partially implemented delegation feature that allows users to delegate their vote to another participant in a given poll. Whilst this implementation provides the basic structure required for one-step delegation, it lacks robustness in consistently handling more complex delegation scenarios such as cycles.
+The current version of vodle includes a partially implemented delegation feature that allows users to delegate their vote to another participant in a given poll. Whilst this implementation provides the basic structure required for delegation, it lacks consistency in handling more complex delegation scenarios such as cycles.
 
 \subsubsection*{Delegation Workflow}
 
@@ -239,7 +245,7 @@ The current version of vodle includes a partially implemented delegation feature
 
 \item \textbf{Creating a Delegation Link}
 
-User A can initiate a delegation by inviting another participant (User B) to act as their delegate. The system then generates a unique delegation link tied to the relevant poll and user A. This link can be copied manually, sent via email, or shared using a device-specific sharing interface.
+User A can initiate a delegation by inviting another participant (User B) to act as their delegate. The system then generates a unique delegation link tied to the relevant poll and user A. This link can be copied manually, sent via email, or using their device's inbuilt sharing options.
 
 \begin{figure}[H]
     \centering
@@ -268,7 +274,7 @@ User A can initiate a delegation by inviting another participant (User B) to act
 
 \item \textbf{Accepting the Delegation}
 
-User B must manually accept the delegation. When the link is opened, the system prompts them with an acceptance dialog. Once accepted, the delegation document stored in CouchDB is updated with a new status (e.g., ``accepted''), confirming that User B is now the official delegate for User A in that poll.
+User B must manually accept the delegation. When the link is opened, the system prompts them with an acceptance dialog. Once accepted, the delegation document stored in CouchDB is updated with a new status (``accepted''), confirming that User B is now the official delegate for User A in that poll.
 
 \begin{figure}[H]
     \centering
@@ -287,7 +293,7 @@ User B's interface will show how many votes they are currently casting on behalf
     \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/userA_after.png}
 
     \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/userB_after.png}
-    \caption{\textbf{User Interfaces After Delegation:} The top image shows User A's interface after the delegation is accepted, indicating that their vote is now delegated to User B. The bottom image shows User B's interface, which reflects that they are now voting on behalf of User A.}
+    \caption{\textbf{User Interfaces After Delegation:} The top screenshot shows User A's interface after the delegation is accepted, indicating that their vote is now delegated to User B. The bottom screenshot shows User B's interface, which reflects that they are now voting on behalf of User A.}
     \label{fig:del_view_initial}
 \end{figure}
 
@@ -305,10 +311,10 @@ Colour pallet - need to maintain consisten design when adding delegation feature
 \section{Summary}
 The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle. Initially, the research highlighted critical limitations in traditional liquid democracy systems, such as the formation of delegation cycles, the risks associated with abstentions, and the disproportionate influence of super-voters. These insights showed the need for implementing delegation mechanisms that are capable of addressing these challenges effectively.
 
-Research into these mechanisms revealed several promising methods. Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness. Vote splitting was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates. Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from platforms like Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
+Research into these mechanisms revealed several promising methods. Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness. Vote splitting was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates. Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
 
 To ensure a thorough evaluation of these delegation mechanisms before full-scale integration, agent-based modelling was selected as a suitable method, with the Mesa framework identified as the most practical choice due to its ease of use, Python compatibility, and flexibility for rapid experimentation.
 
 The technological constraints of vodle itself, especially the reliance on client-side processing due to the CouchDB architecture, demonstrated the need for efficient, lightweight implementation strategies.
 
-These insights collectively define the project's objectives, which are structured and detailed in the following chapter. The objectives are designed explicitly to address the limitations uncovered in the research, ensuring the integration of liquid democracy into vodle is practical, user-friendly, and aligned with established best practices.
+These insights collectively define the project's objectives, which are formalised in the following chapter. The objectives are designed explicitly to address the limitations uncovered in the research, ensuring the integration of liquid democracy into vodle is practical, user-friendly, and aligned with established best practices.

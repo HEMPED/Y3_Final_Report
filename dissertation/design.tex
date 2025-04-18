@@ -1,10 +1,10 @@
 \chapter{Design and Implementation}
 \label{ch:design_implementation}
 
-This chapter outlines the design choices and technical implementation of the delegation mechanisms introduced into the vodle platform. Each section corresponds to a key objective defined in the previous chapter, detailing how it was approached within the constraints of vodle's architecture and data model. These approaches are informed directly by the findings presented in Chapter~\ref{ch:background}, which highlighted key weaknesses in traditional liquid democracy systems and surveyed alternative mechanisms with practical benefits.
+This chapter outlines the design choices and technical implementation of the delegation mechanisms introduced into the vodle platform. Each section corresponds to a key objective defined in the previous chapter, detailing how it was approached within the constraints of vodle's architecture and data model.
 
 \section{System Architecture Overview}
-Vodle is built as a serverless web application that emphasises accessibility, client-side performance, and ease of deployment. Its architecture comprises three main components:
+Vodle is built as a serverless web application that emphasises accessibility, client-side performance, and ease of deployment. Its architecture comprises two components:
 
 \begin{itemize}
   \item \textbf{Frontend:} Implemented using Angular and the Ionic framework, the frontend provides a responsive and modular interface that works across both desktop and mobile devices. The use of Angular facilitates the creation of component-based user interfaces, essential for introducing interactive features such as the ranked delegation UI and vote splitting sliders.
@@ -15,101 +15,116 @@ Vodle is built as a serverless web application that emphasises accessibility, cl
     \item The lack of a traditional server-side backend limits opportunities for centralised verification or caching, increasing the complexity of handling dynamic delegation graphs client-side.
     \item Data structures must be serialised and de-serialised as JSON, requiring careful schema design to ensure backwards compatibility and clarity across different types of delegations.
   \end{itemize}
-  \item \textbf{Interaction Flow:} A user-delegation interaction begins when a user initiates a delegation, shares a link, and their selected delegate accepts it. From that point, the delegate can act on behalf of the original user. The logic for resolving delegation chains and calculating final vote weights occurs whenever a delegation is accepted or modified.
 \end{itemize}
 
-\begin{figure}[H]
-  \centering
-  %\includegraphics[width=0.9\linewidth]{../common/delegation_flow_diagram.png}
-  \caption{Overview of user-delegation interaction in vodle.}
-  \label{fig:delegation-architecture}
-\end{figure}
+\section{Implement a Core Delegation Model into Vodle}
 
-\section{Data Model Design}
+The core delegation mechanism was expanded into a fully operational system with support for delegation invitations, revocation, transitive resolution, and cycle detection.
+
+\subsubsection{Delegation Interaction Flow}
+
+A user initiates a delegation by selecting a delegate and sending them a unique link tied to a specific poll. When the recipient accepts the invitation, they gain permission to submit a vote on the user's behalf.
+
+Delegated users can use their own vote for any option by using a toggle. For untoggled options, the vote is taken from their direct delegate by querying the database for the delegate's vote. Transitive delegation is automatically resolved by following the chain until a casting voter is found.
+
+% egin{figure}[H]
+% \centering
+% %\includegraphics[width=0.9\linewidth]{../common/delegation\_flow\_diagram.png}
+% \caption{Overview of user-delegation interaction in vodle.}
+% \label{fig:delegation-architecture}
+% \end{figure}
+
+\subsubsection{Issues Identified}
+
+Before the redesign, several critical issues were identified in the core delegation logic:
+
 \begin{itemize}
-  \item Overview of how delegation data is structured in CouchDB
-  \item Storage format for different delegation types:
-  \begin{itemize}
-    \item Core
-    \item Ranked
-    \item Vote splitting
-    \item Option-specific
-  \end{itemize}
-  \item JSON examples for each data format
-  \item Discussion of schema compatibility and serialisation
+    \item \textbf{No enforcement of cycle prevention:} It was possible for users to create cyclic delegations, leading to resolution loops.
+    \item \textbf{Inconsistent UI feedback:} Delegated users were not correctly informed about how many others they were representing.
 \end{itemize}
 
-\section{Core Delegation Model}
+\subsubsection{Fixes and Enhancements}
+To address these problems, several key fixes were implemented:
+
 \begin{itemize}
-  \item Description of the existing implementation and its limitations
-  \item Improvements made:
-  \begin{itemize}
-    \item Invitation and acceptance logic
-    \item Transitive delegation
-    \item Cycle detection enhancements (motivated by issues outlined in Section~2.1.1 of Chapter~\ref{ch:background})
-  \end{itemize}
-  \item Code snippets and UI screenshots
+    \item \textbf{Consistent cycle checking:} The system now uses an \texttt{inverse\_indirect\_map} to maintain a live view of indirect delegations. When a user clicks a delegation link, the sender's ID is checked against this map to detect cycles before they are committed.
+    \item \textbf{UI accuracy improvements:} The interface now consistently displays ``your vote is used for \textit{n} other people'' using the inverse map to track vote reach in real time.
 \end{itemize}
 
-\section{Ranked Delegation}
+\subsubsection{Cycle Detection}
+Cycle detection uses the \texttt{inverse\_indirect\_map}, where each key is a user ID and the value is a list of users who have delegated to them, either directly or indirectly.
+
 \begin{itemize}
-  \item Description of the UI for setting delegate rankings
-  \item Explanation of the MinSum algorithm and why it was selected
-  \item Implementation of ranked delegation path resolution
-  \item Graphical illustrations and code snippets
+    \item When a user clicks on a delegation link, the system checks if the sender of the link is already in the accepting user's indirect delegator list.
+    \item If so, a cycle would be formed, and the delegation is rejected.
+    \item Upon acceptance, the inverse map is updated by appending the sender's delegators to the recipient's list. This updated value is stored and serialised in the database.
+    \item When a delegation is revoked, the inverse map is also updated to remove the affected paths.
 \end{itemize}
 
-This feature directly addresses the issue of vote loss due to unavailable delegates, as described in Chapter~\ref{ch:background}. Ranked delegation ensures fallback options are available, reducing the likelihood of vote loss due to abstention or cycle involvement.
+This approach allows for constant-time checks when handling delegation actions and scales efficiently with the number of users.
 
-\section{Vote Splitting Delegation}
+\subsubsection{Challenges}
+Implementing consistent, real-time cycle detection using a fully client-side model was particularly challenging. Ensuring that the inverse map remained accurate and efficiently serialised under all scenarios---such as nested revocations or reassignments---required careful handling of delegation state. Additionally, updating the user interface to reflect the latest delegation status based on map values added further complexity.
+
+\subsubsection{Outcome}
+The revised implementation fully satisfies the core functional requirements for delegation, including user control, transitive resolution, and privacy-preserving representation.
+
+\section{Implement Ranked Delegation into Vodle}
+This feature introduced ranked delegation using the MinSum rule, allowing users to list fallback delegates in case their primary choice was unavailable.
+
 \begin{itemize}
-  \item UI design for assigning weights to multiple delegates
-  \item Computation of final ratings from weighted delegations
+  \item UI for setting delegate rankings
+  \item Explanation and application of the MinSum rule
+  \item Implementation of ranked path resolution
+  \item Illustrations and code snippets
+\end{itemize}
+
+\subsubsection{Challenges}
+The MinSum rule had to be implemented efficiently using only browser-based resources. Ranking resolution had to preserve user intent while avoiding delegation ambiguity. Providing visual feedback to help users understand how rankings would resolve added an additional layer of design complexity.
+
+\section{Implement a Vote Splitting Delegation Mechanism into Vodle}
+Vote splitting was implemented to allow users to distribute fractional influence to multiple delegates.
+
+\begin{itemize}
+  \item UI for assigning weights
+  \item Computation of weighted vote outcomes
   \item Constraints:
   \begin{itemize}
-    \item Total weight limit
+    \item Weight sum limit (\texttt{< 1.0})
     \item Error handling
   \end{itemize}
-  \item Algorithm integration and testing
+  \item Algorithm integration and frontend testing
 \end{itemize}
 
-Vote splitting provides a mechanism to mitigate the influence of super-voters (Chapter~\ref{ch:background}, Section~2.1.3), by enabling distributed influence rather than concentrating votes in a single delegate.
+\subsubsection{Challenges}
+The vote splitting logic needed to maintain consistency with the MaxParC aggregation model, while ensuring intuitive user experience. Edge cases (e.g., partially overlapping delegate chains or missing data) introduced complexity during testing. Rendering weight distributions clearly in the UI while keeping the interface lightweight was a recurring challenge.
 
-\section{Option-Specific Delegation}
+\section{Implement the Ability to Delegate Individual Options to Different Users}
+This feature enabled per-option delegation, allowing users to assign a different delegate for each item in a poll.
+
 \begin{itemize}
-  \item Interface design for assigning delegates per option
-  \item Justification from background research (e.g. category-specific delegation in Google Votes)
-  \item Implementation of independent resolution per option
-  \item Data structure considerations
+  \item Per-option delegate selection interface
+  \item Independent resolution of each delegated option
+  \item Storage schema modifications
 \end{itemize}
 
-Inspired by the design of Google Votes (Chapter~\ref{ch:background}), this feature improves expressiveness and relevance in delegation by aligning delegation choices with topic-specific expertise.
+\subsubsection{Challenges}
+This mechanism required updates to the internal delegation logic to handle resolution at the option level. The user interface also had to be adapted to display multiple concurrent delegate selections without overwhelming the user. Debugging resolution logic for hybrid delegation modes (e.g., one direct, one split, one ranked) was non-trivial.
 
-\section{Simulation Engine}
-Although agent-based modelling (ABM) was initially proposed as a method for validating delegation mechanisms in dynamic contexts (see Chapter~\ref{ch:background}), it was not implemented due to time constraints. This decision and its implications will be discussed further in the Project Management chapter.
-
-\section{Integration and Testing}
-\begin{itemize}
-  \item Testing approach:
-  \begin{itemize}
-    \item Unit testing
-    \item Integration testing
-    \item UI testing
-  \end{itemize}
-  \item Use of Angular testing tools (Jasmine, Karma)
-  \item Git branching strategy and development workflow
-\end{itemize}
+\section{Simulate Delegation Mechanisms}
+The simulation objective was de-scoped due to time constraints and prioritisation of implementation work. While initial planning and framework selection (Mesa) were completed, no functional simulation code was delivered. The decision to drop this extension is discussed further in the Project Management chapter.
 
 \section{Design Decisions and Trade-offs}
 \begin{itemize}
-  \item Handling client-side complexity
-  \item Delegation resolution performance
-  \item Usability vs. expressiveness in the UI
+  \item All logic had to run client-side due to the serverless CouchDB architecture, limiting complexity and computational resources.
+  \item A consistent JSON format was required for all data models, impacting flexibility in data design.
+  \item Trade-offs were made between expressive delegation types and usability, particularly in the option-specific and vote splitting interfaces.
 \end{itemize}
 
 \section{Summary}
 \begin{itemize}
-  \item Recap of design challenges and how they were addressed
-  \item How implementation choices align with the core project goals and constraints, as well as solutions identified through background research
+  \item Each objective was successfully implemented within the constraints of the vodle platform.
+  \item Challenges were primarily technical (client-side performance, real-time resolution) and design-oriented (clarity and control for users).
+  \item The final implementation offers a modular, extensible delegation system that addresses the key theoretical and practical limitations outlined in earlier chapters.
 \end{itemize}
 

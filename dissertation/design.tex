@@ -1,23 +1,25 @@
 \chapter{Design and Implementation}
 \label{ch:design_implementation}
+This chapter describes the design and implementation of the delegation mechanisms integrated into vodle, detailing both the technical approach and practical decisions made throughout development. It begins by outlining vodle's existing system architecture, clarifying how this influenced the integration of new delegation features. 
 
-This chapter outlines the design choices and technical implementation of the delegation mechanisms introduced into the vodle platform. Each section corresponds to a key objective defined in the previous chapter, detailing how it was approached within the constraints of vodle's architecture and data model.
+Each subsequent section aligns directly with one of the project objectives defined previously, explaining the rationale behind key design choices, algorithms, and interface elements. Emphasis is placed on the critical design trade-offs and challenges encountered, highlighting how constraints such as the serverless architecture and client-side computation informed implementation decisions.
 
 \section{System Architecture Overview}
 Vodle is built as a serverless web application that emphasises accessibility, client-side performance, and ease of deployment. Its architecture comprises two components:
 
-\begin{itemize}
+\begin{enumerate}
   \item \textbf{Frontend:} Implemented using Angular and the Ionic framework, the frontend provides a responsive and modular interface that works across both desktop and mobile devices. The use of Angular facilitates the creation of component-based user interfaces, essential for introducing interactive features such as the ranked delegation UI and vote splitting sliders.
-  \item \textbf{Backend:} Vodle uses CouchDB as its database. There is no custom backend logic or middleware; instead, the application communicates directly with CouchDB over HTTP. All documents, including user ratings and delegation structures, are stored in JSON format.
-  \item \textbf{Implications of a serverless architecture:}
-  \begin{itemize}
-    \item All vote delegation logic, including transitive resolution, cycle detection, and vote splitting calculations, must be executed in the browser. This places constraints on performance and requires careful optimisation of algorithms used.
-    \item The lack of a traditional server-side backend limits opportunities for centralised verification or caching, increasing the complexity of handling dynamic delegation graphs client-side.
-    \item Data structures must be serialised and de-serialised as JSON, requiring careful schema design to ensure backwards compatibility and clarity across different types of delegations.
-  \end{itemize}
+  \item \textbf{Backend:} Vodle uses CouchDB as its database. There is no custom backend logic or middleware; instead, the frontend application communicates directly with CouchDB over HTTP.
+\end{enumerate}
+
+\subsubsection{Implications of This Architecture}
+Vodle's serverless architecture has several implications for the design and implementation of the delegation mechanisms, especially due to the absence of a traditional data processing backend. The following points summarise the key considerations:
+\begin{itemize}
+  \item All vote delegation logic, including transitive resolution, cycle detection, and vote splitting calculations, must be executed in the browser. This places constraints on performance and requires careful optimisation of algorithms used.
+  \item CouchDB's document-based storage model means that all data must be serialised and deserialised in JSON format. This affects how data structures are designed and manipulated, as well as how they are stored and retrieved from the database.
 \end{itemize}
 
-\subsection{CouchDB overview}
+\subsection{CouchDB Configuration}
 % Each used remote CouchDB is identified by the URL of a CouchDB server (!) 
 % (rather than the URL of a database contained in that server!).
 % The CouchDB server must provide:
@@ -71,21 +73,28 @@ At runtime the app must therefore support:
   \item Revocation that is immediate yet conflict-free if multiple clients are open.
 \end{enumerate}
 
-\subsection{Current Issues Prior to Redesign}
-\begin{description}
-  \item[Out-of-sync state] Each browser session cached its own copy of the delegation graph; no push notifications existed to bring other clients up-to-date.
-  \item[Inconsistent cycle checking] Because state diverged, the local "no-loop" tests sometimes produced different answers on different machines.
-  \item[UI drift] Controls such as ``delegate none/some/all'' and the ``your vote is used for \(n\) others'' badge used stale data and became misleading.
-\end{description}
+\subsection{Issues Prior to Redesign - TODO}
+The original implementation of liquid democracy in vodle functions as a proof-of-concept, but it has several limitations that hinder its usability and reliability. The following sections outline some of the key issues that were identified whilst planning the redesign.
+
+\textbf{Inconsistency in data between clients} delegation graph not synched -- leads to cycle checking issue \dots
+
+\paragraph{Out-of-sync state} Each browser session cached its own copy of the delegation graph; no push notifications existed to bring other clients up-to-date.
+\paragraph{Inconsistent cycle checking} Because state diverged, the local "no-loop" tests sometimes produced different answers on different machines.
+\paragraph{UI drift} Controls such as ``delegate none/some/all'' and the ``your vote is used for \(n\) others'' badge used stale data and became misleading.
 
 \subsection{Cycle Checking}
-The following section details the design and implementation of a cycle-checking algorithm that was added to the core delegation model as well as the data structures and synchronisation mechanisms that were introduced to support it.
+Robust cycle detection is a core requirement for any system implementing transitive delegation. In liquid democracy, cycles render votes unresolved and potentially lost, directly undermining the integrity of the outcome. Given vodle's dynamic and client-driven architecture, it was crucial to implement an efficient, client-side mechanism that could detect and prevent cycles in real time, without requiring server-side intervention or excessive computation.
+
+The original implementation of cycle prevention in vodle was incomplete and inconsistently enforced. Because delegation data was locally cached and not always synchronised across clients, users could unknowingly create cycles that would only be caught (or missed) depending on the state of their browser session. This led to erratic user experiences, where a delegation might succeed on one device but be rejected on another.
+
+The redesigned cycle checking approach addresses this inconsistency through the introduction of a shared data structure, stored in CouchDB and updated collaboratively by all clients. This ensures consistent validation of new delegations and enables immediate feedback to users attempting to create an invalid delegation path. The remainder of this section details the algorithmic choices, data structures, and UI modifications used to implement reliable cycle detection in vodle.
+
 \subsubsection{Algorithm Design}
 The current delegations in a system can be represented as a directed graph where each user is represented as a node and each delegation is represented as a directed edge $(u,v)$, where $u$ is the delegator and $v$ is the delegate. The goal of the cycle-checking algorithm is to ensure that a proposed delegation does not create a cycle in this directed graph.
 
 A new delegation $X\to Y$ is valid if and only if $Y$ is \emph{not} reachable from $X$ in that DAG -- if $Y$ is not a descendant of $X$.
 
-Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. This implementation will be detailed in the following section.
+Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. The implementation of this algorithm is detailed in the next section.
 
 \subsubsection{Implementation Details}
 A hashmap is used to store the descendants of each user. The keys are user IDs, and the values are sets of user IDs representing the direct delegates of that user. In the code, this hashmap is referred to as ``\verb|inverse_indirect_map|''.
@@ -102,43 +111,40 @@ A hashmap is used to store the descendants of each user. The keys are user IDs, 
   \label{fig:inverse_indirect_map}
 \end{figure}
 
-This structure allows for the following operations:
-\paragraph{Check Delegation} To check if a delegation \(X\!\to\!Y\) is valid, we simply check if \(Y\) is in the set of descendants of \(X\). This operation takes \(O(1)\) time.
-\begin{figure}[H]
-  \centering
-  \begin{minted}{javascript}
-    const inverse_indirect_map = this.G.D.get_inverse_indirect_map(pid);
-    const descendant_set = inverse_indirect_map.get(delegate_vid);
-    if (descendant_set.has(myvid)) {
-      cycle = true;
-    }
-  \end{minted}
-  \caption{Code for checking if a delegation is valid. This check is done when a user clicks on a delegate link. The map is retrieved from the synced local cache, and the set of descendants for the delegator is checked to see if it contains the current user.}
-\end{figure}
-
+This map enables several key operations required for maintaining a consistent and cycle-free delegation graph:
 
 \begin{itemize}
-  \item \textbf{Check Delegation}: to decide if \(X\!\to\!Y\) is legal, verify that \verb|Y| $\notin$ \verb|map[X]| (\(O(1)\)).
-  \item \textbf{Add Edge}: \verb|map[Y]| $\leftarrow$ \verb|map[Y]| $\cup$ \verb|map[X]| $\cup$ \{\verb|X|\}.
-  \item \textbf{Remove Edge}: \verb|map[Y]| $\leftarrow$ \verb|map[Y]| \textbackslash{} (\verb|map[X]| $\cup$ \{\verb|X|\}). Because the graph is a DAG, it is not possible for the descendants of $X$ to be a subset of the descendants of $Y$ after removing the edge $X\to Y$.
+  \item \textbf{Check Delegation Validity:} To determine whether a delegation \(X \!\to\! Y\) would create a cycle, the system checks if \(Y\) already appears in the set of descendants of \(X\). If so, the new delegation is invalid. This check takes \(O(1)\) time.
+  \begin{figure}[H]
+    \centering
+    \begin{minted}{javascript}
+      const inverse_indirect_map = this.G.D.get_inverse_indirect_map(pid);
+      const descendant_set = inverse_indirect_map.get(delegate_vid);
+      if (descendant_set.has(myvid)) {
+        cycle = true;
+      }
+    \end{minted}
+    \caption{Code for checking if a delegation is valid. This check is triggered when a user clicks on a delegate link. The map is retrieved from the synchronised local cache, and the set of descendants is used to confirm that a cycle would not be formed.}
+  \end{figure}
+
+  \item \textbf{Add Delegation Edge:} When a new delegation \(X \to Y\) is accepted, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to include both \(X\) and all of \(X\)'s current descendants.
+
+  \item \textbf{Remove Delegation Edge:} When a delegation \(X \!\to\! Y\) is removed, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to remove both \(X\) and all of \(X\)'s current descendants.
 \end{itemize}
 
-\paragraph{Persistence} The map lives alongside the poll document so every client shares one authoritative copy. Although ordinary poll docs are append-only, a special admin rule now allows updates at the key \verb|inverse_indirect_map|. Conflict fields (\verb|_rev| in CouchDB) ensure last-write-wins semantics while we serialise edits.
+\subsubsection{Synchronisation -- TODO}
+Explain CouchDB problem with poll db and user db. Every user needs to be able to fetch and push \verb|inverse_indirect_map|.
 
-\subsubsection{Practical Challenges}
-\begin{itemize}
-  \item blank 4 now.
-\end{itemize}
+\subsubsection{Practical Challenges -- TODO}
 
-\subsection{UI Fixes}
+\subsection{User Interface Changes -- TODO}
 \begin{itemize}
   \item Re-bound the ``delegate none/some/all'' switch so it toggles \emph{only} the current option and refreshes its label after server confirmation.
   \item Re-implemented the ``vote is used for \(n\) others'' badge so it recomputes from the latest \texttt{inverse\_indirect\_map} rather than client guesses.
   \item Added unobtrusive toast notifications when a delegation request is rejected (e.g.\ cycle detected) so the user can immediately choose another delegate.
 \end{itemize}
 
-\subsection{Summary}
-The redesign introduced a lightweight yet provably correct cycle-checking algorithm, synchronised across clients by persisting an \texttt{inverse\_indirect\_map} in the poll document. Combined with targeted UI fixes, the core delegation model now (i) prevents loops, (ii) reflects state consistently across devices, and (iii) scales to thousands of voters without central servers.
+\subsection{Summary -- TODO}
 
 
 \section{Implement Ranked Delegation into Vodle}
@@ -146,8 +152,10 @@ This feature introduced ranked delegation using the MinSum rule, allowing users 
 
 \begin{itemize}
   \item UI for setting delegate rankings
+  \item New UI when making a poll to allow user to select ranked delegation.
   \item \verb|direct_delegation_map|: maps user IDs to list of ranked delegates [[delegationid, rank, status]...]
   \item Explanation and application of the MinSum rule
+  \item How do we determine who is a casting voter?
   \item Implementation of ranked path resolution
   \item Illustrations and code snippets
 \end{itemize}
@@ -167,6 +175,7 @@ Vote splitting was implemented to allow users to distribute fractional influence
     \item Weight sum limit (\texttt{< 1.0})
     \item Error handling
   \end{itemize}
+  \item Optimisations to limit database writes.
   \item Algorithm integration and frontend testing
 \end{itemize}
 

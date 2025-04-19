@@ -135,44 +135,41 @@ For our implementation, MinSum will be chosen as the delegation rule because it 
 
 \subsection*{Vote Splitting}\label{subsec:vote_splitting_background}
 
-Delegating a full vote to a single individual, while simple, imposes unnecessary constraints on voter expression. As discussed in the previous sections, a single point of delegation increases vulnerability to vote loss through abstentions or cycles, and creates disproportionate power structures when many voters rely on the same delegate. Vote splitting addresses these concerns by allowing users to retain control over a portion of their vote and distribute the rest among multiple trusted individuals.
+Traditional delegation systems, which require voters to delegate their entire vote to a single individual, introduce significant risks such as vote loss through delegate abstentions, delegation cycles, and excessive concentration of voting power in the hands of a few super-voters. To mitigate these issues, vote splitting allows voters to distribute their voting power among multiple delegates. This approach provides greater flexibility and robustness while preserving voter intent more accurately.
 
-From a user experience perspective, vote splitting is intuitive and empowering. It aligns with how people make decisions in real life: partial trust is more common than absolute trust. By enabling voters to assign portions of their influence to different peers, this mechanism offers:
+Vote splitting offers several key advantages:
 \begin{itemize}
-  \item \textbf{Granular control:} Voters can balance personal agency with trust in others.
-  \item \textbf{Resilience:} If one delegate is unavailable or abstains, the remaining delegates can still cast their votes, reducing the risk of total vote loss.
-  \item \textbf{Distributed influence:} The risk of super-voters is reduced when votes are more evenly distributed.
+  \item \textbf{Increased resilience:} Distributing votes across multiple delegates reduces the impact of any single delegate abstaining or becoming unavailable, thus lowering the risk of vote loss.
+  \item \textbf{Reduced concentration of power:} Allowing partial votes to different delegates decreases the likelihood of any single delegate becoming a super-voter.
+  \item \textbf{Enhanced voter expression:} Voters can more precisely express their preferences and trust levels by allocating voting power proportionally to multiple individuals.
 \end{itemize}
 
-However, enabling partial delegation raises a number of important design and implementation challenges:
+Several methodologies for implementing vote splitting have been explored in the literature, each with its strengths and weaknesses:
+
+\subsubsection*{Equal Vote Distribution~\citep{degrave2014}}
+Degrave's approach allows voters to distribute their votes evenly among multiple delegates. Voters select a group of delegates, and their vote is equally distributed amongst those that do not abstain.
+Although this system is intuitive and reduces the impact of abstentions, it lacks flexibility as voters cannot express differing trust levels towards each delegate. Additionally, a critical limitation is the inability for voters to allocate any portion of their vote to themselves, meaning voters are forced to either delegate their entire voting power or none of it, severely limiting personal control over a user's final vote.
+
+\subsubsection*{Fractional Delegation~\citep{bersetche2024}}
+Bersetche et al. introduce fractional delegation, allowing voters to explicitly assign different weights to each chosen delegate, including themselves. Delegates each receive a specified fraction of the voter's total voting power, reflecting the voter's nuanced trust and preference levels. This approach captures detailed voter preferences accurately and allows for greater personal agency compared to equal vote distribution. However, fractional delegation introduces additional complexity in managing and tracking these weighted delegations. Users must explicitly manage multiple numerical allocations, which may increase cognitive load and complicate user interfaces.
+
+\subsubsection*{Trust Matrix Model}
+In the trust matrix model, voters define explicit trust values \( \text{trust}_{i,j} \), representing how much voter \( i \) trusts voter \( j \). Each voter also assigns their personal rating (\( \text{self}_i \)). The effective rating for each voter is computed iteratively using the equation:
+\[
+\text{eff}_i = \text{trust}_{i,i} \cdot \text{self}_i + \sum_{j \neq i}\text{trust}_{i,j} \cdot \text{eff}_j
+\]
+
+Here, each voter's trust values (including self-trust) must sum to at most 1. The iterative computation continues until the change in effective ratings between iterations falls below a predefined threshold \( \epsilon \). This approach offers the highest granularity and expressive power, allowing voters to precisely articulate nuanced trust relationships among multiple delegates. However, it comes with considerable computational complexity and potential convergence issues, especially in large networks with dense delegation relationships. Additionally, users may find it challenging to specify and manage such detailed trust matrices, negatively affecting usability.
+
+\subsubsection*{Summary of Approaches}
+In summary, each vote-splitting method balances voter expressivity, computational complexity, user interface clarity, and resilience differently:
 \begin{itemize}
-  \item \textbf{Cycle handling:} Even with vote splitting, cycles can still occur, potentially leading to lost votes.
-  \item \textbf{Transparency:} It must be easy for voters to understand how their vote has been used and how much influence they retain.
+  \item \textbf{Equal Vote Distribution (Degrave)} excels in simplicity and ease of implementation, ensuring robustness through straightforward delegation. However, it significantly limits voter expression and prohibits voters from allocating votes to themselves.
+  \item \textbf{Fractional Delegation (Bersetche)} provides greater flexibility, permitting detailed voter preference expression, including self-allocation of votes. This method increases both computational complexity and interface complexity.
+  \item \textbf{Trust Matrix Iterative Model} offers the highest expressivity and detail in delegation relationships, capturing complex trust dynamics. However, this method entails substantial computational overhead and introduces complexity in terms of usability and understanding for voters.
 \end{itemize}
 
-To address these issues, several approaches have been proposed:
-
-\paragraph{\cite{degrave}: }
-%Each voter distributes their full voting power across several proxies. The model computes a global equilibrium by recursively resolving delegations until only casting votes remain. However, it enforces $t_{i,i} = 0$, meaning voters who use the mechanism entirely forfeit their direct say. Moreover, the system does not limit how far delegated weight can propagate, allowing long chains to accumulate negligible contributions that still affect the outcome.
-Voters can either vote directly or delegate their entire vote evenly across one or more delegates. 
-
-\paragraph{Bersetche: }
-
-\paragraph{New}
-This project proposes a linear fixed-point model as a practical and interpretable alternative. Each voter~$i$ defines trust weights $t_{i,j}$ for all $j$, such that $\sum_j t_{i,j} = 1$ and $t_{i,i} > 0$. Given a rating $r_i$ for each voter, the effective rating $e_i$ is defined recursively:
-\begin{equation}
-    e_i = t_{i,i} r_i + \sum_{\substack{j=1 \\ j \ne i}}^n t_{i,j} e_j
-\end{equation}  
-This formulation has desirable theoretical properties:
-\begin{itemize}
-  \item \textbf{Self-weight preservation:} A voter who retains $x\%$ of their vote always contributes at least that much to the outcome.
-  \item \textbf{Cycle safety:} The requirement that $t_{i,i} > 0$ ensures the system matrix is diagonally dominant, guaranteeing convergence even in the presence of cycles.
-  \item \textbf{Smoothness:} The outcome varies continuously with trust weights, making the system robust and predictable.
-  \item \textbf{No external hyperparameters:} Unlike Bersetche's model, no discount factor must be tuned.
-\end{itemize}
-
-\subsubsection*{Summary}
-Vote splitting introduces flexibility, robustness, and fairness into delegation systems, but also demands care in design. Any adopted mechanism must resolve cycles safely, ensure damping of long chains, and remain interpretable. While each of the surveyed models has unique strengths, the trust-weighted fixed-point rule offers a balanced and principled foundation. It supports user agency, avoids parameter tuning, and ensures stable aggregation--making it a strong candidate for integration into vodle in the chapters that follow.
+Considering the priorities of the vodle platform--usability, intuitive interfaces, computational efficiency, and maintaining voter agency-- \dots
 
 
 \section{Existing Implementations of Liquid Democracy}

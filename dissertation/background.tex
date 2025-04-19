@@ -2,27 +2,20 @@
 
 This chapter provides background context for the development of a liquid democracy system within vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of vodle as a platform are explored.
 
-Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters within these diagrams, the following symbols are used:
-\begin{itemize}
-  % \item \textbf{Circles} indicate voters who \textit{delegate} their vote to someone else.
-  % \item \textbf{Squares} represent \textit{casting voters}, those who who cast their own vote and do not delegate.
-  % \item \textbf{Triangles} show voters who \textit{abstain} - neither voting directly nor delegating to others.
-  \item \textbf{Circle: } \textit{Delegated voter} - a voter that has delegated and therefore does not cast their own vote.
-  \item \textbf{Square: } \textit{Casting voter} - a voter that has not delegated and casts their own vote.
-  \item \textbf{Triangle: } \textit{Abstaining voter} - a voter that neither delegates nor casts their own vote.
-\end{itemize}
-
-\section{Liquid Democracy}
+\section{Liquid Democracy -- TODO: FIX INTRO}
 
 Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain \citep{blum_liquid_2016}. A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
 
 Although transitivity provides greater flexibility to the voters, 
-%Whilst the transitivity property enables concentration of voting power with trusted individuals,
 it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating ``super-voters''. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed later in this chapter.
 
-%\cite{ford_delegative_2002} argues that direct democracy becomes ineffective at scale due to the diversity in participants' knowledge and interest. Without mechanisms to channel influence through trusted intermediaries, the collective outcome may reflect average rather than informed decision-making. Liquid democracy addresses this by enabling voters to shift influence toward participants with greater expertise or engagement.
-
-\subsection{Issues with Liquid Democracy}
+\subsection{Issues with Liquid Democracy -- TODO:INTRO}
+Throughout this section, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters within these diagrams, the following symbols are used:
+\begin{itemize}
+  \item \textbf{Circle: } \textit{Delegated voter} -- a voter that has delegated and therefore does not cast their own vote.
+  \item \textbf{Square: } \textit{Casting voter} -- a voter that has not delegated and casts their own vote.
+  \item \textbf{Triangle: } \textit{Abstaining voter} -- a voter that neither delegates nor casts their own vote.
+\end{itemize}
 
 \subsection*{Delegation cycles}
 \begin{figure}[h]

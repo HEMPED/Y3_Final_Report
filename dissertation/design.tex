@@ -17,63 +17,136 @@ Vodle is built as a serverless web application that emphasises accessibility, cl
   \end{itemize}
 \end{itemize}
 
-\section{Implement a Core Delegation Model into Vodle}
+\subsection{CouchDB overview}
+% Each used remote CouchDB is identified by the URL of a CouchDB server (!) 
+% (rather than the URL of a database contained in that server!).
+% The CouchDB server must provide:
+% - a user database named '_users' (which is the standard name for user databases)
+% - a database named 'vodle' that will contain the data
+% - a user named 'vodle' that has write access to both (!) these databases.
+% 
+% The user 'vodle' will be used by the vodle app to automatically create the other database users
+% ('vodle.user.UUU', 'vodle.poll.PPP', and 'vodle.poll.PPP.voter.VVV')
+% when a user logs in the first time, changes their password, creates a new poll, 
+% or starts participating in a poll as a voter.
+% This way the database administrator only needs to be involved when setting up the database initially,
+% but not later on to create users.
+% 
+% Although the database user 'vodle' can create users, it cannot delete or modify users or read their passwords.
+% Also, neither the database user 'vodle' or 'vodle.poll.PPP' can change their own password.
+% This way, no-one can delete or overtake the database users 'vodle.user.UUU' or 'vodle.poll.PPP.voter.VVV'
+% of any other person or prevent others from accessing their personal, poll, or voter data.
 
-The core delegation mechanism was expanded into a fully operational system with support for delegation invitations, revocation, transitive resolution, and cycle detection.
+\section{Implement a Core Delegation Model into vodle}
+\label{sec:core_delegation_detailed}
 
-\subsubsection{Delegation Interaction Flow}
+This section provides a self-contained, technical narrative of how the core delegation mechanism was conceived, which problems it solved, and how the final client-side implementation works. It follows the structure below so that each stage (from user interaction to data consistency) can be expanded or shortened independently during editing.
 
-A user initiates a delegation by selecting a delegate and sending them a unique link tied to a specific poll. When the recipient accepts the invitation, they gain permission to submit a vote on the user's behalf.
+\subsection{Delegation Interaction Flow}
+Figure~\ref{fig:delegation-flow} depicts the life-cycle of a delegation. The diagram is intentionally simple--only the four message exchanges required to set up or tear down a delegation are shown--so the reader can map each arrow to a concrete API call or UI control.
 
-Delegated users can use their own vote for any option by using a toggle. For untoggled options, the vote is taken from their direct delegate by querying the database for the delegate's vote. Transitive delegation is automatically resolved by following the chain until a casting voter is found.
+% ------------- DIAGRAM PLACEHOLDER -------------
+% Replace the TikZ skeleton with an exported SVG once finalised.
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[node distance=3cm,>=stealth,thick]
+    % clients
+    \node[rectangle,draw,rounded corners,fill=gray!5] (A) {Delegator A};
+    \node[rectangle,draw,rounded corners,fill=gray!5,right of=A] (B) {Delegate B};
+    % arrows
+    \draw[->] (A) -- node[above]{share link} (B);
+    \draw[->,dashed] (B) .. controls +(0,1.5) and +(0,1.5) .. node[above]{accept} (A);
+    \draw[->] (B.south) -- ++(0,-1.2) node[midway,right]{casts vote};
+    \draw[->] (A.south) -- ++(0,-1.2) node[midway,left]{tally uses B};
+  \end{tikzpicture}
+  \caption{Minimal message sequence for creating a delegation. Only four interactions are required: (1) A shares a link, (2) B accepts, (3) B may cast or delegate further, (4) A's vote resolves through B.}
+  \label{fig:delegation-flow}
+\end{figure}
 
-% egin{figure}[H]
-% \centering
-% %\includegraphics[width=0.9\linewidth]{../common/delegation\_flow\_diagram.png}
-% \caption{Overview of user-delegation interaction in vodle.}
-% \label{fig:delegation-architecture}
-% \end{figure}
+At runtime the app must therefore support:
+\begin{enumerate}
+  \item Generating and copying a poll-scoped, user-scoped invitation link.
+  \item Polling CouchDB for acceptance (or rejection) of that link.
+  \item A client-side resolution routine that follows the chain of \texttt{delegateFor} relationships until a casting voter is found.
+  \item Revocation that is immediate yet conflict-free if multiple clients are open.
+\end{enumerate}
 
-\subsubsection{Issues Identified}
+\subsection{Current Issues Prior to Redesign}
+\begin{description}
+  \item[Out-of-sync state] Each browser session cached its own copy of the delegation graph; no push notifications existed to bring other clients up-to-date.
+  \item[Inconsistent cycle checking] Because state diverged, the local "no-loop" tests sometimes produced different answers on different machines.
+  \item[UI drift] Controls such as ``delegate none/some/all'' and the ``your vote is used for \(n\) others'' badge used stale data and became misleading.
+\end{description}
 
-Before the redesign, several critical issues were identified in the core delegation logic:
+\subsection{Cycle Checking}
+The following section details the design and implementation of a cycle-checking algorithm that was added to the core delegation model as well as the data structures and synchronisation mechanisms that were introduced to support it.
+\subsubsection{Algorithm Design}
+The current delegations in a system can be represented as a directed graph where each user is represented as a node and each delegation is represented as a directed edge $(u,v)$, where $u$ is the delegator and $v$ is the delegate. The goal of the cycle-checking algorithm is to ensure that a proposed delegation does not create a cycle in this directed graph.
+
+A new delegation $X\to Y$ is valid if and only if $Y$ is \emph{not} reachable from $X$ in that DAG -- if $Y$ is not a descendant of $X$.
+
+Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. This implementation will be detailed in the following section.
+
+\subsubsection{Implementation Details}
+A hashmap is used to store the descendants of each user. The keys are user IDs, and the values are sets of user IDs representing the direct delegates of that user. In the code, this hashmap is referred to as ``\verb|inverse_indirect_map|''.
+\begin{figure}[H]
+  \centering
+  \begin{minted}{json}
+    "inverse_indirect_map": {
+      "B": ["A"],
+      "C": ["B", "A"],
+      "D": ["C", "B", "A"]
+    }
+  \end{minted}
+  \caption{Example of a hashmap for users A, B, C, and D. User A has delegated to B, user B has delegated to C, and user C has delegated to D. Consequently, the descendants of user D are A, B and C.}
+  \label{fig:inverse_indirect_map}
+\end{figure}
+
+This structure allows for the following operations:
+\paragraph{Check Delegation} To check if a delegation \(X\!\to\!Y\) is valid, we simply check if \(Y\) is in the set of descendants of \(X\). This operation takes \(O(1)\) time.
+\begin{figure}[H]
+  \centering
+  \begin{minted}{javascript}
+    const inverse_indirect_map = this.G.D.get_inverse_indirect_map(pid);
+    const descendant_set = inverse_indirect_map.get(delegate_vid);
+    if (descendant_set.has(myvid)) {
+      cycle = true;
+    }
+  \end{minted}
+  \caption{Code for checking if a delegation is valid. This check is done when a user clicks on a delegate link. The map is retrieved from the synced local cache, and the set of descendants for the delegator is checked to see if it contains the current user.}
+\end{figure}
+
 
 \begin{itemize}
-    \item \textbf{No enforcement of cycle prevention:} It was possible for users to create cyclic delegations, leading to resolution loops.
-    \item \textbf{Inconsistent UI feedback:} Delegated users were not correctly informed about how many others they were representing.
+  \item \textbf{Check Delegation}: to decide if \(X\!\to\!Y\) is legal, verify that \verb|Y| $\notin$ \verb|map[X]| (\(O(1)\)).
+  \item \textbf{Add Edge}: \verb|map[Y]| $\leftarrow$ \verb|map[Y]| $\cup$ \verb|map[X]| $\cup$ \{\verb|X|\}.
+  \item \textbf{Remove Edge}: \verb|map[Y]| $\leftarrow$ \verb|map[Y]| \textbackslash{} (\verb|map[X]| $\cup$ \{\verb|X|\}). Because the graph is a DAG, it is not possible for the descendants of $X$ to be a subset of the descendants of $Y$ after removing the edge $X\to Y$.
 \end{itemize}
 
-\subsubsection{Fixes and Enhancements}
-To address these problems, several key fixes were implemented:
+\paragraph{Persistence} The map lives alongside the poll document so every client shares one authoritative copy. Although ordinary poll docs are append-only, a special admin rule now allows updates at the key \verb|inverse_indirect_map|. Conflict fields (\verb|_rev| in CouchDB) ensure last-write-wins semantics while we serialise edits.
 
+\subsubsection{Practical Challenges}
 \begin{itemize}
-    \item \textbf{Consistent cycle checking:} The system now uses an \texttt{inverse\_indirect\_map} to maintain a live view of indirect delegations. When a user clicks a delegation link, the sender's ID is checked against this map to detect cycles before they are committed.
-    \item \textbf{UI accuracy improvements:} The interface now consistently displays ``your vote is used for \textit{n} other people'' using the inverse map to track vote reach in real time.
+  \item blank 4 now.
 \end{itemize}
 
-\subsubsection{Cycle Detection}
-Cycle detection uses the \texttt{inverse\_indirect\_map}, where each key is a user ID and the value is a list of users who have delegated to them, either directly or indirectly.
-
+\subsection{UI Fixes}
 \begin{itemize}
-    \item When a user clicks on a delegation link, the system checks if the sender of the link is already in the accepting user's indirect delegator list.
-    \item If so, a cycle would be formed, and the delegation is rejected.
-    \item Upon acceptance, the inverse map is updated by appending the sender's delegators to the recipient's list. This updated value is stored and serialised in the database.
-    \item When a delegation is revoked, the inverse map is also updated to remove the affected paths.
+  \item Re-bound the ``delegate none/some/all'' switch so it toggles \emph{only} the current option and refreshes its label after server confirmation.
+  \item Re-implemented the ``vote is used for \(n\) others'' badge so it recomputes from the latest \texttt{inverse\_indirect\_map} rather than client guesses.
+  \item Added unobtrusive toast notifications when a delegation request is rejected (e.g.\ cycle detected) so the user can immediately choose another delegate.
 \end{itemize}
 
-This approach allows for constant-time checks when handling delegation actions and scales efficiently with the number of users.
+\subsection{Summary}
+The redesign introduced a lightweight yet provably correct cycle-checking algorithm, synchronised across clients by persisting an \texttt{inverse\_indirect\_map} in the poll document. Combined with targeted UI fixes, the core delegation model now (i) prevents loops, (ii) reflects state consistently across devices, and (iii) scales to thousands of voters without central servers.
 
-\subsubsection{Challenges}
-Implementing consistent, real-time cycle detection using a fully client-side model was particularly challenging. Ensuring that the inverse map remained accurate and efficiently serialised under all scenarios---such as nested revocations or reassignments---required careful handling of delegation state. Additionally, updating the user interface to reflect the latest delegation status based on map values added further complexity.
-
-\subsubsection{Outcome}
-The revised implementation fully satisfies the core functional requirements for delegation, including user control, transitive resolution, and privacy-preserving representation.
 
 \section{Implement Ranked Delegation into Vodle}
 This feature introduced ranked delegation using the MinSum rule, allowing users to list fallback delegates in case their primary choice was unavailable.
 
 \begin{itemize}
   \item UI for setting delegate rankings
+  \item \verb|direct_delegation_map|: maps user IDs to list of ranked delegates [[delegationid, rank, status]...]
   \item Explanation and application of the MinSum rule
   \item Implementation of ranked path resolution
   \item Illustrations and code snippets
@@ -87,6 +160,7 @@ Vote splitting was implemented to allow users to distribute fractional influence
 
 \begin{itemize}
   \item UI for assigning weights
+  \item modify\verb|direct_delegation_map|to include weights [[delegationid, weight, status]...]
   \item Computation of weighted vote outcomes
   \item Constraints:
   \begin{itemize}
@@ -105,6 +179,9 @@ This feature enabled per-option delegation, allowing users to assign a different
 \begin{itemize}
   \item Per-option delegate selection interface
   \item Independent resolution of each delegated option
+  \item talk about nested map - need to take care to serialise.
+  \item \verb|direct_delegation_map|: \verb|option_id| -> \verb|user_id| -> [delegationid, null, status]
+  \item \verb|inverse_indirect_map|: \verb|option_id| -> \verb|user_id| -> list of users who have delegated to them, either directly or indirectly.
   \item Storage schema modifications
 \end{itemize}
 

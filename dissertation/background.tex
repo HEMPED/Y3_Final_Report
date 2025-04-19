@@ -4,12 +4,12 @@ This chapter provides background context for the development of a liquid democra
 
 Throughout this chapter, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters within these diagrams, the following symbols are used:
 \begin{itemize}
-    % \item \textbf{Circles} indicate voters who \textit{delegate} their vote to someone else.
-    % \item \textbf{Squares} represent \textit{casting voters}, those who who cast their own vote and do not delegate.
-    % \item \textbf{Triangles} show voters who \textit{abstain} - neither voting directly nor delegating to others.
-    \item \textbf{Circle: } \textit{Delegated voter} - a voter that has delegated and therefore does not cast their own vote.
-    \item \textbf{Square: } \textit{Casting voter} - a voter that has not delegated and casts their own vote.
-    \item \textbf{Triangle: } \textit{Abstaining voter} - a voter that neither delegates nor casts their own vote.
+  % \item \textbf{Circles} indicate voters who \textit{delegate} their vote to someone else.
+  % \item \textbf{Squares} represent \textit{casting voters}, those who who cast their own vote and do not delegate.
+  % \item \textbf{Triangles} show voters who \textit{abstain} - neither voting directly nor delegating to others.
+  \item \textbf{Circle: } \textit{Delegated voter} - a voter that has delegated and therefore does not cast their own vote.
+  \item \textbf{Square: } \textit{Casting voter} - a voter that has not delegated and casts their own vote.
+  \item \textbf{Triangle: } \textit{Abstaining voter} - a voter that neither delegates nor casts their own vote.
 \end{itemize}
 
 \section{Liquid Democracy}
@@ -26,20 +26,20 @@ it can also lead to unintended consequences. Chains of delegations may result in
 
 \subsection*{Delegation cycles}
 \begin{figure}[h]
-    \centering
-    \begin{tikzpicture}[->, >=stealth, thick, scale=1.5]
-        % Nodes at triangle vertices
-        \node[circle, draw] (A) at (0,0) {A};
-        \node[circle, draw] (B) at (2,0) {B};
-        \node[circle, draw] (C) at (1,1.732) {C}; % height = sqrt(3)
+  \centering
+  \begin{tikzpicture}[->, >=stealth, thick, scale=1.5]
+    % Nodes at triangle vertices
+    \node[circle, draw] (A) at (0,0) {A};
+    \node[circle, draw] (B) at (2,0) {B};
+    \node[circle, draw] (C) at (1,1.732) {C}; % height = sqrt(3)
 
-        % Arrows showing delegation
-        \draw (A) -- (B);
-        \draw (B) -- (C);
-        \draw (C) -- (A);
-    \end{tikzpicture}
-    \caption{Delegation cycle: A delegates to B, B to C, and C back to A.}
-    \label{fig:triangle-cycle}
+    % Arrows showing delegation
+    \draw (A) -- (B);
+    \draw (B) -- (C);
+    \draw (C) -- (A);
+  \end{tikzpicture}
+  \caption{Delegation cycle: A delegates to B, B to C, and C back to A.}
+  \label{fig:triangle-cycle}
 \end{figure}
 
 
@@ -52,17 +52,17 @@ A simplistic method to prevent cycles is to check whether a delegation would cre
 Delegation cycles are increasingly likely to emerge in dynamic voting systems, where delegations can be added, removed, or modified at any point in time. Delegations that initially did not form part of a cycle may later contribute to one as other voters add a new delegation or alter an existing one.
 \subsection*{Abstentions}
 \begin{figure}[H]
-    \centering
-    \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm]
-        \node[circle, draw] (A) {A};
-        \node[circle, draw, right of=A] (B) {B};
-        \node[regular polygon, regular polygon sides=3, shape border rotate=0, draw, minimum size=1cm, inner sep=0pt, right of=B] (C) {C};
+  \centering
+  \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm]
+    \node[circle, draw] (A) {A};
+    \node[circle, draw, right of=A] (B) {B};
+    \node[regular polygon, regular polygon sides=3, shape border rotate=0, draw, minimum size=1cm, inner sep=0pt, right of=B] (C) {C};
 
-        \draw (A) -- (B);
-        \draw (B) -- (C);
-    \end{tikzpicture}
-    \caption{Delegation chain ending in abstention: A delegates to B, B to C. C abstains, causing the votes of A and B to be lost.}
-    \label{fig:delegation-abstention}
+    \draw (A) -- (B);
+    \draw (B) -- (C);
+  \end{tikzpicture}
+  \caption{Delegation chain ending in abstention: A delegates to B, B to C. C abstains, causing the votes of A and B to be lost.}
+  \label{fig:delegation-abstention}
 \end{figure}
 
 A voter abstains by neither casting a vote nor delegating it to another user \citep{brill_liquid_2022}. This includes both deliberate abstention, where a voter knowingly chooses not to participate, and passive abstention, where a voter may be unaware of an ongoing poll or are unable to engage with it.
@@ -71,19 +71,19 @@ Abstentions are especially impactful when they occur at the end of a larger dele
 
 \subsection*{Super-voters}
 \begin{figure}[h]
-    \centering
-    \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm, square/.style={regular polygon,regular polygon sides=4}]
-        \node[circle, draw] (A) {A};
-        \node[circle, draw, right of=A] (B) {B};
-        \node[square, draw, minimum size=1cm, inner sep=0pt, right of=B] (C) {C};
-        \node[square, draw, minimum size=1cm, inner sep=0pt, right of=C] (D) {D};
-        \node[square, draw, minimum size=1cm, inner sep=0pt, right of=D] (E) {E};
+  \centering
+  \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm, square/.style={regular polygon,regular polygon sides=4}]
+    \node[circle, draw] (A) {A};
+    \node[circle, draw, right of=A] (B) {B};
+    \node[square, draw, minimum size=1cm, inner sep=0pt, right of=B] (C) {C};
+    \node[square, draw, minimum size=1cm, inner sep=0pt, right of=C] (D) {D};
+    \node[square, draw, minimum size=1cm, inner sep=0pt, right of=D] (E) {E};
 
-        \draw (A) -- (B);
-        \draw (B) -- (C);
-    \end{tikzpicture}
-    \caption{Super-voter: A delegates to B, B to C. No matter which vote D or E cast, C's vote will always determine the outcome as it has a weight of 3.}
-    \label{fig:delegation-supervoter}
+    \draw (A) -- (B);
+    \draw (B) -- (C);
+  \end{tikzpicture}
+  \caption{Super-voter: A delegates to B, B to C. No matter which vote D or E cast, C's vote will always determine the outcome as it has a weight of 3.}
+  \label{fig:delegation-supervoter}
 \end{figure}
 In liquid democracy, a super-voter is an individual who receives a large number of delegated votes, therefore gaining disproportionate influence over decisions \citep{kling2015votingbehaviourpoweronline}. While this behaviour may reflect voters' genuine preferences, it can lead to a concentration of power that goes against the intended egalitarianism and democratic ideals of liquid democracy.
 
@@ -110,9 +110,9 @@ This is done through a \textit{delegation rule}, a function that, given a ranked
 The following key properties help evaluate these delegation rules:
 
 \begin{itemize}
-    \item \textbf{Guru Participation:} Ensures that a voter accepting delegated votes (a ``guru'') is never worse off by doing so. Receiving additional delegations should not decrease their influence over the final outcome \citep{kotsialou_riley_2020}. 
-    \item \textbf{Confluence:} Guarantees that each delegating voter ends up with one clear and unambiguous delegation path. This property simplifies vote resolution and enhances transparency \citep{brill_liquid_2022}. 
-    \item \textbf{Copy Robustness:} Prevents strategic manipulation where a voter might mimic another's vote outside the system to gain extra influence. A copy-robust rule makes sure that duplicating a vote externally does not yield more combined power than a proper delegation \citep{brill_liquid_2022,behrens_2015}. 
+  \item \textbf{Guru Participation:} Ensures that a voter accepting delegated votes (a ``guru'') is never worse off by doing so. Receiving additional delegations should not decrease their influence over the final outcome \citep{kotsialou_riley_2020}. 
+  \item \textbf{Confluence:} Guarantees that each delegating voter ends up with one clear and unambiguous delegation path. This property simplifies vote resolution and enhances transparency \citep{brill_liquid_2022}. 
+  \item \textbf{Copy Robustness:} Prevents strategic manipulation where a voter might mimic another's vote outside the system to gain extra influence. A copy-robust rule makes sure that duplicating a vote externally does not yield more combined power than a proper delegation \citep{brill_liquid_2022,behrens_2015}. 
 \end{itemize}
 
 The literature considers several delegation rules, each with distinct trade-offs:
@@ -133,8 +133,47 @@ In summary, ranked delegation enhances liquid democracy by reducing the risk of 
 
 For our implementation, MinSum will be chosen as the delegation rule because it offers a good trade-off between delegation quality, computational efficiency, and user interpretability. By selecting the path with the lowest total rank sum, MinSum prioritises higher ranked delegates while avoiding unnecessarily long or indirect delegation chains. This not only improves the quality of representation but also makes it clearer to users why a particular delegate was chosen as the path reflects their stated preferences in a straightforward way. Additionally, MinSum is more computationally efficient than alternatives like BordaBranching, making it a practical choice for deployment within the vodle platform.
 
-\subsection*{Vote Splitting}\label{sub-section:vote-splitting}
-introduce algorithm, maybe proofs as well?
+\subsection*{Vote Splitting}\label{subsec:vote_splitting_background}
+
+Delegating a full vote to a single individual, while simple, imposes unnecessary constraints on voter expression. As discussed in the previous sections, a single point of delegation increases vulnerability to vote loss through abstentions or cycles, and creates disproportionate power structures when many voters rely on the same delegate. Vote splitting addresses these concerns by allowing users to retain control over a portion of their vote and distribute the rest among multiple trusted individuals.
+
+From a user experience perspective, vote splitting is intuitive and empowering. It aligns with how people make decisions in real life: partial trust is more common than absolute trust. By enabling voters to assign portions of their influence to different peers, this mechanism offers:
+\begin{itemize}
+  \item \textbf{Granular control:} Voters can balance personal agency with trust in others.
+  \item \textbf{Resilience:} If one delegate is unavailable or abstains, the remaining delegates can still cast their votes, reducing the risk of total vote loss.
+  \item \textbf{Distributed influence:} The risk of super-voters is reduced when votes are more evenly distributed.
+\end{itemize}
+
+However, enabling partial delegation raises a number of important design and implementation challenges:
+\begin{itemize}
+  \item \textbf{Cycle handling:} Even with vote splitting, cycles can still occur, potentially leading to lost votes.
+  \item \textbf{Transparency:} It must be easy for voters to understand how their vote has been used and how much influence they retain.
+\end{itemize}
+
+To address these issues, several approaches have been proposed:
+
+\paragraph{\cite{degrave}: }
+%Each voter distributes their full voting power across several proxies. The model computes a global equilibrium by recursively resolving delegations until only casting votes remain. However, it enforces $t_{i,i} = 0$, meaning voters who use the mechanism entirely forfeit their direct say. Moreover, the system does not limit how far delegated weight can propagate, allowing long chains to accumulate negligible contributions that still affect the outcome.
+Voters can either vote directly or delegate their entire vote evenly across one or more delegates. 
+
+\paragraph{Bersetche: }
+
+\paragraph{New}
+This project proposes a linear fixed-point model as a practical and interpretable alternative. Each voter~$i$ defines trust weights $t_{i,j}$ for all $j$, such that $\sum_j t_{i,j} = 1$ and $t_{i,i} > 0$. Given a rating $r_i$ for each voter, the effective rating $e_i$ is defined recursively:
+\begin{equation}
+    e_i = t_{i,i} r_i + \sum_{\substack{j=1 \\ j \ne i}}^n t_{i,j} e_j
+\end{equation}  
+This formulation has desirable theoretical properties:
+\begin{itemize}
+  \item \textbf{Self-weight preservation:} A voter who retains $x\%$ of their vote always contributes at least that much to the outcome.
+  \item \textbf{Cycle safety:} The requirement that $t_{i,i} > 0$ ensures the system matrix is diagonally dominant, guaranteeing convergence even in the presence of cycles.
+  \item \textbf{Smoothness:} The outcome varies continuously with trust weights, making the system robust and predictable.
+  \item \textbf{No external hyperparameters:} Unlike Bersetche's model, no discount factor must be tuned.
+\end{itemize}
+
+\subsubsection*{Summary}
+Vote splitting introduces flexibility, robustness, and fairness into delegation systems, but also demands care in design. Any adopted mechanism must resolve cycles safely, ensure damping of long chains, and remain interpretable. While each of the surveyed models has unique strengths, the trust-weighted fixed-point rule offers a balanced and principled foundation. It supports user agency, avoids parameter tuning, and ensures stable aggregation--making it a strong candidate for integration into vodle in the chapters that follow.
+
 
 \section{Existing Implementations of Liquid Democracy}
 To understand how liquid democracy can be integrated into vodle, it is important to examine how similar systems have been implemented in real-world contexts. 
@@ -154,9 +193,9 @@ For a platform like vodle, the experience of LiquidFeedback highlights several i
 %Overall, LiquidFeedback serves as both a proof of concept and a cautionary tale; demonstrating that liquid democracy can work at scale, but that thoughtful implementation is essential to avoid replicating the very problems it seeks to solve.
 \subsection{Google Votes}
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\linewidth]{../common/google_votes.png}
-    \caption{Screenshot taken from \cite{hardt_google_2015} showing the user interface of Google Votes.}
+  \centering
+  \includegraphics[width=0.8\linewidth]{../common/google_votes.png}
+  \caption{Screenshot taken from \cite{hardt_google_2015} showing the user interface of Google Votes.}
 \end{figure}
 
 Google Votes was an internal experiment at Google designed to explore the practical application of liquid democracy within a corporate environment. Built on top of the company's internal Google+ social network, it operated between 2012 and 2015 and allowed employees to participate in decision-making by either voting directly or delegating their vote to a colleague \citep{hardt_google_2015}.
@@ -173,34 +212,14 @@ The need to explore ABM arises due to the project's goal of introducing a vote-s
 
 Several widely used ABM frameworks exist, each with their own strengths and drawbacks relevant to this project:
 \begin{itemize}
-    \item \textbf{NetLogo} \citep{netlogo} is a highly accessible and widely adopted modelling platform known for its user-friendly graphical interface and ease of learning. It offers rapid prototyping capabilities and excellent visualisation features, allowing clear communication of results. However, very complicated models are not compatible with it.
-    \item \textbf{Repast} \citep{repast} provides a powerful and versatile suite of tools for building large-scale, computationally intensive simulations. It supports distributed computing, which is beneficial for extensive delegation networks with potentially thousands of agents. However, Repast has a steep learning curve, which could hinder its compatibility with this heavily time restricted project.
-    \item \textbf{Mesa} \citep{kazil_utilizing_2020} is an open-source framework written in Python and specifically designed for agent-based modelling. Its advantage lies in its integration with Python's ecosystem of data science libraries. Simulations built with Mesa can easily make use of tools such as NumPy and pandas for efficient data processing, and Matplotlib or Seaborn for visualising model outputs. This compatibility allows for rapid analysis and iteration, while also significantly lowering the learning curve for developers already familiar with Python. Mesa offers a practical balance between usability and computational flexibility, making it well-suited for customisable and moderately large simulations.
-    \item \textbf{Agents.jl} \citep{agentsjl} is a high-performance agent-based modelling framework written in Julia. Due to Julia's speed and efficiency, it is suitable for large-scale and computationally demanding simulations. The framework is designed to be user-friendly, with a syntax that is approachable for those familiar with scientific computing. However, the Julia ecosystem is less mature compared to Python's, which may limit the availability of additional libraries and resources. 
+  \item \textbf{NetLogo} \citep{netlogo} is a highly accessible and widely adopted modelling platform known for its user-friendly graphical interface and ease of learning. It offers rapid prototyping capabilities and excellent visualisation features, allowing clear communication of results. However, very complicated models are not compatible with it.
+  \item \textbf{Repast} \citep{repast} provides a powerful and versatile suite of tools for building large-scale, computationally intensive simulations. It supports distributed computing, which is beneficial for extensive delegation networks with potentially thousands of agents. However, Repast has a steep learning curve, which could hinder its compatibility with this heavily time restricted project.
+  \item \textbf{Mesa} \citep{kazil_utilizing_2020} is an open-source framework written in Python and specifically designed for agent-based modelling. Its advantage lies in its integration with Python's ecosystem of data science libraries. Simulations built with Mesa can easily make use of tools such as NumPy and pandas for efficient data processing, and Matplotlib or Seaborn for visualising model outputs. This compatibility allows for rapid analysis and iteration, while also significantly lowering the learning curve for developers already familiar with Python. Mesa offers a practical balance between usability and computational flexibility, making it well-suited for customisable and moderately large simulations.
+  \item \textbf{Agents.jl} \citep{agentsjl} is a high-performance agent-based modelling framework written in Julia. Due to Julia's speed and efficiency, it is suitable for large-scale and computationally demanding simulations. The framework is designed to be user-friendly, with a syntax that is approachable for those familiar with scientific computing. However, the Julia ecosystem is less mature compared to Python's, which may limit the availability of additional libraries and resources. 
 \end{itemize}
 Given the time constraints of this project, Mesa offers a practical and efficient solution. Its Python-based interface and straightforward setup allow for rapid development without the overhead of learning a new framework. This ease of use enables more time to be spent designing meaningful experiments and analysing results, rather than configuring tooling.
 \section{Vodle}
 Vodle is a web-based platform for participatory group decision-making. Users participate in polls that allow them to rate a set of options using sliders. When the poll ends, these ratings are aggregated and the MaxParC rating system is used to determine the final result of the poll.
-
-% \subsection{MaxParC - TODO: summary}
-% Understanding MaxParC is important for this project because it forms the core of how vodle interprets group preferences. Since this work involves modifying vodle's voting behaviour through the integration of liquid democracy, it is essential to understand how MaxParC processes input ratings. In particular, understanding how changes in individual ratings influence the final outcome of a poll helps to frame the implications of delegating or reweighting votes.
-% %A clear grasp of MaxParC's underlying principles allows for a more informed and effective integration that maintains the platform's commitment to fairness and consensus.
-
-% Maximum Partial Consensus (MaxParC), the rating system used by vodle, was introduced by \cite{heitzig_fair_2024}. It is a decision-making method designed to address the limitations of traditional voting systems, in particular the potential for majority rule to suppress minority viewpoints.
-% The primary objective of MaxParC is to achieve a balance between fairness, consensus, and efficiency in group decision-making.
-
-% Each voter rates an option from $0$ to $100$ ($x$), representing their willingness to approve that option if and only if $<x\%$ of users do not approve that option. Therefore, a rating of $0$ means ``do no approve no matter what'' and a rating of $100$ means ``approve no matter what'' or ``always approve''. This can be visualised in the illustration below.
-
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.8\linewidth]{../common/maxparc.png}
-%     \caption{Graphic from \cite{heitzig_fair_2024} representing MaxParC from the view of some voter Alice. Each rating value represents a conditional commitment by Alice to approve
-%     the respective option. Approval scores, number of voters that approve the option, are represented by light bars
-%     coming in from the right, options are sorted by descending approval score. Alice is counted as approving an option if her rating needle overlaps with
-%     the approval score bar.}
-% \end{figure}
-
-% To summarise, any delegation or vote splitting mechanism must be designed so that it only adds to an option's overall rating and never reduces it. This ensures that delegated input remains consistent with MaxParC's conditional approval model and preserves the original intent of the voter.
 
 \subsection{MaxParC - TODO: rework the summary}
 MaxParC (Maximum Partial Consensus) is the core rating system used in vodle to aggregate user preferences and determine poll outcomes. Introduced by \cite{heitzig_fair_2024}, MaxParC was designed to address common limitations of traditional voting systems, particularly the tendency for majority rule to overlook minority preferences. Its goal is to balance fairness, consensus, and efficiency in collective decision-making.
@@ -208,9 +227,9 @@ MaxParC (Maximum Partial Consensus) is the core rating system used in vodle to a
 In MaxParC, each user rates an option on a scale from $0$ to $100$. This rating reflects the user's willingness to approve that option based on how many other users also support it. Specifically, a rating of $x$ means that the voter will approve the option if fewer than $x\%$ of participants disapprove. A rating of $0$ means the option is never approved, while $100$ means it is always approved regardless of others' opinions. This structure transforms a simple rating into a conditional approval, allowing for a more nuanced expression of preferences with the potential for compromise.
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\linewidth]{../common/maxparc.png}
-    \caption{Visual representation of MaxParC from the perspective of a voter (Alice). Ratings represent conditional approval thresholds. An option is counted as approved by Alice if the approval bar (light grey) overlaps with her rating needle. Graphic from \cite{heitzig_fair_2024}.}
+  \centering
+  \includegraphics[width=0.8\linewidth]{../common/maxparc.png}
+  \caption{Visual representation of MaxParC from the perspective of a voter (Alice). Ratings represent conditional approval thresholds. An option is counted as approved by Alice if the approval bar (light grey) overlaps with her rating needle. Graphic from \cite{heitzig_fair_2024}.}
 \end{figure}
 
 \textit{TODO: rework this section to be more concise and clear or remove}
@@ -239,71 +258,8 @@ These technological considerations shape the practical implementation of liquid 
 
 The current version of vodle includes a partially implemented delegation feature that allows users to delegate their vote to another participant in a given poll. Whilst this implementation provides the basic structure required for delegation, it lacks consistency in handling more complex delegation scenarios such as cycles.
 
-\subsubsection*{Delegation Workflow}
+include delegation workflow + forward ref to implementation chapter
 
-\begin{enumerate}
-
-\item \textbf{Creating a Delegation Link}
-
-User A can initiate a delegation by inviting another participant (User B) to act as their delegate. The system then generates a unique delegation link tied to the relevant poll and user A. This link can be copied manually, sent via email, or using their device's inbuilt sharing options.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.2\linewidth]{../common/initial_vodle_screenshots/deldialog.png}
-    \caption{\textbf{Creating a Delegation:} The user (User A) initiates a delegation request by entering the nickname of their chosen delegate (User B) and how the sender will be identified (User A). The link is then generated and can be shared with User B with the options provided.}
-    \label{fig:deldialog_initial}
-\end{figure}
-
-% \begin{figure}[H]
-% \centering
-% \begin{minted}{typescript}
-% function createDelegationLink(pollId: string, userId: string): string {
-%     const delegationLink = generateUniqueLink(pollId, userId);
-%     const delegationData = {
-%         pollId: pollId,
-%         userId: userId,
-%         status: "pending",
-%         link: delegationLink
-%     };
-%     storeInCouchDB(delegationData);
-%     return delegationLink;
-% }
-% \end{minted}
-% \caption{Code snippet for creating a delegation link. The function generates a unique link and stores the delegation data in CouchDB.}
-% \end{figure}
-
-\item \textbf{Accepting the Delegation}
-
-User B must manually accept the delegation. When the link is opened, the system prompts them with an acceptance dialog. Once accepted, the delegation document stored in CouchDB is updated with a new status (``accepted''), confirming that User B is now the official delegate for User A in that poll.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/delaccept.png}
-    \caption{\textbf{Accepting a Delegation:} The user (User B) is prompted to accept or reject User A's delegation request.}
-    \label{fig:delaccept_initial}
-\end{figure}
-
-\item \textbf{Final User Interface Changes}
-
-After a successful delegation User A's interface will show that their vote is delegated to User B. Their interface will also show that they can revoke their delegation at any time by pressing the revoke button or override User B's vote for a specific option by pressing the toggle next to its corresponding slider.
-
-User B's interface will show how many votes they are currently casting on behalf of other users in addition to the invitations they have received.
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/userA_after.png}
-
-    \includegraphics[width=0.8\linewidth]{../common/initial_vodle_screenshots/userB_after.png}
-    \caption{\textbf{User Interfaces After Delegation:} The top screenshot shows User A's interface after the delegation is accepted, indicating that their vote is now delegated to User B. The bottom screenshot shows User B's interface, which reflects that they are now voting on behalf of User A.}
-    \label{fig:del_view_initial}
-\end{figure}
-
-\end{enumerate}
-
-\subsubsection*{Current Limitations}
-
-Although the current system includes logic intended to prevent delegation cycles, it does not function reliably in all cases. While it can block simple cases like direct self-delegation, more complex cycles involving multiple users are not consistently detected. For instance, in a chain where User A delegates to B, B to C, and C back to A, the system may fail to recognise the cycle due to \dots
-
-\textit{How much detail is needed here? ask markus}
 \subsection{Design Philosophy}
 Colour pallet - need to maintain consisten design when adding delegation features.
 

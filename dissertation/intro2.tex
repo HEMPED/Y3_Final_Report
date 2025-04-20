@@ -1,0 +1,46 @@
+\chapter{Introduction}\label{ch:introduction}
+
+\section{Context and Motivation}
+
+Decision-making is a central part of how groups operate; whether in political settings, organisations, or online communities. Traditionally, two primary models are used to make collective decisions: \textbf{direct democracy}, where every individual votes on each issue themselves, and \textbf{representative democracy}, where individuals elect others to vote on their behalf.
+
+Both approaches have limitations. Direct democracy becomes impractical at scale, as it requires high levels of engagement from every participant. Representative systems, on the other hand, often concentrate decision-making power in a few individuals, and offer little flexibility once representatives are chosen.
+
+Vodle is a web-based decision-making platform that aims to explore alternatives to these traditional models. It allows users to participate in polls by rating each option from 0 to 100, with the final result calculated using the MaxParC rating aggregation method. The platform is designed for open, consensus-oriented group decisions, and places strong emphasis on accessibility and user control.
+
+However, the platform initially only supported direct participation -- users could submit their own ratings but could not delegate their vote to others. This limitation made it less useful in contexts where users lacked time, interest, or expertise to vote in every poll. The motivation for this project is to address this gap by integrating support for liquid democracy into vodle.
+
+\section{Liquid Democracy}
+
+Liquid democracy is a hybrid approach that combines features of both direct and representative models. In a liquid democracy, users can choose to vote directly or delegate their vote to someone they trust. These delegations are transitive -- if A delegates to B, and B to C, then C ultimately casts A's vote. Users may revoke or change their delegation at any time.
+
+This system offers flexibility and scalability: engaged users can vote directly, while others can still influence outcomes through trusted delegates. It creates informal networks of influence, empowering individuals without forcing uniform participation.
+
+Despite its benefits, liquid democracy introduces new technical challenges. Cycles in the delegation graph can trap votes, abstentions can unintentionally nullify entire chains, and certain individuals may accumulate disproportionate influence, becoming ``super-voters.'' These risks require careful handling in any practical implementation, including the one proposed in this project.
+
+\section{Project Aims}
+
+This project aims to implement a flexible, robust liquid democracy system within vodle. In doing so, it extends the platform beyond simple direct voting and makes it more usable in realistic, large-scale decision-making settings.
+
+The project addresses known theoretical weaknesses of liquid democracy, and introduces the following mechanisms:
+\begin{itemize}
+  \item \textbf{Transitive delegation} -- with consistent cycle prevention and real-time vote updates.
+  \item \textbf{Ranked delegation} -- where users specify fallback delegates.
+  \item \textbf{Vote splitting} -- allowing users to distribute parts of their vote to multiple people.
+  \item \textbf{Per-option delegation} -- letting users assign different delegates for different poll items.
+\end{itemize}
+
+All features are designed to work within vodle's serverless, client-side architecture, and remain compatible with its underlying MaxParC voting model.
+
+\section{Structure of This Report -- TODO when report is finished}
+
+The remainder of this report is structured as follows:
+
+\begin{itemize}
+  \item Chapter~\ref{ch:background}
+  \item Chapter~\ref{ch:project_objectives}
+  \item Chapter~\ref{ch:design_implementation}
+  \item Chapter~\ref{ch:evaluation}
+  \item Chapter~\ref{ch:project_management}
+  \item Chapter~\ref{ch:conclusions}
+\end{itemize}

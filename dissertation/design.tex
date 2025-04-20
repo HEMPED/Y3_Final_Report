@@ -20,24 +20,12 @@ Vodle's serverless architecture has several implications for the design and impl
 \end{itemize}
 
 \subsection{CouchDB Configuration}
-% Each used remote CouchDB is identified by the URL of a CouchDB server (!) 
-% (rather than the URL of a database contained in that server!).
-% The CouchDB server must provide:
 % - a user database named '_users' (which is the standard name for user databases)
 % - a database named 'vodle' that will contain the data
-% - a user named 'vodle' that has write access to both (!) these databases.
-% 
-% The user 'vodle' will be used by the vodle app to automatically create the other database users
-% ('vodle.user.UUU', 'vodle.poll.PPP', and 'vodle.poll.PPP.voter.VVV')
-% when a user logs in the first time, changes their password, creates a new poll, 
-% or starts participating in a poll as a voter.
-% This way the database administrator only needs to be involved when setting up the database initially,
-% but not later on to create users.
-% 
-% Although the database user 'vodle' can create users, it cannot delete or modify users or read their passwords.
-% Also, neither the database user 'vodle' or 'vodle.poll.PPP' can change their own password.
-% This way, no-one can delete or overtake the database users 'vodle.user.UUU' or 'vodle.poll.PPP.voter.VVV'
-% of any other person or prevent others from accessing their personal, poll, or voter data.
+%
+% Values in the poll database are not allowed to be edited
+%
+% Users cannot edit values in the _users database that are not their own.
 
 \section{Implement a Core Delegation Model into vodle}
 \label{sec:core_delegation_detailed}

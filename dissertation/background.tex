@@ -3,22 +3,36 @@
 This chapter provides background context for the development of a liquid democracy system within vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of vodle as a platform are explored.
 
 \section{Liquid Democracy -- TODO: FIX INTRO}
+Liquid democracy is a decision-making system that combines elements of both direct and representative democracy that offers a voter more flexibility than traditional voting models.
 
-Liquid democracy, or delegative voting, allows voters to either cast a vote directly, delegate it to someone they trust, or abstain \citep{blum_liquid_2016}. A key feature is that delegations are transitive - a chain of users that all delegate to each other sequentially ends with a single final voter who casts their vote on behalf of all those in the chain.
+In direct democracy, every participant votes individually on each issue. This model offers the most individual input but can become impractical for large-scale decision-making due to the high level of participation required from each individual. As \cite{ford_delegative_2002} states, direct democracy assumes that all individuals are both willing and able to engage meaningfully with every decision, which is often not the case in large groups due to the variance in both the interest and knowledge of voters. The cognitive demand of staying informed on all matters, combined with the time commitment necessary for constant participation, makes direct democracy unmanageable at scale.
 
-Although transitivity provides greater flexibility to the voters, 
-it can also lead to unintended consequences. Chains of delegations may result in cycles that prevent votes from being cast, or allow certain individuals to accumulate an excessive share of influence, creating ``super-voters''. These problems amongst others motivate the need for alternative delegation mechanisms, as discussed later in this chapter.
+In a representative democracy, citizens elect officials who make decisions on their behalf for the duration of a fixed term. While this model is scalable and practical for large populations, it introduces several limitations. Elected representatives often make decisions based on party lines, personal convictions, or external influences such as lobbying groups, which may not accurately reflect the preferences of their constituents \citep{blum_liquid_2016}. In addition, because elections are infrequent, this system tends to be unresponsive to shifts in public opinion. Citizens are unable to easily adjust or retract their delegation, which limits their ability to influence decisions once representatives are in office \citep{blum_liquid_2016}. As a result, participation is both indirect and inflexible, which can lead to disengagement and dissatisfaction among voters.
+
+Liquid democracy addresses these limitations by allowing voters to: cast their votes directly, delegate them to someone that they trust, or abstain from voting entirely \citep{blum_liquid_2016}. In comparison to a direct democracy, the bar for participation is lowered as voters no longer need to stay informed and engaged to pass a vote because they can trust a delegate to do it on their behalf.
+These delegations can also be updated or revoked at any time, giving users more control over how their vote is used in comparison to a traditional representational democracy where your representative can only be changed at certain points in time.
+
+Despite its theoretical appeal, liquid democracy introduces new challenges. Transitive delegation can lead to unintended consequences such as delegation cycles, where a chain of delegations loops back on itself, or the emergence of super-voters, individuals who accumulate a disproportionate number of delegated votes. Additionally, if a voter delegates to someone who abstains from voting, their vote may be lost entirely. These issues raise concerns about fairness, transparency, and the integrity of representation within liquid democratic systems.
+
+The remainder of this section explores these challenges in more detail and examines variations of liquid democracy designed to address them, including ranked delegation and vote splitting.
 
 \subsection{Issues with Liquid Democracy -- TODO:INTRO}
 Throughout this section, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters within these diagrams, the following symbols are used:
-\begin{itemize}
-  \item \textbf{Circle: } \textit{Delegated voter} -- a voter that has delegated and therefore does not cast their own vote.
-  \item \textbf{Square: } \textit{Casting voter} -- a voter that has not delegated and casts their own vote.
-  \item \textbf{Triangle: } \textit{Abstaining voter} -- a voter that neither delegates nor casts their own vote.
-\end{itemize}
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|@{}|l|l@{}|}
+  \hline
+  \textbf{Symbol} & \textbf{Role Description} \\ \hline
+  \textbf{Circle}   & \textit{Delegated voter} -- has delegated their vote and does not cast one directly. \\
+  \textbf{Square}   & \textit{Casting voter} -- casts their own vote and has not delegated. \\
+  \textbf{Triangle} & \textit{Abstaining voter} -- neither delegates nor casts their own vote. \\
+  \hline
+  \end{tabular}
+  \caption{Diagram symbol legend used to represent different voter behaviours.}
+\end{table}  
 
 \subsection*{Delegation cycles}
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \begin{tikzpicture}[->, >=stealth, thick, scale=1.5]
     % Nodes at triangle vertices

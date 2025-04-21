@@ -113,7 +113,12 @@ The following sections provide a detailed analysis of the risks identified in th
 \section{Risk Management Reflection - TODO}
 
 \section{Legal and Ethical Considerations}
+As vodle may eventually be used to gather votes on sensitive topics, particular attention was paid to ensuring user privacy and system fairness throughout development.
 
-As vodle may eventually be used to gather votes on sensitive topics, care was taken to ensure privacy and fairness. Delegation chains are resolved internally and never publicly exposed, preserving the confidentiality of voter relationships. No personal data was collected or processed for the purposes of this project, so no changes to the platform's terms of service were required.
+Delegation chains are resolved internally within the browser and are never publicly exposed. A key design feature is that a delegation only becomes active when the invited user explicitly accepts the invitation. This ensures that no information about a user's voting intentions or delegation preferences is shared without their consent. The delegate only becomes aware of the relationship once they actively confirm it, and the delegator retains full control to revoke or modify the delegation at any time.
+
+This mechanism protects the confidentiality of voter relationships and ensures that vote flows remain private unless both parties agree to the delegation. As such, even in a scenario where a vote is passed through multiple users, no individual along the chain gains access to the full path unless explicitly authorised.
+
+Furthermore, no personal data was collected or processed for the purposes of this project. All stored information relates strictly to poll participation and delegation structures, with no link to identifiable personal attributes. As a result, no changes to vodle's terms of service were required, and the project remains compliant with relevant data protection and ethical standards.
 
 \section{Overall/Self Reflection - TODO}

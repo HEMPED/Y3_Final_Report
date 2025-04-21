@@ -3,19 +3,18 @@
 This chapter outlines the project's management approach, including the development methodology, planning, and reflections on the process. It also considers legal and ethical issues and assesses key risks associated with the project.
 
 \section{Methodology}
-The project followed an agile methodology, selected for its flexibility and its emphasis on iterative development and regular customer feedback. The work involved building a sequence of interdependent features into vodle; starting with a basic delegation mechanism and expanding to include ranked delegation, vote splitting, and per-option delegation. Since each feature built on the last, an iterative approach was ideal to ensure compatibility and to allow design decisions to adapt over time.
+The project adopted an agile methodology, chosen for its flexibility, iterative development cycle, and emphasis on frequent customer feedback. The work involved incrementally building a series of interdependent features into vodle -- starting with a core delegation mechanism, and progressively expanding functionality to include ranked delegation, vote splitting, and finally, per-option delegation. This iterative approach allowed each new feature to build directly upon the last, ensuring ongoing compatibility and adaptability in design decisions as the system evolved.
 
-Agile was particularly well suited to this project due to the presence of an active ``customer'' figure: Jobst Heitzig, the co-supervisor and original creator of vodle. Heitzig provided clarified system expectations and helped shape design decisions based on the real-world use case. Fortnightly meetings were held with both Jobst Heitzig and Markus Brill, to review progress and incorporate their feedback into the next development cycle. This tight feedback loop is a core principle of agile, allowing the project to stay aligned with user needs and system goals.
+Agile methodology was particularly suitable for this project due to the involvement of an active ``customer'' figure: Jobst Heitzig, co-supervisor and original creator of vodle. Heitzig played a crucial role in defining system expectations and guiding design decisions based on practical, real-world considerations. Regular meetings, held fortnightly with both Jobst Heitzig and Markus Brill, facilitated continuous feedback and review of progress, enabling rapid adaptation of development plans. This feedback cycle closely reflects the Agile Manifesto's principles of early and continuous delivery, as well as close collaboration between developers and stakeholders \citep{agilemanifesto2001}.
 
-Alternative models such as Waterfall were considered but ultimately rejected due to their inflexibility. Waterfall could have provided clear documentation at each phase and well-defined milestones, which initially seemed beneficial for implementing interconnected voting delegation features. However, Waterfall requires defining the full scope of the project upfront and offers limited room for revision - something that would have been impractical due to the project's shorter timeframe and the evolving nature of requirements as features were tested.
+Other project management approaches, such as Waterfall, were also evaluated but ultimately dismissed due to their inherent rigidity. Although Waterfall initially appeared attractive due to clearly defined phases and comprehensive documentation at each stage, its requirement to specify the complete project scope upfront was incompatible with the evolving nature of the project. Given the shorter timeframe and the dynamic nature of feature requirements, the flexibility afforded by agile was critical to the project's success.
 
-Elements of Scrum were also considered, as it is one of the most widely adopted agile frameworks (63\% of agile teams use Scrum \citep{versionone2020stateofagile}). The sprint-based development cycles, clearly defined roles, and structured ceremonies like sprint planning and reviews were attractive features that could have facilitated focused implementation and effective communication. However, daily stand-up meetings and fixed-length sprints were not feasible for this project, as all parties involved (myself and the two supervisors) had other commitments. The small team size didn't warrant all Scrum ceremonies, and the academic nature of the project called for more flexible review cycles. Instead, progress was reviewed every two weeks, ensuring feedback could still be gathered and acted upon without adding unnecessary scheduling pressure.
+Scrum, one of the most widely adopted agile frameworks (used by approximately 63\% of agile teams \citep{versionone2020stateofagile}), was also considered. Its structured, sprint-based cycles, clear team roles, and structured ceremonies such as sprint planning and reviews were appealing for maintaining focused implementation and streamlined communication. However, the project's constraints -- limited availability due to academic commitments and a small team size -- made Scrum's daily stand-up meetings and fixed sprint lengths impractical. As a result, the project adopted an adapted agile approach: progress was reviewed every two weeks, effectively maintaining the advantages of frequent feedback without the constraints and scheduling pressures imposed by full Scrum ceremonies.
 
-\textit{move to start?}
-Each development cycle produced a working, testable feature that could be evaluated and integrated into the overall system. This approach reduced the risk of late-stage errors and helped maintain steady progress throughout the project. Agile's iterative and feedback-driven structure was a natural fit for the technical and collaborative demands of this work.
+Each iteration of development produced a functional, testable feature that could be immediately evaluated and integrated into the broader system. This method significantly reduced the risk of late-stage integration issues and ensured steady, measurable progress throughout the project's duration. Overall, the agile methodology's iterative, feedback-oriented structure proved highly effective, meeting both the technical complexity and collaborative needs inherent in this work.
 \section{Plan}
 
-The project plan was organised into objectives (see section \ref{ch:project_objectives}) that built on one another in sequence:
+The project plan was organised into objectives (see Section \ref{ch:project_objectives}) that built on one another in sequence:
 
 \begin{itemize}
     \item \textbf{Core Objective 1:} Implement a Core Delegation Model into Vodle.
@@ -27,7 +26,27 @@ The project plan was organised into objectives (see section \ref{ch:project_obje
 
 This objective-led structure was well-suited to the agile approach, allowing each milestone to be treated as an iteration with a deliverable at the end. A Gantt chart (see below) was created to visualise the project timeline and to track dependencies and progress.
 
-\textbf{TODO: Gantt Chart}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../common/initial_gantt.png}
+    \caption{Gantt chart illustrating the project plan from the progress report.}
+    \label{fig:gantt}
+\end{figure}
+
+
+\section{Changes to the Project Plan}
+The original project plan, illustrated in the Gantt chart (Figure~\ref{fig:gantt}), outlined a linear progression through the core objectives. However, several adjustments were made during the course of the project to reflect evolving priorities and unforeseen technical challenges.
+
+The most significant change was the decision to de-scope the extension objective (simulating delegation mechanisms). This was prompted by two main factors. First, implementing the core objectives proved more technically demanding than initially anticipated -- particularly ranked delegation and vote splitting. These challenges required more time and attention than expected, leaving limited capacity to complete the extension objective without compromising the quality of the core deliverables.
+
+Second, during the background research phase, it became clear that similar investigations into delegation behaviour had already been conducted -- most notably by \citet{brill_liquid_2021}. Although their study did not use agent based modelling, instead using networks from synthetic and real-world networks (such as partial networks from Facebook, Twitter, Slashdot, etc.), it provided a comprehensive empirical evaluation of ranked delegation rules using various metrics such as maximum vote path length, average vote path rank, the number of isolated voters (voters without a delegation path) and many more.
+
+Given the depth and relevance of these findings, replicating the analysis through agent-based modelling, especially within the project's limited timeframe, was deemed unnecessary. Instead, the project focused on fully delivering and refining the core objectives, which aligned more directly with vodle's platform goals and would have a better impact on the user experience of vodle.
+
+A second change involved reversing the development order of objectives 3 and 4. Originally, objective 3 (vote splitting) was scheduled to follow objective 2. However, during the Christmas development period, it became clear that objective 4 (per-option delegation) could be completed more quickly and required fewer algorithmic dependencies. To maintain development momentum, objective 4 was brought forward.
+
+This adjustment helped mitigate project risk. Objective 4 involved minimal changes to the database schema and integrated easily with UI components developed for earlier objectives. In contrast, objective 3 introduced more complex computational logic and performance concerns, which demanded additional design, testing and changes to the database. Tackling objective 4 earlier helped avoid potential cascading delays and ensured a smoother integration process later in development.
+
 \section{Risk Assessment - TODO}
 \begin{table}[H]
 \centering

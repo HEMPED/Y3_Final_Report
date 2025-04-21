@@ -19,7 +19,7 @@ Vodle's serverless architecture has several implications for the design and impl
   \item CouchDB's document-based storage model means that all data must be serialised and deserialised in JSON format. This affects how data structures are designed and manipulated, as well as how they are stored and retrieved from the database.
 \end{itemize}
 
-\subsection{CouchDB Configuration}
+%\subsection{CouchDB Configuration}
 % - a user database named '_users' (which is the standard name for user databases)
 % - a database named 'vodle' that will contain the data
 %
@@ -27,10 +27,34 @@ Vodle's serverless architecture has several implications for the design and impl
 %
 % Users cannot edit values in the _users database that are not their own.
 
+\subsection{CouchDB Databases and Write Constraints}
+\label{subsec:couchdb_limits}
+
+Vodle stores all persistent data in two logical places:
+
+\begin{enumerate}
+  \item \textbf{\_users} -- the built-in database managed by CouchDB. Every user account is a single document whose \verb|_id| is the user's name (e.g.\ \verb|org.couchdb.user:alice|). CouchDB's validation functions forbid anyone except the authenticated owner or a server administrator from changing these documents.
+  \item \textbf{Poll databases} -- one database per poll, named \verb|poll-<uuid>|, plus a convenience symlink called \verb|vodle| that always points at ``the currently being edited''. These databases hold:
+        \begin{itemize}
+          \item the immutable poll definition (\verb|poll.json|);
+          \item one \verb|vote-<user>| document per voter;
+          \item locally cached, per-user helper documents (e.g. verb|delegations-<user>|) that speed up client-side calculations.
+        \end{itemize}
+\end{enumerate}
+
+\paragraph{No true ``shared document''}
+
+A fundamental limitation of CouchDB's security model is that \emph{all} write permissions are evaluated per-document.  Either a client may overwrite a document in its entirety or it may not.  There is no concept of field-level ACLs and therefore no safe way for several users to co-edit a single JSON object.  In practice this means:
+
+\begin{itemize}
+  \item Each voter can freely create or update documents whose IDs start with their own username (\verb|vote-alice|, \verb|delegations-alice|, \dots).
+  \item They \emph{cannot} touch any document written by another user, nor any global artefact such as \verb|poll.json|.
+  \item Server-side validation functions can block illegal writes, but they cannot merge concurrent edits into a shared attribute.
+\end{itemize}
+
 \section{Implement a Core Delegation Model into vodle}
 \label{sec:core_delegation_detailed}
-
-This section provides a self-contained, technical narrative of how the core delegation mechanism was conceived, which problems it solved, and how the final client-side implementation works. It follows the structure below so that each stage (from user interaction to data consistency) can be expanded or shortened independently during editing.
+This section describes the design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It covers the issues with the original implementation and the challenges solved in the redesign.
 
 \subsection{Delegation Interaction Flow}
 Figure~\ref{fig:delegation-flow} depicts the life-cycle of a delegation. The diagram is intentionally simple--only the four message exchanges required to set up or tear down a delegation are shown--so the reader can map each arrow to a concrete API call or UI control.

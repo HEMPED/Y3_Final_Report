@@ -7,7 +7,7 @@ The project adopted an agile methodology, chosen for its flexibility, iterative 
 
 Agile methodology was particularly suitable for this project due to the involvement of an active ``customer'' figure: Jobst Heitzig, co-supervisor and original creator of vodle. Heitzig played a crucial role in defining system expectations and guiding design decisions based on practical, real-world considerations. Regular meetings, held fortnightly with both Jobst Heitzig and Markus Brill, facilitated continuous feedback and review of progress, enabling rapid adaptation of development plans. This feedback cycle closely reflects the Agile Manifesto's principles of early and continuous delivery, as well as close collaboration between developers and stakeholders \citep{agilemanifesto2001}.
 
-Other project management approaches, such as Waterfall, were also evaluated but ultimately dismissed due to their inherent rigidity. Although Waterfall initially appeared attractive due to clearly defined phases and comprehensive documentation at each stage, its requirement to specify the complete project scope upfront was incompatible with the evolving nature of the project. Given the shorter timeframe and the dynamic nature of feature requirements, the flexibility afforded by agile was critical to the project's success.
+Other project management approaches, such as Waterfall, were also evaluated but ultimately dismissed due to their inherent rigidity. Although Waterfall initially appeared attractive due to clearly defined phases and comprehensive documentation at each stage, its requirement to specify the complete project scope upfront was incompatible with the evolving nature of the project. Given the shorter time frame and the dynamic nature of feature requirements, the flexibility afforded by agile was critical to the project's success.
 
 Scrum, one of the most widely adopted agile frameworks (used by approximately 63\% of agile teams \citep{versionone2020stateofagile}), was also considered. Its structured, sprint-based cycles, clear team roles, and structured ceremonies such as sprint planning and reviews were appealing for maintaining focused implementation and streamlined communication. However, the project's constraints -- limited availability due to academic commitments and a small team size -- made Scrum's daily stand-up meetings and fixed sprint lengths impractical. As a result, the project adopted an adapted agile approach: progress was reviewed every two weeks, effectively maintaining the advantages of frequent feedback without the constraints and scheduling pressures imposed by full Scrum ceremonies.
 
@@ -47,24 +47,30 @@ A second change involved reversing the development order of objectives 3 and 4. 
 
 This adjustment helped mitigate project risk. Objective 4 involved minimal changes to the database schema and integrated easily with UI components developed for earlier objectives. In contrast, objective 3 introduced more complex computational logic and performance concerns, which demanded additional design, testing and changes to the database. Tackling objective 4 earlier helped avoid potential cascading delays and ensured a smoother integration process later in development.
 
-\subsection{Actual Timeline vs Planned Timeline -- TODO}
-While the original project plan offered a clear sequence for implementing each objective, the actual progression of the project deviated in several key areas due to technical complexity, user interface considerations, and evolving priorities. The Gantt chart below (Figure~\ref{fig:actual_gantt}) summarises the planned versus actual timeline for each major objective. The following subsection provides a breakdown of the key deviations and the reasons behind them.
-
+\subsection{Actual Timeline vs Planned Timeline}
+While the original project plan provided a clear sequence for implementing each objective, the actual progression deviated in several key areas due to technical challenges, interface considerations, and evolving priorities. Figure~\ref{fig:actual_gantt} (below) shows the actual timeline of the project, which can be compared to the original plan (Figure~\ref{fig:gantt}).
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{../common/actual_gantt.png}
-    \caption{Gantt chart illustrating the project plan from the progress report.}
+    \caption{Gantt chart illustrating the actual timeline of the project.}
     \label{fig:actual_gantt}
 \end{figure}
 
+The most significant deviations from the original plan included:
+
 \begin{itemize}
-    \item Mentioned swapping 3,4 already
-    \item objective 1 delayed due to time spent understanding the existing codebase -- especially the database schema and how to implement the delegation model in a way that would be compatible with it.
-    \item 
+    \item \textbf{Objective 1 (Core Delegation Model)} commenced approximately one week later than planned. This delay stemmed from the need for deeper familiarization with vodle's existing codebase, particularly its database schema and frontend architecture. Understanding these components was essential to ensure that new delegation features could integrate seamlessly without disrupting existing functionality. This initial exploration phase, while time consuming, was crucial for establishing a solid foundation for subsequent development.
+    \item \textbf{Objective 2 (Ranked Delegation)} extended significantly beyond its initial timeframe. Originally scheduled for completion during the Christmas break, development continued until Term 2, Week 3. This extension was primarily due to the unforeseen complexities (as discussed in Section~\ref{sec:design_ranked_delegation}) which required both sophisticated transitive resolution logic and intuitive user interface feedback mechanisms, which proved more challenging than initially estimated.
+    \item \textbf{Objectives 3 and 4}'s order was swapped, as discussed earlier in this section. While the original plan positioned Objective 3 (Vote Splitting) to follow Objective 2, development logistics and dependency considerations prompted a shift to implement Objective 4 (Per-Option Delegation) first. This decision minimised integration risks, as Objective 4 required fewer schema modifications and built more directly on existing UI components, in particular those developed for Objective 2 (Ranked Delegation).
+    \item \textbf{Extension Objective (Simulation)} was ultimately descoped from the project plan. This decision reflected both time constraints imposed by the extended development periods for core objectives and the discovery of existing comprehensive research on delegation behavior by \citet{brill_liquid_2021}. Focusing resources on delivering robust implementations of the core objectives was deemed more valuable than duplicating existing research.
 \end{itemize}
 
+Despite these deviations, the overall project structure remained intact and successful. The buffer period allocated at the end of Term 2 served its intended purpose as contingency time, effectively absorbing the delays in Objectives 1 and 2. This strategic planning ensured that despite timeline adjustments, the project remained on track for completion with all core objectives delivered to high quality standards.
 
-\section{Risk Assessment - TODO}
+The ability to adapt the project plan while maintaining focus on delivering the core functionality demonstrates the value of the chosen agile methodology. Rather than rigidly adhering to potentially unrealistic timelines, the flexible approach allowed for continuous reassessment and prioritisation based on evolving technical insights and stakeholder feedback.
+\section{Risk Assessment}
+The following section provides a detailed analysis of the risks identified in the risk assessment table below (see Table~\ref{tab:risk-assessment}). Each risk is discussed individually in detailed later on in the section, outlining its implications and the strategies proposed to mitigate potential issues.
+
 \begin{table}[H]
 \centering
 \begin{tabular}{|p{4.5cm}|p{2cm}|p{8cm}|}
@@ -82,8 +88,6 @@ Data loss or corruption & Low & Use Git for version control and take regular loc
 \end{tabular}
 \caption{Key risks identified and their mitigation strategies}\label{tab:risk-assessment}
 \end{table}
-
-The following sections provide a detailed analysis of the risks identified in the risk assessment table (see Table~\ref{tab:risk-assessment}). Each risk is discussed individually, outlining its implications and the strategies proposed to mitigate potential issues.
 
 \subsection*{Breaking the Live Vodle Site During Development}
 
@@ -122,11 +126,31 @@ The following sections provide a detailed analysis of the risks identified in th
 \textbf{Likelihood:} Low
 
 \textbf{Description:} While unlikely, corruption of the CouchDB database during development could occur due to improper schema modifications or accidental changes.
-%Given the development nature of the database, such corruption primarily affects development efficiency rather than user data or long-term stability.
 
-\textbf{Mitigation:} No mitigation --- in the event of data corruption, the development database will be reset to its original state. As all data in the database is poll and user specific, it does not impact development as no important data is stored in the production environment.
+\textbf{Mitigation:} No mitigation -- in the event of data corruption, the development database will be reset to its original state. As all data in the database is poll and user specific, it does not impact development as no important data is stored in the production environment.
 
-\section{Risk Management Reflection - TODO}
+\section{Risk Management Reflection}
+This section evaluates how effectively the project's risk management strategies addressed both anticipated and unforeseen challenges. It examines which risks were realised, how mitigation strategies performed in practice, and identifies lessons learned that could inform future projects. 
+
+\textbf{Breaking the Live Vodle Site During Development}
+
+The use of Git branching strategies and comprehensive local testing successfully prevented any disruption to the live site. The separation between development and production environments ensured stability throughout the project lifecycle. This disciplined approach proved valuable despite adding some overhead to the development process.
+
+\textbf{Feature Complexity Exceeds Estimates}
+
+This materialised as the most significant risk, particularly during the implementation of ranked delegation (Objective 2) and vote splitting mechanisms (Objective 3). The algorithmic complexity and UI considerations extended development beyond initial estimates.
+The strategy of prioritising core objectives proved invaluable, allowing the project to successfully deliver all essential functionality. The decision to descope the extension objective demonstrates effective risk management balancing ambition with practical constraints.
+In hindsight, breaking complex features into smaller subtasks during planning might have improved estimation accuracy, though the agile methodology compensated through its inherent flexibility.
+
+\textbf{Lack of Engagement from Supervisors or Stakeholders}
+
+This risk did not take place. The fortnightly meetings and additional communication channels maintained strong engagement throughout the project. Jobst Heitzig's dual role as co-supervisor and customer representative provided crucial domain expertise and timely feedback on design decisions.
+
+\textbf{Data Loss or Corruption}
+No significant data loss incidents occurred. Git version control provided reliable tracking of code changes, while the lightweight approach to database management proved appropriate as no critical data was compromised.
+
+\textbf{Summary}
+Overall, the risk management approach proved effective in supporting project delivery despite several challenges. The most significant risk -- feature complexity exceeding estimates -- did occur and required timeline adjustments, but the contingency buffer and flexible scope management successfully mitigated its impact. The disciplined development approach prevented any disruption to the live site, while strong stakeholder engagement and version control systems effectively addressed the remaining identified risks. The experience highlighted the importance of integrating contingency time into project schedules and maintaining flexibility when dealing with technically complex features.
 
 \section{Legal and Ethical Considerations}
 As vodle may eventually be used to gather votes on sensitive topics, particular attention was paid to ensuring user privacy and system fairness throughout development.

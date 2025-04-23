@@ -93,7 +93,7 @@ The architecture of vodle, particularly its reliance on CouchDB and the absence 
 \begin{itemize}
   \item \textbf{User autonomy is strictly enforced.} Each user can only modify documents that are explicitly associated with their own identity. This guarantees that vote and delegation data cannot be tampered with by other clients but also eliminates the possibility of directly setting or managing another user's vote.
 
-  \item \textbf{Shared state must be decomposed.} The current database design does not support the modification of a single document by multiple users. As a result, features that require a global view -- such as a delegation graph -- require a rework of the database schema.
+  \item \textbf{Issues with sharing a document.} The current database design does not support the modification of a single document by multiple users. As a result, features that require a global view -- such as a delegation graph -- require a rework of the database schema.
 
   \item \textbf{Validation logic is structural, not contextual.} Since CouchDB validation functions can only inspect the document being written, they cannot reason about relationships across documents. This prohibits logic such as resolving delegations server-side, enforcing uniqueness of votes, or validating delegation cycles at the point of write.
 
@@ -106,43 +106,51 @@ Together, these constraints shape some of the design and implementation choices 
 \label{sec:core_delegation_detailed}
 This section describes the design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It covers the issues with the original implementation and the challenges solved in the redesign.
 
-\subsection{Delegation Interaction Flow}
-Figure~\ref{fig:delegation-flow} depicts the life-cycle of a delegation. The diagram is intentionally simple--only the four message exchanges required to set up or tear down a delegation are shown--so the reader can map each arrow to a concrete API call or UI control.
+\subsection{Existing Delegation Interaction Flow}
+Figure~\ref{fig:delegation-flow-accept} depicts the life-cycle of a delegation. The diagram is intentionally simple--only the four message exchanges required to set up or tear down a delegation are shown--so the reader can map each arrow to a concrete API call or UI control.
 
 % ------------- DIAGRAM PLACEHOLDER -------------
 % Replace the TikZ skeleton with an exported SVG once finalised.
 \begin{figure}[H]
   \centering
-  \begin{tikzpicture}[node distance=3cm,>=stealth,thick]
+  \begin{tikzpicture}[node distance=7cm,>=stealth,thick]
     % clients
-    \node[rectangle,draw,rounded corners,fill=gray!5] (A) {Delegator A};
-    \node[rectangle,draw,rounded corners,fill=gray!5,right of=A] (B) {Delegate B};
+    \node[rectangle,draw,rounded corners,fill=gray!5] (A) {A};
+    \node[rectangle,draw,rounded corners,fill=gray!5,right of=A] (B) {B};
     % arrows
-    \draw[->] (A) -- node[above]{share link} (B);
-    \draw[->,dashed] (B) .. controls +(0,1.5) and +(0,1.5) .. node[above]{accept} (A);
-    \draw[->] (B.south) -- ++(0,-1.2) node[midway,right]{casts vote};
-    \draw[->] (A.south) -- ++(0,-1.2) node[midway,left]{tally uses B};
+    \draw[->] (A) -- node[above]{(1) Share Link} (B);
+    \draw[->] (B) .. controls +(0,1.5) and +(0,1.5) .. node[above]{(2) Accept} (A);
+    \draw[->] (B.south) -- ++(0,-1.2) node[midway,right]{Casts Own Vote};
+    \draw[->, dashed] (A.south) -- ++(0,-1.2) node[midway,left]{Uses B's Vote};
   \end{tikzpicture}
-  \caption{Minimal message sequence for creating a delegation. Only four interactions are required: (1) A shares a link, (2) B accepts, (3) B may cast or delegate further, (4) A's vote resolves through B.}
-  \label{fig:delegation-flow}
+  \caption{Sequence for a delegation to be initiated. User A shares a link with user B, who accepts the delegation.}
+  \label{fig:delegation-flow-accept}
 \end{figure}
 
-At runtime the app must therefore support:
-\begin{enumerate}
-  \item Generating and copying a poll-scoped, user-scoped invitation link.
-  \item Polling CouchDB for acceptance (or rejection) of that link.
-  \item A client-side resolution routine that follows the chain of \texttt{delegateFor} relationships until a casting voter is found.
-  \item Revocation that is immediate yet conflict-free if multiple clients are open.
-\end{enumerate}
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[node distance=7cm,>=stealth,thick]
+    % clients
+    \node[rectangle,draw,rounded corners,fill=gray!5] (A) {A};
+    \node[rectangle,draw,rounded corners,fill=gray!5,right of=A] (B) {B};
+    % arrows
+    \draw[->] (A) -- node[above]{(1) Share Link} (B);
+    \draw[->] (B) .. controls +(0,1.5) and +(0,1.5) .. node[above]{(2) Reject} (A);
+    \draw[->] (B.south) -- ++(0,-1.2) node[midway,right]{Casts Own Vote};
+    \draw[->] (A.south) -- ++(0,-1.2) node[midway,left]{Casts Own Vote};
+  \end{tikzpicture}
+  \caption{Sequence for a rejected delegation. User A shares a delegation link with user B, who rejects the delegation.}
+  \label{fig:delegation-flow-reject}
+\end{figure}
 
-\subsection{Issues Prior to Redesign - unnecessary?}
-The original implementation of liquid democracy in vodle functions as a proof-of-concept, but it has several limitations that hinder its usability and reliability. The following sections outline some of the key issues that were identified whilst planning the redesign.
+% \subsection{Issues Prior to Redesign - unnecessary?}
+% The original implementation of liquid democracy in vodle functions as a proof-of-concept, but it has several limitations that hinder its usability and reliability. The following sections outline some of the key issues that were identified whilst planning the redesign.
 
-\textbf{Inconsistency in data between clients} delegation graph not synched -- leads to cycle checking issue \dots
+% \textbf{Inconsistency in data between clients} delegation graph not synched -- leads to cycle checking issue \dots
 
-\paragraph{Out-of-sync state} Each browser session cached its own copy of the delegation graph; no push notifications existed to bring other clients up-to-date.
-\paragraph{Inconsistent cycle checking} Because state diverged, the local "no-loop" tests sometimes produced different answers on different machines.
-\paragraph{UI drift} Controls such as ``delegate none/some/all'' and the ``your vote is used for \(n\) others'' badge used stale data and became misleading.
+% \paragraph{Out-of-sync state} Each browser session cached its own copy of the delegation graph; no push notifications existed to bring other clients up-to-date.
+% \paragraph{Inconsistent cycle checking} Because state diverged, the local "no-loop" tests sometimes produced different answers on different machines.
+% \paragraph{UI drift} Controls such as ``delegate none/some/all'' and the ``your vote is used for \(n\) others'' badge used stale data and became misleading.
 
 \subsection{Cycle Checking}
 Robust cycle detection is a core requirement for any system implementing transitive delegation. In liquid democracy, cycles render votes unresolved and potentially lost, directly undermining the integrity of the outcome. Given vodle's dynamic and client-driven architecture, it was crucial to implement an efficient, client-side mechanism that could detect and prevent cycles in real time, without requiring server-side intervention or excessive computation.

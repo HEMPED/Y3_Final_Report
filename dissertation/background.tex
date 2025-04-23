@@ -44,7 +44,7 @@ Throughout this section, several diagrams are used to illustrate how votes move 
   \caption{Diagram symbol legend used to represent different voter behaviours.}
 \end{table}  
 
-\subsection*{Delegation cycles}
+\subsection*{Delegation Cycles}\label{subsec:delegation_cycles}
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[->, >=stealth, thick, scale=1.5]
@@ -89,7 +89,7 @@ A voter abstains by neither casting a vote nor delegating it to another user \ci
 
 Abstentions are especially impactful when they occur at the end of a larger delegation chain, as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. Additionally, the voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
 
-\subsection*{Super-voters}
+\subsection*{Super Voters}
 \begin{figure}[h]
   \centering
   \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm, square/.style={regular polygon,regular polygon sides=4}]
@@ -272,14 +272,16 @@ CouchDB \citep{couchdb} is vodle's primary data storage method and communicates 
 
 The lack of server-side computation means the delegation algorithms must be designed with client-side efficiency in mind, ensuring performance remains acceptable even as delegation complexity increases. Thus, the choice of algorithms for liquid democracy features, such as those to resolve conflicting delegation paths, is directly influenced by CouchDB's architectural constraints.
 
-These technological considerations -- which will be covered in more detail in Section~\ref{sec:design_architecture} -- shape the practical implementation of liquid democracy within vodle, highlighting the need for efficient client-side processing, careful data management, and cross-platform consistency.
+These technological considerations (covered in more detail in Section~\ref{sec:design_architecture})shape the practical implementation of liquid democracy within vodle, highlighting the need for efficient client-side processing, careful data management, and cross-platform consistency.
 
-\subsection{Partially Implemented Delegation in Vodle}
+\subsection{Partially Implemented Delegation in Vodle}\label{subsec:background_existing_delegation}
+Vodle contained an incomplete implementation of vote delegation at the beginning of the project. While this functionality was not exposed to end users and had never been deployed in a working state, several components of a delegation system were already present in the codebase. These included an invitation based mechanism for creating delegations, along with the user interface elements required for it to function.
 
-The current version of vodle includes a partially implemented delegation feature that allows users to delegate their vote to another participant in a given poll. Whilst this implementation provides the basic structure required for delegation, it lacks consistency in handling more complex delegation scenarios such as cycles.
+This implementation also attempted cycle detection (and prevention), but its behaviour was inconsistent. Because delegation graphs were stored only in local memory and not synchronised across clients, different browsers could have divergent views of the delegation state. As a result, delegation actions that passed cycle checks on one client could fail on another, undermining the reliability of the system.
 
-include delegation workflow + forward ref to implementation chapter
+Although inactive and incomplete, this partial implementation helped clarify some of the challenges involved in integrating liquid democracy into vodle -- in particular those related to consistency, synchronisation, and user experience. It also provided a foundation of interface patterns and conceptual models that were built upon the development of the project.
 
+Further discussion of the issues with this implementation as well as how it was adapted, improved, or replaced can be found in Chapter~\ref{ch:design_implementation}.
 \subsection{Design Philosophy}
 
 

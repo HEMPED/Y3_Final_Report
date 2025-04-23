@@ -4,7 +4,7 @@ This chapter describes the design and implementation of the delegation mechanism
 
 Each subsequent section aligns directly with one of the project objectives defined previously, explaining the rationale behind key design choices, algorithms, and interface elements. Emphasis is placed on the critical design trade-offs and challenges encountered, highlighting how constraints such as the serverless architecture and client-side computation informed implementation decisions.
 
-\section{System Architecture Overview}
+\section{System Architecture Overview}\label{sec:design_architecture}
 Vodle is built as a serverless web application that emphasises accessibility, client-side performance, and ease of deployment. Its architecture comprises two components:
 
 \begin{enumerate}
@@ -19,38 +19,88 @@ Vodle's serverless architecture has several implications for the design and impl
   \item CouchDB's document-based storage model means that all data must be serialised and deserialised in JSON format. This affects how data structures are designed and manipulated, as well as how they are stored and retrieved from the database.
 \end{itemize}
 
-%\subsection{CouchDB Configuration}
-% - a user database named '_users' (which is the standard name for user databases)
-% - a database named 'vodle' that will contain the data
-%
-% Values in the poll database are not allowed to be edited
-%
-% Users cannot edit values in the _users database that are not their own.
-
-\subsection{CouchDB Databases and Write Constraints}
+\subsection{CouchDB Storage and Write Constraints}
 \label{subsec:couchdb_limits}
 
-Vodle stores all persistent data in two logical places:
+Vodle store all data in CouchDB in two types of databases: the \_users database and poll databases. The \_users database is a standard CouchDB database that stores user documents, while the poll databases are created dynamically for each poll and contain all relevant data for that poll.
 
 \begin{enumerate}
-  \item \textbf{\_users} -- the built-in database managed by CouchDB. Every user account is a single document whose \verb|_id| is the user's name (e.g.\ \verb|org.couchdb.user:alice|). CouchDB's validation functions forbid anyone except the authenticated owner or a server administrator from changing these documents.
-  \item \textbf{Poll databases} -- one database per poll, named \verb|poll-<uuid>|, plus a convenience symlink called \verb|vodle| that always points at ``the currently being edited''. These databases hold:
+  \item \textbf{\_users Database.}
+    \begin{itemize}
+      \item Each document ID is \texttt{org.couchdb.user:<username>}.
+      \item Only the account owner or an administrator may modify or delete their user document.
+    \end{itemize}
+
+  \item \textbf{Poll Databases.}
+    \begin{itemize}
+      \item Databases are named \texttt{poll-<POLLID>}.
+      \item Stores:
         \begin{itemize}
-          \item the immutable poll definition (\verb|poll.json|);
-          \item one \verb|vote-<user>| document per voter;
-          \item locally cached, per-user helper documents (e.g. verb|delegations-<user>|) that speed up client-side calculations.
+          \item The immutable poll definition (\texttt{poll.json}).
+          \item One vote document per voter (\texttt{vote-<user>}).
         \end{itemize}
+    \end{itemize}
 \end{enumerate}
 
-\paragraph{No true ``shared document''}
+\paragraph{Document-Level Security}
+CouchDB enforces security at the level of entire documents. This means that access control decisions are made based on the identity of the user attempting to write a document and the document's ID -- there is no support for restricting access to individual fields within a document. Additionally, CouchDB does not support merging concurrent changes; updates must replace the entire document in a single write operation. As a result, all write operations are either fully accepted or fully rejected by the database's \texttt{validate\_doc\_update} function. This strict model simplifies validation logic but introduces important constraints in the context of implemented liquid democracy, which are discussed in the remainder of this section.
 
-A fundamental limitation of CouchDB's security model is that \emph{all} write permissions are evaluated per-document.  Either a client may overwrite a document in its entirety or it may not.  There is no concept of field-level ACLs and therefore no safe way for several users to co-edit a single JSON object.  In practice this means:
+\subsubsection{Poll-DB Validation}
+When a client writes to a poll database, the \texttt{validate\_doc\_update} enforces:
+
+\begin{enumerate}
+  \item \textbf{User Documents:} IDs are prefixed with \texttt{~vodle.user.}, and only the owner may modify them:
+\begin{figure}[H]
+  \centering
+\begin{minted}{typescript}
+if (!id.startsWith(`~{userCtx.name}§`)) {
+  throw({ forbidden: 'Only the document owner may modify this user doc.' });
+}
+\end{minted}
+\caption{Code to prevent a user from modifying another user's document.}
+\end{figure}
+
+  \item \textbf{Immutable Poll Artefacts: } Documents like \texttt{poll.json} or results cannot be updated once created:
+\begin{figure}[H]
+    \begin{minted}[fontsize=\small,baselinestretch=1]{javascript}
+if (oldDoc && isPollArtifact(id)) {
+  throw({ forbidden: 'Poll documents are immutable once created.' });
+}
+    \end{minted}
+\caption{Code to prevent modification of poll artefacts.}
+\end{figure}
+\end{enumerate}
+
+\subsubsection{\_users-DB Validation}
+In the \_users database, a similar validation function is used to prevent users from modifying other users' documents, including the \texttt{vodle} service account.
+\begin{figure}[H]
+\begin{minted}[fontsize=\small,baselinestretch=1]{javascript}
+if (id !== `org.couchdb.user:{userCtx.name}`) {
+  throw({ forbidden: 'Users may only modify their own user document.' });
+}
+if (userCtx.name === 'vodle' || isPollService(userCtx.name)) {
+  throw({ forbidden: 'Service accounts are immutable.' });
+}
+\end{minted}
+\caption{Code to prevent a user from modifying another user's document.}
+\end{figure}
+
+\subsection{Summary of Storage and Validation Constraints}
+\label{subsec:summary_storage_constraints}
+
+The architecture of vodle, particularly its reliance on CouchDB and the absence of a custom backend, imposes important constraints on how delegation features are designed and implemented.
 
 \begin{itemize}
-  \item Each voter can freely create or update documents whose IDs start with their own username (\verb|vote-alice|, \verb|delegations-alice|, \dots).
-  \item They \emph{cannot} touch any document written by another user, nor any global artefact such as \verb|poll.json|.
-  \item Server-side validation functions can block illegal writes, but they cannot merge concurrent edits into a shared attribute.
+  \item \textbf{User autonomy is strictly enforced.} Each user can only modify documents that are explicitly associated with their own identity. This guarantees that vote and delegation data cannot be tampered with by other clients but also eliminates the possibility of directly setting or managing another user's vote.
+
+  \item \textbf{Shared state must be decomposed.} The current database design does not support the modification of a single document by multiple users. As a result, features that require a global view -- such as a delegation graph -- require a rework of the database schema.
+
+  \item \textbf{Validation logic is structural, not contextual.} Since CouchDB validation functions can only inspect the document being written, they cannot reason about relationships across documents. This prohibits logic such as resolving delegations server-side, enforcing uniqueness of votes, or validating delegation cycles at the point of write.
+
+  \item \textbf{Client-side logic carries the burden.} Due to the point above, all logic for delegation resolution, cycle checking, and vote splitting must be implemented in the client. This requires careful design to ensure that the frontend can handle complex delegation scenarios without overwhelming the user or causing performance issues.
 \end{itemize}
+
+Together, these constraints shape some of the design and implementation choices of the delegation features in vodle, which will be discussed in detail in the following sections.
 
 \section{Implement a Core Delegation Model into vodle}
 \label{sec:core_delegation_detailed}

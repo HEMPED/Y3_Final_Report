@@ -153,9 +153,9 @@ This interaction flow has two key strengths. First, it ensured that delegations 
 However, while this implementation excelled at user autonomy and privacy, it lacked critical safeguards such as a consistent mechanism to prevent delegation cycles. The following section discusses the limitations of the original cycle-checking logic and outlines how these issues were addressed in the redesigned system.
 
 \subsubsection{Cycle Checking}
-As discussed in Section~\ref{subsec:delegation_cycles}, cycle prevention is critical to ensure that delegated votes are eventually cast by a valid voter. If a cycle forms -- for example, if A delegates to B, B to C, and C back to A -- none of the votes in the cycle can be resolved, effectively nullifying them. Detecting and preventing such structures is therefore a fundamental requirement for maintaining the integrity of the vote resolution process.
+Cycle prevention is needed to ensure that delegated votes are eventually cast by a valid voter. If a cycle forms -- for example, if A delegates to B, B to C, and C back to A -- none of the votes in the cycle can be resolved, effectively nullifying them. Detecting and preventing such structures is therefore a fundamental requirement for maintaining the integrity of the vote resolution process.
 
-The original implementation in vodle included a rudimentary form of cycle detection, but this logic was applied inconsistently. Since each browser session maintained a local view of the delegation graph, users could unknowingly create cycles that were not detected in real time or that only became apparent on other devices. This subsection explores the limitations of the previous system and presents the improved cycle-checking mechanism developed as part of this project.
+The original implementation in vodle included a rudimentary form of cycle detection, but this logic was applied inconsistently. Since each browser session maintained a local view of the delegation graph, users could unknowingly create cycles that were not detected in real time or that only became apparent on other devices.
 
 \Huge\textbf{TALK ABOUT THE CYCLE CHECKING LOGIC IN THE OLD SYSTEM}\large
 

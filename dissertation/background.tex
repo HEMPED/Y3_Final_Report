@@ -2,35 +2,21 @@
 
 This chapter provides background context for the development of a liquid democracy system within vodle. It builds on the concepts introduced earlier, focusing on more detailed research into known limitations of liquid democracy and potential solutions proposed in academic literature. Additionally, the technical foundations and design philosophy of vodle as a platform are explored.
 
-% \section{Liquid Democracy -- TODO: FIX INTRO}
-% Liquid democracy is a decision-making system that combines elements of both direct and representative democracy that offers a voter more flexibility than traditional voting models.
-
-% In direct democracy, every participant votes individually on each issue. This model offers the most individual input but can become impractical for large-scale decision-making due to the high level of participation required from each individual. As \citet{ford_delegative_2002} states, direct democracy assumes that all individuals are both willing and able to engage meaningfully with every decision, which is often not the case in large groups due to the variance in both the interest and knowledge of voters. The cognitive demand of staying informed on all matters, combined with the time commitment necessary for constant participation, makes direct democracy unmanageable at scale.
-
-% In a representative democracy, citizens elect officials who make decisions on their behalf for the duration of a fixed term. While this model is scalable and practical for large populations, it introduces several limitations. Elected representatives often make decisions based on party lines, personal convictions, or external influences such as lobbying groups, which may not accurately reflect the preferences of their constituents \citep{blum_liquid_2016}. In addition, because elections are infrequent, this system tends to be unresponsive to shifts in public opinion. Citizens are unable to easily adjust or retract their delegation, which limits their ability to influence decisions once representatives are in office \citep{blum_liquid_2016}. As a result, participation is both indirect and inflexible, which can lead to disengagement and dissatisfaction among voters.
-
-% Liquid democracy addresses these limitations by allowing voters to: cast their votes directly, delegate them to someone that they trust, or abstain from voting entirely \citep{blum_liquid_2016}. In comparison to a direct democracy, the bar for participation is lowered as voters no longer need to stay informed and engaged to pass a vote because they can trust a delegate to do it on their behalf.
-% These delegations can also be updated or revoked at any time, giving users more control over how their vote is used in comparison to a traditional representational democracy where your representative can only be changed at certain points in time.
-
-% Despite its theoretical appeal, liquid democracy introduces new challenges. Transitive delegation can lead to unintended consequences such as delegation cycles, where a chain of delegations loops back on itself, or the emergence of super-voters, individuals who accumulate a disproportionate number of delegated votes. Additionally, if a voter delegates to someone who abstains from voting, their vote may be lost entirely. These issues raise concerns about fairness, transparency, and the integrity of representation within liquid democratic systems.
-
-% The remainder of this section explores these challenges in more detail and examines variations of liquid democracy designed to address them, including ranked delegation and vote splitting.
-
 \section{Liquid Democracy}
-Liquid democracy is a hybrid decision-making system that combines elements of both direct and representative democracy. It offers individuals greater flexibility in how they participate, allowing them to either vote directly, delegate their vote to someone they trust, or abstain altogether \citep{blum_liquid_2016}.
+As democratic participation increasingly shifts to online platforms, traditional models of governance face new constraints. Liquid democracy has emerged as a compelling alternative, combining the flexibility of direct voting with the scalability of delegation. It allows users to vote directly, delegate their vote to a trusted individual, or abstain entirely -- offering a dynamic and responsive approach to collective decision-making \citep{blum_liquid_2016}.
 
-In a direct democracy, every individual casts their own vote on each issue. While this model provides maximum individual agency, it becomes impractical at scale due to the high participation burden it places on voters. As \citet{ford_delegative_2002} observes, direct democracy assumes that all participants are willing and able to engage meaningfully with every decision -- an unrealistic expectation in large or heterogeneous populations, where voters differ widely in expertise, availability, and interest. As decision making grows more frequent or technically complex, the cognitive and time burdens required to stay informed become overwhelming for many participants.
+In a direct democracy, every individual casts their own vote on each issue. While this model provides maximum agency and transparency, it becomes impractical at scale due to the high cognitive and time demands placed on participants \citep{ford_delegative_2002}. Large or heterogeneous populations often feature varying levels of expertise, interest, and availability -- making sustained engagement unrealistic.
 
-In contrast, representative democracy addresses scalability by allowing voters to elect officials who make decisions on their behalf. However, this model introduces several drawbacks: elected representatives may act based on party alignment, personal beliefs, or lobbying pressures rather than the preferences of their constituents \citep{blum_liquid_2016}. Furthermore, the inability to adjust or revoke one's vote between elections limits responsiveness to changes in public opinion and diminishes individual control.
+Representative democracy addresses scalability by electing officials to make decisions on behalf of others. However, this model can introduce misalignment between representatives and constituents, and voters lack the ability to adjust their preferences between elections \citep{blum_liquid_2016}.
 
-Liquid democracy aims to resolve these limitations by introducing delegable proxy voting. Voters can delegate their vote to another individual for a specific decision or issue domain, and importantly, this delegation is transitive and revocable at any time. This system allows individuals to participate as much or as little as they choose, without forfeiting influence over decisions. Delegations can also evolve over time, offering a dynamic form of representation that is both scalable and responsive.
+Liquid democracy aims to resolve these tensions by enabling delegable, revocable proxy voting. Individuals can delegate their vote to someone they trust for a particular issue or domain, and change their delegation at any time. This empowers voters to participate as much or as little as they choose, without forfeiting influence.
 
-Despite these advantages, liquid democracy introduces new challenges of its own. Transitive delegation can lead to issues such as delegation cycles, where votes become trapped in loops, or the emergence of ``super-voters'' who accumulate disproportionate influence. Additionally, delegated votes may be lost if they ultimately reach a voter who abstains. These issues raise important concerns around transparency, fairness, and the integrity of representation.
-
-The remainder of this section explores these challenges in detail, alongside proposed variations to the liquid democracy model -- such as ranked delegation and vote splitting -- that aim to address its theoretical and practical limitations.
+The remainder of this chapter explores the practical challenges faced by liquid democracy (such as cycles, abstentions, and disproportionate influence) and introduce key enhancements like ranked delegation and vote splitting, which aim to address these limitations while preserving its flexibility and user control.
 
 \subsection{Issues with Liquid Democracy -- TODO:INTRO}
-Throughout this section, several diagrams are used to illustrate how votes move through a liquid democracy system. To clarify the roles of different voters within these diagrams, the following symbols are used:
+
+While liquid democracy offers a flexible and adaptive alternative to traditional decision-making models, it also introduces distinct technical and social challenges. These arise from its reliance on transitive delegations and dynamic participation. In practice, unresolved issues such as delegation cycles, vote loss due to abstentions, and the emergence of disproportionately influential users (``super-voters'') can undermine both the fairness and effectiveness of the system. This section outlines these key issues, highlighting their impact on vote integrity and user trust.
+
 \begin{table}[H]
   \centering
   \begin{tabular}{|@{}|l|l@{}|}
@@ -89,7 +75,7 @@ A voter abstains by neither casting a vote nor delegating it to another user \ci
 
 Abstentions are especially impactful when they occur at the end of a larger delegation chain, as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. Additionally, the voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
 
-\subsection*{Super Voters}
+\subsection*{Super-Voters}
 \begin{figure}[h]
   \centering
   \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm, square/.style={regular polygon,regular polygon sides=4}]
@@ -105,17 +91,16 @@ Abstentions are especially impactful when they occur at the end of a larger dele
   \caption{Super-voter: A delegates to B, B to C. No matter which vote D or E cast, C's vote will always determine the outcome as it has a weight of 3.}
   \label{fig:delegation-supervoter}
 \end{figure}
-In liquid democracy, a super-voter is an individual who receives a large number of delegated votes, therefore gaining disproportionate influence over decisions \citep{kling2015votingbehaviourpoweronline}. While this behaviour may reflect voters' genuine preferences, it can lead to a concentration of power that goes against the intended egalitarianism and democratic ideals of liquid democracy.
 
-Even if a particular implementation of liquid democracy allows users to alter their delegation at any time, in practice, many voters may not actively monitor or even know how their vote is being used. This can allow a small number of super-voters to dominate outcomes, especially in systems that do nothing to prevent large delegation chains.
+In liquid democracy, a \textit{super-voter} is a user who receives a large number of delegations, thereby accumulating significant voting power \citep{kling2015votingbehaviourpoweronline}. While such concentration may arise from genuine trust, it risks creating imbalances that contradict the egalitarian goals of the system. Super-voters can effectively act as unelected representatives -- potentially swaying results with little accountability.
 
-Real-world examples of this phenomenon have been documented. In the German Pirate Party's use of LiquidFeedback, certain users received so many delegations that their votes were like ``decrees'' \citep{sven_becker_liquid_2012,kling2015votingbehaviourpoweronline} even though they were not elected officials.
-Despite \citet{kling2015votingbehaviourpoweronline} noting that super-voters generally voted in line with the majority and therefore did not drastically affect the outcome of the votes, the potential for individuals to single-handedly influence results still remains a concern.
-%\citet{kling2015votingbehaviourpoweronline} noted that the super-voters generally voted in line with the majority, therefore not drastically affecting the outcome of the votes and contributed to the stability of the system. However, the potential for individuals to single-handedly influence the results remained a concern.
-%This pattern has also been observed in blockchain-based governance systems \citep{hallWhatHappensWhen2024}, where voting tokens (digital representations of voting power) are commonly concentrated among a few delegates, giving them an excessive amount of power.
-%In the case of the Pirate Party, analysis showed that although super-voters held significant theoretical power, they generally voted in line with the majority, therefore not drastically affecting the outcome of the votes. \citet{kling2015votingbehaviourpoweronline} described this behaviour as voting "wisely," noting that while these individuals had the capacity to change outcomes, they typically did not use it to push their own agenda.
+Even when systems allow voters to revoke delegations at any time, many users may not actively monitor how their vote is used. This can lead to persistent power structures where a small number of users hold substantial, often unnoticed, influence over outcomes.
 
-This pattern is not limited to traditional online voting platforms. It can also be seen within decentralised autonomous organisations (DAOs) - blockchain-based entities where decisions are made collectively by token holders without central leadership. These organisations use token-based voting to decide on critical issues like protocol upgrades and funding allocations. \citet{hallWhatHappensWhen2024} studied 18 decentralised autonomous organisations (DAOs) and found that voting power was often concentrated in the hands of a few delegates. While most did not control a large share of all available tokens, low participation meant that their share of actual votes cast was disproportionately high. In several DAOs, the top five delegates accounted for over 50\% of all votes cast, and in the DAO Gitcoin, this figure exceeded 90\%.
+This phenomenon is not just theoretical. In the German Pirate Party's use of LiquidFeedback, some participants became so dominant that their votes carried decree-like weight, even though they were not formally elected \citep{sven_becker_liquid_2012, kling2015votingbehaviourpoweronline}. While \citet{kling2015votingbehaviourpoweronline} observed that these super-voters generally aligned with majority opinion -- contributing to system stability rather than distorting it -- their influence still raises concerns about transparency and voter autonomy.
+
+Super-voting is not confined to traditional political platforms. In decentralised autonomous organisations (DAOs), which use token-based voting on blockchains, similar patterns emerge. \citet{hallWhatHappensWhen2024} found that in many DAOs, voting power was highly concentrated among a few delegates due to low participation. In some cases, such as Gitcoin, over 90\% of votes cast were controlled by the top five delegates.
+
+These examples underscore the importance of delegation mechanisms that can curb excessive power accumulation. Techniques such as vote splitting and delegation caps are essential to preserving fairness, especially in systems like vodle that prioritise inclusivity and trust-based participation.
 
 \subsection{Variations of Liquid Democracy}
 The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, enhancements have been proposed that modify how delegations function. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
@@ -173,11 +158,12 @@ Although this system is intuitive and reduces the impact of abstentions, it lack
 \subsubsection*{Fractional Delegation~\citep{bersetche2024}}
 Bersetche et al. introduce fractional delegation, allowing voters to explicitly assign different weights to each chosen delegate, including themselves. Delegates each receive a specified fraction of the voter's total voting power, reflecting the voter's nuanced trust and preference levels. This approach captures detailed voter preferences accurately and allows for greater personal agency compared to equal vote distribution. However, fractional delegation introduces additional complexity in managing and tracking these weighted delegations. Users must explicitly manage multiple numerical allocations, which may increase cognitive load and complicate user interfaces.
 
-\subsubsection*{Trust Matrix Model}
-In the trust matrix model, voters define explicit trust values \( \text{trust}_{i,j} \), representing how much voter \( i \) trusts voter \( j \). Each voter also assigns their personal rating (\( \text{self}_i \)). The effective rating for each voter is computed iteratively using the equation:
-\[
-\text{eff}_i = \text{trust}_{i,i} \cdot \text{self}_i + \sum_{j \neq i}\text{trust}_{i,j} \cdot \text{eff}_j
-\]
+\subsubsection*{Trust Matrix Model (proposed by Heitzig)}
+
+This model was originally proposed by Jobst Heitzig, co-supervisor of this project, as a novel and highly expressive approach to vote splitting. It allows voters to define trust values \( \text{trust}_{i,j} \) for multiple delegates, including themselves, and combines these into an effective rating via an iterative computation:
+\begin{gather}
+  \text{eff}_i = \text{trust}_{i,i} \cdot \text{self}_i + \sum_{j \neq i}\text{trust}_{i,j} \cdot \text{eff}_j
+\end{gather}
 
 Here, each voter's trust values (including self-trust) must sum to at most 1. The iterative computation continues until the change in effective ratings between iterations falls below a predefined threshold \( \epsilon \). This approach offers the highest granularity and expressive power, allowing voters to precisely articulate nuanced trust relationships among multiple delegates. However, it comes with considerable computational complexity and potential convergence issues, especially in large networks with dense delegation relationships. Additionally, users may find it challenging to specify and manage such detailed trust matrices, negatively affecting usability.
 
@@ -188,9 +174,6 @@ In summary, each vote-splitting method balances voter expressivity, computationa
   \item \textbf{Fractional Delegation (Bersetche)} provides greater flexibility, permitting detailed voter preference expression, including self-allocation of votes. This method increases both computational complexity and interface complexity.
   \item \textbf{Trust Matrix Iterative Model} offers the highest expressivity and detail in delegation relationships, capturing complex trust dynamics. However, this method entails substantial computational overhead and introduces complexity in terms of usability and understanding for voters.
 \end{itemize}
-
-Considering the priorities of the vodle platform--usability, intuitive interfaces, computational efficiency, and maintaining voter agency-- \dots
-
 
 \section{Existing Implementations of Liquid Democracy}
 To understand how liquid democracy can be integrated into vodle, it is important to examine how similar systems have been implemented in real-world contexts. 
@@ -205,7 +188,7 @@ In practice, the Pirate Party's use of LiquidFeedback revealed several key dynam
 
 Another practical issue was the complexity of the system. LiquidFeedback was difficult to understand for many users, especially those unfamiliar with concepts like transitive delegation or multi-stage voting which limited its accessibility and contributed to declining engagement over time \citep{kling2015votingbehaviourpoweronline}.
 
-For a platform like vodle, the experience of LiquidFeedback highlights several important design considerations. First, user interfaces must be intuitive enough to allow voters to participate without needing deep technical knowledge. Second, the user must be know the status of their delegation at a glance - improving the understanding of the platform. Finally, ensuring that votes lead to visible and actionable outcomes is critical for maintaining user engagement.
+For a platform like vodle, the experience of LiquidFeedback highlights several important design considerations. First, user interfaces must be intuitive enough to allow voters to participate without needing deep technical knowledge. Second, the user must know the status of their delegation at a glance - improving the understanding of the platform. Finally, ensuring that votes lead to visible and actionable outcomes is critical for maintaining user engagement.
 
 %Overall, LiquidFeedback serves as both a proof of concept and a cautionary tale; demonstrating that liquid democracy can work at scale, but that thoughtful implementation is essential to avoid replicating the very problems it seeks to solve.
 \subsection{Google Votes}
@@ -288,9 +271,9 @@ Further discussion of the issues with this implementation as well as how it was 
 \section{Summary}
 The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle. Initially, the research highlighted critical limitations in traditional liquid democracy systems, such as the formation of delegation cycles, the risks associated with abstentions, and the disproportionate influence of super-voters. These insights showed the need for implementing delegation mechanisms that are capable of addressing these challenges effectively.
 
-Research into these mechanisms revealed several promising methods. Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness. Vote splitting was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates. Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from Google Votes, where topic specific delegations improved user engagement and representation accuracy.
+Research into these mechanisms revealed several promising methods. Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness. Vote splitting was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates. Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
 
-To ensure a thorough evaluation of these delegation mechanisms before full-scale integration, agent-based modelling was selected as a suitable method, with the Mesa framework identified as the most practical choice due to its ease of use, Python compatibility, and flexibility for rapid experimentation.
+Among the vote splitting methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's goals of user autonomy and flexibility. By allowing voters to articulate nuanced trust relationships across multiple delegates, including themselves, the model offers a compelling balance between representation quality and individual control. While more computationally intensive than simpler approaches, it presents a viable strategy for robust vote splitting within a real-time voting system.
 
 The technological constraints of vodle itself, especially the reliance on client-side processing due to the CouchDB architecture, demonstrated the need for efficient, lightweight implementation strategies.
 

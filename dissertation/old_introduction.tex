@@ -1,0 +1,46 @@
+\chapter{Introduction}\label{ch:introduction}
+
+\section{Context and Motivation}
+
+Decision-making is a central aspect of how groups function -- whether in governments, organisations, or online communities. Traditionally, two core models have guided collective decision-making: \textbf{direct democracy}, where individuals vote on issues themselves, and \textbf{representative democracy}, where elected individuals vote on behalf of others.
+
+Each model presents trade-offs. Direct democracy offers inclusivity and transparency, but becomes impractical at scale due to the level of engagement required from all participants \citep{ford_delegative_2002}. Representative democracy, while scalable, can lead to power being concentrated in the hands of a few, with limited responsiveness or accountability between elections \citep{blum_liquid_2016}.
+
+An example of a platform built around direct democracy is vodle, a web-based tool for collaborative decision-making. Vodle allows users to rate poll options from 0 to 100, with results computed using a unique consensus-based algorithm called MaxParC. Designed for openness and fairness, the platform is well-suited for decisions where all members can be actively involved.
+
+However, vodle's reliance on direct democracy introduces challenges in real-world scenarios. Many users lack the time, interest, or expertise to participate meaningfully in every decision. As the platform scales and decisions grow more complex, expecting consistent, active engagement from all users becomes increasingly impractical.
+
+This limitation highlights the need for a more adaptable approach to collective decision making -- one that maintains the fairness and transparency of direct voting, but allows users to participate at different levels based on their availability or confidence in the topic at hand.
+One such approach is liquid democracy.
+
+\subsection{Liquid Democracy}
+Liquid democracy blends elements of direct and representative democracy. It allows users to vote directly or delegate their vote to someone that they trust \citep{blum_liquid_2016}. Delegations are transitive: if Alice delegates to Bob and Bob to Charlie, Charlie effectively votes on behalf of all three. This model enables users to move seamlessly between casting their own votes or entrusting it to a trusted delegate, depending on how engaged they are with the issue.
+
+By supporting varying levels of involvement, liquid democracy offers a natural extension to vodle's current model. It preserves user autonomy while improving inclusiveness - users retain full control over their vote and can change delegations at any time.
+
+However, implementing liquid democracy presents several challenges:
+\begin{itemize}
+  \item \textbf{Delegation cycles}, where votes are passed in a loop and never reach a final decision-maker.
+  \item \textbf{Abstentions in delegation chains}, which can unintentionally suppress multiple users' votes.
+  \item \textbf{Disproportionate influence}, where certain individuals accumulate many delegations and become ``super-voters''.
+\end{itemize}
+
+Addressing these issues requires both technical mechanisms and clear, intuitive interfaces that give users visibility and control over how their votes are used.
+
+\section{Project Aims}
+
+The primary goal of this project is to design and implement a liquid democracy system within vodle. This integration extends the platform's capabilities beyond direct voting, enabling it to support a wider range of participation styles and scale to more complex decision-making contexts.
+
+
+\section{Structure of This Report}
+
+The rest of the report is structured as follows:
+
+\begin{itemize}
+  \item Chapter~\ref{ch:background}
+  \item Chapter~\ref{ch:project_objectives}
+  \item Chapter~\ref{ch:design_implementation}
+  \item Chapter~\ref{ch:evaluation}
+  \item Chapter~\ref{ch:project_management}
+  \item Chapter~\ref{ch:conclusions}
+\end{itemize}

@@ -2,45 +2,42 @@
 
 \section{Context and Motivation}
 
-Decision-making is a central part of how groups operate; whether in political settings, organisations, or online communities. Traditionally, two primary models are used to make collective decisions: \textbf{direct democracy}, where every individual votes on each issue themselves, and \textbf{representative democracy}, where individuals elect others to vote on their behalf.
+In online communities, organisations, and even national governments, decision-making is a central pillar of collective action. Yet as participation scales, two traditional models of democracy struggle to meet the evolving needs of modern groups. In a \textbf{direct democracy}, individuals vote on issues themselves, ensuring transparency and personal agency. In contrast, \textbf{representative democracy} delegates this responsibility to elected individuals, offering scalability at the cost of responsiveness \citep{ford_delegative_2002, blum_liquid_2016}.
 
-Both approaches have limitations. Direct democracy becomes impractical at scale, as it requires high levels of engagement from every participant. Representative systems, on the other hand, often concentrate decision-making power in a few individuals, and offer little flexibility once representatives are chosen.
+Each system introduces trade-offs. Direct democracy demands consistent, informed engagement from all participants -- an unrealistic expectation for most. Representative democracy, while more practical at scale, can result in power imbalances and diluted accountability between elections.
 
-Vodle is a web-based decision-making platform that aims to explore alternatives to these traditional models. It allows users to participate in polls by rating each option from 0 to 100, with the final result calculated using the MaxParC rating aggregation method. The platform is designed for open, consensus-oriented group decisions, and places strong emphasis on accessibility and user control.
+This project builds on vodle, a web-based decision-making platform which uses direct democracy. Users rate poll options on a scale from 0 to 100, with outcomes determined using a unique voting rule MaxParC. Vodle's design prioritises openness, flexibility, and fairness -- making it well-suited for participatory decisions where all members are encouraged to contribute.
 
-However, the platform initially only supported direct participation -- users could submit their own ratings but could not delegate their vote to others. This limitation made it less useful in contexts where users lacked time, interest, or expertise to vote in every poll. The motivation for this project is to address this gap by integrating support for liquid democracy into vodle.
+However, in real-world settings, vodle's reliance on direct democracy reveals limitations. Many users lack the time, interest, or expertise to participate meaningfully in every decision. As decisions grow in number and complexity, expecting consistent, active engagement from all users becomes increasingly impractical. This challenge calls for a more adaptable system -- one that preserves transparency while accommodating varying levels of participation.
 
-\section{Liquid Democracy}
+\subsection{Liquid Democracy}
 
-Liquid democracy is a hybrid approach that combines features of both direct and representative models. In a liquid democracy, users can choose to vote directly or delegate their vote to someone they trust. These delegations are transitive -- if A delegates to B, and B to C, then C ultimately casts A's vote. Users may revoke or change their delegation at any time.
+Liquid democracy blends the strengths of direct and representative systems. It allows users to either vote directly or delegate their vote to someone they trust \citep{blum_liquid_2016}. Crucially, delegations are \textit{transitive}: if Alice delegates to Bob and Bob to Charlie, Charlie votes on behalf of all three. This flexible model lets users dynamically choose between direct participation and trusted representation, adapting to their interest and availability on a per-decision basis.
 
-This system offers flexibility and scalability: engaged users can vote directly, while others can still influence outcomes through trusted delegates. It creates informal networks of influence, empowering individuals without forcing uniform participation.
+By enabling seamless movement between voting and delegation, liquid democracy offers a principled extension of vodle's model, allowing users to vary their participation over time while preserving system transparency and fairness. It enhances inclusiveness without sacrificing autonomy -- users can reclaim their vote at any time.
 
-Despite its benefits, liquid democracy introduces new technical challenges. Cycles in the delegation graph can trap votes, abstentions can unintentionally nullify entire chains, and certain individuals may accumulate disproportionate influence, becoming ``super-voters.'' These risks require careful handling in any practical implementation, including the one proposed in this project.
+However, implementing liquid democracy introduces several challenges:
+\begin{itemize}
+  \item \textbf{Delegation cycles} -- votes can loop endlessly, preventing any vote from being cast.
+  \item \textbf{Abstentions in delegation chains} -- a single abstaining delegate can nullify multiple dependent votes.
+  \item \textbf{Disproportionate influence} -- some users may receive many delegations, becoming ``super-voters'' with excessive power.
+\end{itemize}
+
+Addressing these issues requires thoughtful technical solutions and intuitive interfaces that offer users visibility and control over their vote delegation.
 
 \section{Project Aims}
 
-This project aims to implement a flexible, robust liquid democracy system within vodle. In doing so, it extends the platform beyond simple direct voting and makes it more usable in realistic, large-scale decision-making settings.
+This project aims to design and implement a robust, user-friendly liquid democracy system within vodle. By introducing features such as transitive, ranked, and per-option delegation, the project extends vodle's capabilities beyond direct voting -- enabling more inclusive, scalable, and context-sensitive decision-making.
 
-The project addresses known theoretical weaknesses of liquid democracy, and introduces the following mechanisms:
-\begin{itemize}
-  \item \textbf{Transitive delegation} -- with consistent cycle prevention and real-time vote updates.
-  \item \textbf{Ranked delegation} -- where users specify fallback delegates.
-  \item \textbf{Vote splitting} -- allowing users to distribute parts of their vote to multiple people.
-  \item \textbf{Per-option delegation} -- letting users assign different delegates for different poll items.
-\end{itemize}
-
-All features are designed to work within vodle's server less, client-side architecture, and remain compatible with its underlying MaxParC voting model.
-
-\section{Structure of This Report -- TODO when report is finished}
+\section{Structure of This Report}
 
 The remainder of this report is structured as follows:
 
 \begin{itemize}
-  \item Chapter~\ref{ch:background}
-  \item Chapter~\ref{ch:project_objectives}
-  \item Chapter~\ref{ch:design_implementation}
-  \item Chapter~\ref{ch:evaluation}
-  \item Chapter~\ref{ch:project_management}
-  \item Chapter~\ref{ch:conclusions}
+  \item Chapter~\ref{ch:background} outlines the theoretical and technical background, including research into delegation models and related systems.
+  \item Chapter~\ref{ch:project_objectives} defines the core and extension objectives of the project, along with detailed requirements.
+  \item Chapter~\ref{ch:design_implementation} presents the architecture and implementation of the delegation features.
+  \item Chapter~\ref{ch:evaluation} evaluates the system through testing and feedback.
+  \item Chapter~\ref{ch:project_management} reflects on the planning, risks, and methodology used during development.
+  \item Chapter~\ref{ch:conclusions} offers a summary of the project outcomes and directions for future work.
 \end{itemize}

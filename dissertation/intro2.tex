@@ -1,33 +1,27 @@
 \chapter{Introduction}\label{ch:introduction}
 
-\section{Context and Motivation}
+\section{Context and Motivation -- TODO}
 
-In online communities, organisations, and even national governments, decision-making is a central pillar of collective action. Yet as participation scales, two traditional models of democracy struggle to meet the evolving needs of modern groups. In a \textbf{direct democracy}, individuals vote on issues themselves, ensuring transparency and personal agency. In contrast, \textbf{representative democracy} delegates this responsibility to elected individuals, offering scalability at the cost of responsiveness \citep{ford_delegative_2002, blum_liquid_2016}.
+In group settings ranging from online communities to organisations, collective decision making is both essential and difficult to scale. Direct democracy empowers individuals by letting everyone vote on every issue, but struggles with engagement as participation grows. Representative democracy improves scalability but often reduces accountability and flexibility \citep{ford_delegative_2002, blum_liquid_2016}
 
-Each system introduces trade-offs. Direct democracy demands consistent, informed engagement from all participants -- an unrealistic expectation for most. Representative democracy, while more practical at scale, can result in power imbalances and diluted accountability between elections.
+Liquid democracy is a hybrid model that aims to balance these trade-offs. It allows individuals to either vote directly or delegate their voting power to others they trust. This approach combines the transparency and agency of direct democracy with the scalability of representation, offering a dynamic alternative for participatory systems.
 
-This project builds on vodle, a web-based decision-making platform which uses direct democracy. Users rate poll options on a scale from 0 to 100, with outcomes determined using a unique voting rule MaxParC. Vodle's design prioritises openness, flexibility, and fairness -- making it well-suited for participatory decisions where all members are encouraged to contribute.
+This project applies liquid democracy within vodle, a web-based platform for group decision making. Vodle allows users to express nuanced preferences across decision options and promotes open, participatory decision making. However, it inherits a common limitation: users may lack the time, interest, or confidence to engage with every decision, leading to underrepresentation and disengagement.
 
-However, in real-world settings, vodle's reliance on direct democracy reveals limitations. Many users lack the time, interest, or expertise to participate meaningfully in every decision. As decisions grow in number and complexity, expecting consistent, active engagement from all users becomes increasingly impractical. This challenge calls for a more adaptable system -- one that preserves transparency while accommodating varying levels of participation.
+By integrating liquid democracy into vodle, the project aims to give users more flexibility in how their preferences are represented. Delegation features allow users to stay involved even when they choose not to vote directly, making the platform more scalable, inclusive, and responsive to varying levels of user engagement -- all while maintaining transparency and user control.
 
-\subsection{Liquid Democracy}
+\section{Project Goals}
 
-Liquid democracy blends the strengths of direct and representative systems. It allows users to either vote directly or delegate their vote to someone they trust \citep{blum_liquid_2016}. Crucially, delegations are \textit{transitive}: if Alice delegates to Bob and Bob to Charlie, Charlie votes on behalf of all three. This flexible model lets users dynamically choose between direct participation and trusted representation, adapting to their interest and availability on a per-decision basis.
+The goal of this project is to design and implement a liquid democracy system within vodle. This involves building flexible delegation mechanisms that support diverse participation styles and address the limitations of traditional direct voting.
 
-By enabling seamless movement between voting and delegation, liquid democracy offers a principled extension of vodle's model, allowing users to vary their participation over time while preserving system transparency and fairness. It enhances inclusiveness without sacrificing autonomy -- users can reclaim their vote at any time.
-
-However, implementing liquid democracy introduces several challenges:
+The system introduces several key features:
 \begin{itemize}
-  \item \textbf{Delegation cycles} -- votes can loop endlessly, preventing any vote from being cast.
-  \item \textbf{Abstentions in delegation chains} -- a single abstaining delegate can nullify multiple dependent votes.
-  \item \textbf{Disproportionate influence} -- some users may receive many delegations, becoming ``super-voters'' with excessive power.
+  \item \textbf{Ranked delegation}, allowing users to specify trusted delegates in order of preference.
+  \item \textbf{Per-option delegation}, enabling different delegates for different decision topics.
+  \item \textbf{Vote splitting}, using a trust-based model to distribute voting power across multiple delegates.
 \end{itemize}
 
-Addressing these issues requires thoughtful technical solutions and intuitive interfaces that offer users visibility and control over their vote delegation.
-
-\section{Project Aims}
-
-This project aims to design and implement a robust, user-friendly liquid democracy system within vodle. By introducing features such as transitive, ranked, and per-option delegation, the project extends vodle's capabilities beyond direct voting -- enabling more inclusive, scalable, and context-sensitive decision-making.
+These features are designed to enhance participation, reduce the concentration of voting power, and improve the resilience of the platform. The project focuses on creating an intuitive and efficient implementation that aligns with vodle's existing architecture and emphasises user autonomy.
 
 \section{Structure of This Report}
 

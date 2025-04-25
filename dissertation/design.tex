@@ -310,68 +310,55 @@ This map enables several key operations required for maintaining a consistent an
 
 \section{Implement Ranked Delegation into Vodle}\label{sec:design_ranked_delegation}
 
-% \begin{itemize}
-%   \item UI for setting delegate rankings
-%   \item make sure you can't delegate the same rank twice
-%   \item UI for re ordering delegations
-%   \item New UI when making a poll to allow user to select ranked delegation.
-%   \item \verb|direct_delegation_map|: maps user IDs to list of ranked delegates [[delegationid, rank, status]...]
-%   \item Explanation and application of the MinSum rule
-%   \item How do we determine who is a casting voter?
-%   \item Implementation of ranked path resolution
-%   \item Illustrations and code snippets
-% \end{itemize}
+This section describes the design and implementation of ranked delegation in vodle, addressing Objective 2 of the project. The ranked delegation system allows users to specify fallback delegates in case their primary delegate is unavailable due to abstaining or being part of a cycle.
 
-This section describes the design and implementation of ranked delegation in vodle, addressing Objective 2 of the project. The ranked delegation system allows users to specify fallback delegates in case their primary delegate is unavailable -- due to being a part of a delegation cycle or abstaining. 
-
-\subsection{Overview}
-
-For the implementation in vodle, users can specify a ranked list of up to three delegates, which are poll specific. To resolve delegation paths, the system applies the MinSum delegation rule (see Section~\ref{subsec:background_ranked_delegation}), ensuring that votes are routed along paths that minimise the total delegation cost based on rank.
-
-Key features of the ranked delegation implementation include:
-\begin{itemize}
-    \item A user interface for selecting and reordering ranked delegates.
-    \item Validation to prevent assigning the same user multiple times.
-    \item Dynamic resolution of delegation paths using the MinSum rule.
-    \item Cycle detection to prevent invalid delegation graphs.
-\end{itemize}
+The implementation of ranked delegation in vodle is poll-specific: each user may specify a ranked list of up to three delegates for a given poll. These preferences are evaluated using the MinSum delegation rule (see Section~\ref{subsec:background_ranked_delegation}), which selects the delegation path with the lowest cumulative rank cost. This ensures that the system respects the user's stated preferences as closely as possible, while avoiding unnecessarily long or indirect delegation chains.
 
 \subsection{Data Structures}
+[Why did we need a new map?]
 
-Ranked delegations are recorded in the \texttt{direct\_delegation\_map}, mapping each user ID to a list of their ranked delegates. Each delegate is represented as a triple -- \texttt[delegation\_id, rank, status].
+Each voter's ranked delegates are stored in the \texttt{direct\_delegation\_map}, which maps a user ID to a list of delegation entries. Each entry is a triple:
+\[
+[\text{delegate\_id}, \text{rank}, \text{status}]
+\]
 where:
 \begin{itemize}
-    \item \texttt{delegation\_id} is the identifier of the delegate.
-    \item \texttt{rank} is an integer representing the delegate's rank (1 being the most preferred delegate).
-    \item \texttt{status} tracks whether the delegation has been accepted, rejected, is pending, or active (currently part of a delegation path).
+    \item \texttt{delegate\_id} is the user ID of the delegate.
+    \item \texttt{rank} is the position in the ranking (1 = most preferred).
+    \item \texttt{status} indicates whether the delegation is accepted (1), pending (0), rejected (0), or active (2).
 \end{itemize}
 
-For example, suppose User A ranks User B first, User C second, and User D third. Users B and C accept the delegation, while User D does not respond. If no other delegations exist, the delegation map would be as follows:
+For example, if only User A has delegated and they rank User B first, User C second, and User D third, and B and C accept the delegation while D does not respond, the resulting structure is:
+
 \begin{figure}[H]
   \begin{minted}{python}
     direct_delegation_map = {
-      "A": {["B", 1, 2], ["C", 2, 1], ["D", 3, 0]}
+      "A": [["B", 1, 2], ["C", 2, 1], ["D", 3, 0]]
     }
   \end{minted}
-  \caption{Example of a \texttt{direct\_delegation\_map}, used in ranked delegation.}
+  \caption{Example of a \texttt{direct\_delegation\_map} entry for ranked delegation. B is marked as active as the path $A\to B$ has the lowest total sum of ranks.}
 \end{figure}
-
-As no other delegations exist, MinSum will choose the path with the lowest rank ($A\to B$) and activate all edges along the path (status has a value of 2).
 
 \subsection{Delegation Resolution Using MinSum}
 
-Whenever a delegation is accepted, rejected, or revoked, the delegation paths must be recomputed using the MinSum rule: 
+Whenever a delegation is accepted, rejected, or revoked, all paths must be recomputed using the MinSum rule. This ensures that the voting power of each user flows through the most appropriate path.
 
+The MinSum algorithm is implemented as follows:
 \begin{enumerate}
-    \item Possible paths from each voter to a casting voter are generated by traversing the ranked delegation graph.
-    \item Each edge in the graph is assigned a cost equal to the delegation rank (first-ranked delegate costs 1, second-ranked costs 2 and the third-ranked costs 3).
-    \item The path with the minimal total sum of ranks is selected as the resolution path.
-    \item If multiple paths have the same minimal cost, userID is used as a tie breaker.
-    \item If no casting voter is reachable from a particular user, they must vote themselves.
+    \item All reachable paths from each voter to a casting voter are generated by traversing the delegation graph. Only delegates with accepted status are considered.
+    \item Each edge in a path is assigned a cost equal to the delegate's rank (1, 2, or 3).
+    \item Among all valid paths, the one with the lowest total rank sum is selected as the resolution path.
+    \item If multiple paths have the same minimal cost, ties are broken by selecting the path that reaches the lexicographically lowest user ID.
+    \item The selected path is marked active by setting the \texttt{status} of each edge in that path to 2. All edges that have been accepted and are not part of any selected path are marked inactive by setting their \texttt{status} to 1.
 \end{enumerate}
 
+This resolution logic must operate entirely within the browser, as vodle has no backend.
+
+[Placeholder: explain how pathfinding and status updates are implemented efficiently in practice].
+
 \subsection{Cycle Prevention}
-Delegation cycles are handled during the generation of delegation paths. When a path is being expanded, the system checks whether the next node has already been found in the path. In the case that it has, the search along that branch is terminated.
+
+Delegation cycles are handled during the path generation step. When the system explores a delegation path, it tracks all users seen so far. If a user is encountered more than once in the same path, the search along that branch is terminated:
 
 \begin{figure}[H]
 \begin{minted}{typescript}
@@ -379,46 +366,35 @@ else if (current_path.includes(did)) {
     return;
 }
 \end{minted}
-\caption{Code snippet to prevent cycles from being explored, \texttt{did} refers to the next delegate along a path.}
+\caption{Cycle prevention during ranked delegation path expansion.}
 \end{figure}
+
+This method avoids the need for pre-emptive cycle checking when users set or edit their delegates. Cycles are never included in resolution paths, and no invalid updates are written to the data model.
+
+\subsection{Determining who is a casting voter -- reword}
+
+\subsection{Handling Edits and Reordering}
+
+Users may modify their ranked delegation list at any time before voting closes. Changes include reordering existing delegates, adding new ones, or removing existing ones. To prevent logical errors, the system prevents the same rank being assigned twice and enforces a maximum of three entries.
+
+[Placeholder explain logic between delegation dialog -- TS function]
+
+When a user edits their ranking, any previously computed delegation path is invalidated and recomputed. This ensures that stale paths do not persist and that any changes take effect immediately. [Placeholder: explain how reactivity and caching are handled in the frontend to support this].
 
 \subsection{User Interface}
 
-The user interface for ranked delegation was designed to be simple and mobile-friendly:
-\begin{itemize}
-    \item Users can select up to three delegates using a drag-and-drop list.
-    \item Duplicates are automatically detected and prevented.
-    \item Delegation rankings can be edited at any time through a dedicated interface accessible when voting.
-    \item Visual indicators show the acceptance or rejection status of each delegation.
-\end{itemize}
+The ranked delegation interface is designed for clarity, especially on mobile.
+Users can view their delegates from a pop up window and are given the option to revoke specific delegations or reorder them by dragging and dropping. 
 
-This design ensures that ranked delegation remains accessible to users with varying levels of technical familiarity.
+[Screenshot of info popup]
 
-\subsection{Challenges and Solutions}
+[Explain Screenshot -- status, revoke badge etc.]
 
-Several challenges were encountered during the development of the ranked delegation system. These challenges, along with brief notes for future expansion, are listed below:
+[Code that makes it work]
 
-\begin{itemize}
-    \item \textbf{Efficient MinSum Pathfinding:} Finding the minimal-sum paths through a dynamic delegation graph without excessive computational cost.
-    
-    [Placeholder: explain how this was solved]
+[Talk about what happens when a reorder is saved]
 
-    \item \textbf{Handling Changes to Rankings:} Ensuring that reordering delegates dynamically updated stored mappings and did not leave stale data.
-    
-    [Placeholder: explain how this was solved]
-
-    \item \textbf{Cycle Detection Without Server-Side Validation:} Detecting and preventing delegation cycles entirely on the client side.
-    
-    [Placeholder: explain how this was solved]
-
-    \item \textbf{Maintaining UI Simplicity:} Providing ranked delegation functionality without overwhelming users, especially on mobile.
-    
-    [Placeholder: explain how this was solved]
-\end{itemize}
-
-Each of these challenges influenced the final design and required careful balancing of performance, robustness, and usability.
-
-
+\subsection{Performance Considerations}
 
 \section{Implement Weighted Delegation Mechanism into Vodle}
 Weighte delegation was implemented to allow users to distribute fractional influence to multiple delegates.

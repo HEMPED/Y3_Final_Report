@@ -132,7 +132,7 @@ This section explores several proposed extensions to liquid democracy that addre
 The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, enhancements have been proposed that modify how delegations function. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
 
 The following subsections present several such variations, along with the algorithms that can be used to implement them.
-\subsection*{Ranked Delegation -- TODO: ADD DIAGRAMS}
+\subsection*{Ranked Delegation -- TODO: ADD DIAGRAMS}\label{subsec:background_ranked_delegation}
 Ranked delegation improves liquid democracy by allowing voters to list several trusted delegates in order of preference. Instead of choosing just one delegate, a voter can specify a ranked list so that if their top choice is unavailable (e.g. due to abstention or being a part of a delegation cycle) the system can use the next delegate specified.
 
 Implementing ranked delegation requires a mechanism to decide among multiple possible delegation paths -- a route that a vote can take through the delegation graph to reach a casting voter.
@@ -182,17 +182,59 @@ Several methodologies for implementing weighted delegation have been explored in
 Degrave's approach allows voters to distribute their votes evenly among multiple delegates. Voters select a group of delegates, and their vote is equally distributed amongst those that do not abstain.
 Although this system is intuitive and reduces the impact of abstentions, it lacks flexibility as voters cannot express differing trust levels towards each delegate. Additionally, a critical limitation is the inability for voters to allocate any portion of their vote to themselves, meaning voters are forced to either delegate their entire voting power or none of it, severely limiting personal control over a user's final vote.
 
-\subsubsection*{Fractional Delegation~\citep{bersetche2024}}
-Bersetche et al. introduce fractional delegation, allowing voters to explicitly assign different weights to each chosen delegate, including themselves. Delegates each receive a specified fraction of the voter's total voting power, reflecting the voter's nuanced trust and preference levels. This approach captures detailed voter preferences accurately and allows for greater personal agency compared to equal vote distribution. However, fractional delegation introduces additional complexity in managing and tracking these weighted delegations. Users must explicitly manage multiple numerical allocations, which may increase cognitive load and complicate user interfaces.
+\subsubsection{Fractional Delegation~\citep{bersetche2024}}
 
-\subsubsection*{Trust Matrix Model (proposed by Heitzig) -- TODO: convergence + performance implications}
+\citeauthor{bersetche2024} proposes a generalisation of liquid democracy in which voters are allowed to divide their voting weight arbitrarily among multiple delegates, while optionally retaining a fraction for themselves. Each agent expresses their preferences through a delegation matrix, where each entry specifies the proportion of voting weight delegated to a given individual. This approach enables a more flexible expression of trust relationships compared to classical single-delegation models.
 
-This model was originally proposed by Jobst Heitzig, co-supervisor of this project, as a novel and highly expressive approach to weighted delegation. It allows voters to define trust values \( \text{trust}_{i,j} \) for multiple delegates, including themselves, and combines these into an effective rating via an iterative computation:
+To ensure the system remains stable and to prevent cases such as delegation cycles, \citeauthor{bersetche2024} introduces an artificial agent, referred to as agent \(n+1\). Every delegation path carries a small probability (\(\varepsilon\)) of transferring the voting weight to this agent. This mechanism ensures that votes trapped in delegation cycles or excessively long chains are eventually absorbed, preventing them from destabilising the voting process. In the limit as \(\varepsilon \to 0\), the model approximates the classical behaviour of liquid democracy without losses, but with \(\varepsilon > 0\), it guarantees the existence of equilibrium states.
+
+Votes absorbed by agent \(n+1\) are effectively considered lost. As a result, users who delegate without ultimately terminating in a direct voter may see a fraction of their influence dissipate. This diverges from standard liquid democracy approaches, where all delegated votes are ultimately assumed to participate in the outcome.
+
+Overall, fractional delegation as formalised by Bersetche retains desirable properties such as self-selection, delegation consistency, and conservation of total voting weight (accounting for losses), while enabling more expressive delegation structures and guaranteeing equilibrium under mild conditions.
+
+
+\subsubsection*{Trust Matrix Model (proposed by Heitzig)}
+
+This model was originally proposed by Jobst Heitzig, co-supervisor of this project, as a highly expressive approach to vote splitting within ratings-based voting systems. Rather than directly casting or delegating votes, voters assign trust values \( \text{trust}_{i,j} \in [0, 1] \) to other participants (including themselves), representing the proportion of influence each delegate should have in determining their effective rating. These trust values are used to iteratively compute the final effective rating for each voter.
+
+Let \( \text{rating}_{i,x} \) denote the direct rating that voter \( i \) assigns to option \( x \), and \( \text{eff}_{i,x} \) denote their final effective rating. Then, \( \text{eff}_{i,x} \) can be defined as a combination of the voter's own rating and the effective ratings of their delegates, determined by the trust levels specified:
+
 \begin{gather}
-  \text{eff}_i = \text{trust}_{i,i} \cdot \text{self}_i + \sum_{j \neq i}\text{trust}_{i,j} \cdot \text{eff}_j
+  \text{eff}_{i,x} = \text{trust}_{i,i} \cdot \text{rating}_{i,x} + \sum_{j \neq i} \text{trust}_{i,j} \cdot \text{eff}_{j,x}
 \end{gather}
 
-Here, each voter's trust values (including self-trust) must sum to at most 1. The iterative computation continues until the change in effective ratings between iterations falls below a predefined threshold \( \epsilon \). This approach offers the highest granularity and expressive power, allowing voters to precisely articulate nuanced trust relationships among multiple delegates. However, it comes with considerable computational complexity and potential convergence issues, especially in large networks with dense delegation relationships. Additionally, users may find it challenging to specify and manage such detailed trust matrices, potentially impairing system usability.
+Each voter's trust values must sum to exactly 1:
+\[
+\sum_{j} \text{trust}_{i,j} = 1
+\]
+
+The computation proceeds iteratively, with the effective ratings updated at each step based on the current estimates of delegates' effective ratings. This process continues until there is no longer a change in the effective ratings. Convergence is guaranteed when each voter has some nonzero self-trust (\( \text{trust}_{i,i} > 0 \)), as the system then forms a contraction mapping and Banach's fixed point theorem applies.
+
+% The convergence property can be formalised as follows.
+
+% \paragraph{Convergence Proof.}
+% Let there be \( n \) voters and let \( \mathbf{r} = (r_1, \dots, r_n) \in \mathbb{R}^n \) represent the vector of direct ratings for a fixed option, where \( r_i \) is the rating voter \( i \) assigns directly.
+
+% Let \( T \in \mathbb{R}^{n \times n} \) be the \emph{trust matrix}, where \( T_{i,j} \) denotes the proportion of voter \( i \)'s trust allocated to voter \( j \). Assume that each row sums exactly to 1 and that each voter retains some nonzero self-trust (\( T_{i,i} > 0 \)).
+
+% Let \( \mathbf{e}^{(k)} \in \mathbb{R}^n \) denote the vector of effective ratings at iteration \( k \), and define the update rule:
+% \[
+% \mathbf{e}^{(k+1)} = D \mathbf{r} + A \mathbf{e}^{(k)},
+% \]
+% where \( D = \text{diag}(T_{1,1}, \dots, T_{n,n}) \) and \( A_{i,j} = T_{i,j} \) for \( i \neq j \), \( A_{i,i} = 0 \).
+
+% Define the function \( f: \mathbb{R}^n \to \mathbb{R}^n \) by \( f(\mathbf{e}) = D \mathbf{r} + A \mathbf{e} \). We observe:
+% \[
+% \| f(\mathbf{e}) - f(\mathbf{e}') \|_\infty = \| A (\mathbf{e} - \mathbf{e}') \|_\infty \leq \| A \|_\infty \cdot \| \mathbf{e} - \mathbf{e}' \|_\infty,
+% \]
+% where \( \| A \|_\infty = \max_i \sum_{j} |A_{i,j}| < 1 \) due to the presence of nonzero self-trust.
+
+% Thus, \( f \) is a contraction mapping. By Banach's Fixed-Point Theorem, there exists a unique fixed point \( \mathbf{e}^* \), and the sequence \( (\mathbf{e}^{(k)}) \) converges to \( \mathbf{e}^* \) from any starting point.
+
+% \qed
+
+
+This model offers the highest granularity and flexibility, allowing voters to finely express confidence across multiple delegates per option. However, it also introduces significant computational overhead and may scale poorly in densely connected delegation graphs. Additionally, users may find it difficult to understand or maintain trust matrices of this complexity, raising potential usability concerns in real-world systems.
 
 \subsubsection*{Summary of Approaches}
 % \begin{table}[H]
@@ -264,7 +306,7 @@ Given the time constraints of this project, Mesa offers a practical and efficien
 \section{Vodle}
 To effectively explore and implement liquid democracy mechanisms, it is essential to understand the design and technical context of the platform into which they are being integrated. Vodle is a web based decision-making tool developed to support participatory group processes through interactive polls and transparent aggregation methods. Its goal is to provide users with flexible, fine grained input mechanisms that encourage compromise between voters, while maintaining accessibility and usability across a broad and diverse user base.
 
-This section introduces the core architecture of vodle, including its underlying rating system (MaxParC) and the technologies that support its operation. These technical foundations were instrumental in shaping the design and feasibility of the advanced delegation features developed in this project. In addition, the platform's design philosophy is examined, providing a basis for the principles that guided the implementation of new components.
+This section introduces the core architecture of vodle, including its underlying rating system (MaxParC) and the technologies that support its operation. These technical foundations were instrumental in shaping the design and feasibility of the advanced delegation features developed in this project.
 
 
 \subsection{MaxParC}
@@ -307,7 +349,7 @@ However, the implementation lacked several core features required for a robust l
 Despite these shortcomings, the incomplete implementation helped clarify key challenges that would need to be addressed in the project. In particular, it highlighted the importance of consistent state synchronisation, clear UI feedback, and reliable validation mechanisms. These lessons informed the redesigned delegation architecture described in Chapter~\ref{ch:design_implementation}.
 
 Further discussion of the issues with this implementation as well as how it was adapted, improved, or replaced can be found in Chapter~\ref{ch:design_implementation}.
-\subsection{Design Philosophy -- TODO}
+% \subsection{Design Philosophy -- TODO}
 
 \section{Summary}
 The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle. Initially, the research highlighted critical limitations in traditional liquid democracy systems, such as the formation of delegation cycles, the risks associated with abstentions, and the disproportionate influence of super-voters. These insights showed the need for implementing delegation mechanisms that are capable of addressing these challenges effectively.

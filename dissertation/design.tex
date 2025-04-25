@@ -102,20 +102,90 @@ The architecture of vodle, particularly its reliance on CouchDB and the absence 
 
 Together, these constraints shape some of the design and implementation choices of the delegation features in vodle, which will be discussed in detail in the following sections.
 
-\subsection{Existing Implementation of Liquid Democracy}\label{subsec:design_existing_implementation}
-As mentioned in the background research (see Section~\ref{subsec:background_existing_delegation}), vodle already contained a partial implementation of liquid democracy prior to this project. This early version was not activated in production and was ultimately left incomplete due to stability and design issues. Despite this, it included a basic delegation model that served as a foundation for completing objective 1.
+% \subsection{Existing Implementation of Liquid Democracy}\label{subsec:design_existing_implementation}
+% As mentioned in the background research (see Section~\ref{subsec:background_existing_delegation}), vodle already contained a partial implementation of liquid democracy prior to this project. This early version was not activated in production and was ultimately left incomplete due to stability and design issues. Despite this, it included a basic delegation model that served as a foundation for completing objective 1.
 
-The following subsection outline the key features of the original implementation, including its strengths and issues, which were addressed in the redesigned system.
-% However, the underlying logic was incomplete and unreliable. Delegation data was handled entirely on the client side, and there was no mechanism for synchronising delegation state between users. This led to inconsistencies in features such as cycle detection, which was applied inconsistently depending on the client's local state. Furthermore, no resolution model was implemented for handling transitive delegations or more complex delegation structures.
+% The following subsection outline the key features of the original implementation, including its strengths and issues, which were addressed in the redesigned system.
+% % However, the underlying logic was incomplete and unreliable. Delegation data was handled entirely on the client side, and there was no mechanism for synchronising delegation state between users. This led to inconsistencies in features such as cycle detection, which was applied inconsistently depending on the client's local state. Furthermore, no resolution model was implemented for handling transitive delegations or more complex delegation structures.
 
-% Despite these limitations, several components from the original system were retained during redevelopment. These included parts of the invitation system and select UI elements that handled delegation acceptance and rejection. These elements were adapted and extended as part of the redesigned delegation model, which introduced reliable state management, cycle prevention, and support for advanced delegation behaviours. The subsequent sections detail how this new model was implemented and integrated into vodle.
+% % Despite these limitations, several components from the original system were retained during redevelopment. These included parts of the invitation system and select UI elements that handled delegation acceptance and rejection. These elements were adapted and extended as part of the redesigned delegation model, which introduced reliable state management, cycle prevention, and support for advanced delegation behaviours. The subsequent sections detail how this new model was implemented and integrated into vodle.
 
-\subsubsection{Delegation Interaction Flow}
-The original delegation mechanism in vodle was built around an explicit, opt-in invitation model. Under this model, a user could not be designated as a delegate without their knowledge or consent, thereby preserving both vote privacy and user autonomy. Delegation was initiated by one user (the \textit{delegator}) and required an explicit response (either acceptance or rejection) from the other party (the \textit{delegate}) before it became active.
+% \subsubsection{Delegation Interaction Flow}
+% The original delegation mechanism in vodle was built around an explicit, opt-in invitation model. Under this model, a user could not be designated as a delegate without their knowledge or consent, thereby preserving both vote privacy and user autonomy. Delegation was initiated by one user (the \textit{delegator}) and required an explicit response (either acceptance or rejection) from the other party (the \textit{delegate}) before it became active.
 
-Figure~\ref{fig:delegation-flow-accept} illustrates the standard interaction sequence. In step 1, user A generates and shares a unique delegation link with user B. This link encodes A's intent to delegate and provides B with a prompt to either accept or reject the invitation. If B accepts (step 2), A adopts B's vote as their own (shown by a dashed arrow), while B proceeds to cast their vote independently. Crucially, the delegation only becomes effective upon B's confirmation.
+% Figure~\ref{fig:delegation-flow-accept} illustrates the standard interaction sequence. In step 1, user A generates and shares a unique delegation link with user B. This link encodes A's intent to delegate and provides B with a prompt to either accept or reject the invitation. If B accepts (step 2), A adopts B's vote as their own (shown by a dashed arrow), while B proceeds to cast their vote independently. Crucially, the delegation only becomes effective upon B's confirmation.
 
-If B instead rejects the invitation (Figure~\ref{fig:delegation-flow-reject}), both users cast their votes independently. In either case, the process is explicit and reversible: B can update their decision at any time, and A can cancel or resend the delegation request as needed.
+% If B instead rejects the invitation (Figure~\ref{fig:delegation-flow-reject}), both users cast their votes independently. In either case, the process is explicit and reversible: B can update their decision at any time, and A can cancel or resend the delegation request as needed.
+
+% This interaction flow has two key strengths. First, it ensured that delegations could not be made unilaterally - a voter could never become a delegate without their knowledge. Second, it provided a simple and intuitive interface for forming delegation links (which could be shared via email, social platforms, or by copying the link), lowering the barrier to entry for new users.
+
+% However, while this implementation excelled at user autonomy and privacy, it lacked critical safeguards such as a consistent mechanism to prevent delegation cycles. The following section discusses the limitations of the original cycle-checking logic and outlines how these issues were addressed in the redesigned system.
+
+% \subsubsection{Cycle Checking}
+% Cycle prevention is necessary to ensure that delegated votes always reach a valid casting voter. If a cycle forms -- such as A delegating to B, B to C, and C back to A -- then no vote is cast at the end of that chain, causing all involved votes to be nullified. This can seriously undermine the integrity of the final result.
+
+% The original implementation in vodle attempted to prevent such cycles but applied this logic inconsistently. Cycle detection relied on the local view of the delegation graph cached in each user's browser. Since there was no mechanism for synchronising delegation state between clients, different users could have contradictory views of the system. This meant that a delegation rejected on one device (due to a perceived cycle) might succeed on another. The lack of real-time propagation also led to user interface inconsistencies, where delegation controls displayed outdated or misleading information.
+
+% Internally, the system attempted to detect cycles when a user received a delegation request by checking for existing direct or indirect delegations back to the requester. The code used a combination of local delegation maps, including the \verb|direct_delegation_map| and \verb|effective_delegation_map|, to approximate whether a cycle might form. The logic for determining if a cycle or two-way delegation would occur can be seen in the following code snippet:
+
+% \begin{minted}{typescript}
+% const effdel_vid = effdelmap.get(oid).get(myvid) || myvid;
+% if ((dirdelmap.get(oid) || new Map()).get(myvid) == client_vid) {
+%   two_way = true;
+% } else if (effdel_vid == client_vid) {
+%   cycle = true;
+% }
+% \end{minted}
+
+% Here, the code checks if the effective delegate (casting voter) of the responder (\verb|effdel_vid|) is equal to the original requester (\verb|client_vid|). If so, it flags the possibility of a cycle.
+
+% Despite these precautions, the absence of a global, shared delegation graph meant that cycle prevention was never fully reliable. Cycles could still occur due to race conditions or stale client views. This instability, coupled with the challenge of maintaining consistent cycle detection across browsers, was a key reason why delegation features were disabled in production at the time.
+
+% In the redesigned system, these issues are addressed through a shared, synchronised data structure that tracks delegation across all users. This enables consistent validation of new delegations and real-time detection of cycles regardless of which client initiates or accepts a delegation. The design and implementation of this new cycle detection mechanism (as part of completing Objective 1) are described in Section~\ref{subsec:obj1_cycle_checking}.
+
+% \subsubsection{Inconsistent User Interface}
+
+\section{Implement a Core Delegation Model into vodle}\label{sec:core_delegation_detailed}
+This section outlines the design and implementation of the core delegation model within vodle, addressing Objective 1 of the project. It begins with an analysis of the pre-existing, partially implemented delegation system, identifying the limitations that motivated a full redesign. The second half of the section describes the final implementation, including the new data structures, algorithms, and interface improvements introduced.
+
+\subsection{Limitations of the Original System}
+Before the start of the project, vodle included a partially implemented vote delegation system. Although inactive and never released to users, it formed a useful starting point for development. The system introduced a basic invitation-based delegation model and supported transitive delegation. However, the implementation lacked the guarantees and consistency required for a production-ready system.
+
+Despite its incompleteness, the existing design had many key strengths. In particular:
+\begin{itemize}
+  \item \textbf{Explicit consent} was required before a delegation became active -- all delegations had to be accepted before they were activated.
+  \item \textbf{Privacy} as respected. No user could see another's voting choices unless they were directly involved in a delegation relationship.
+  \item \textbf{Reversibility} was supported. Delegations could be revoked or re-invited at any time, giving users ongoing control.
+  \item \textbf{Transitive delegation was supported}, allowing a user's vote to pass through multiple delegates (e.g. $A\to B\to C\to D$).
+\end{itemize}
+
+These features formed a solid conceptual foundation and several were retained in the final system. However, the implementation had serious architectural flaws, particularly with regard to synchronisation and consistency.
+
+\subsubsection{Delegation Flow}
+Delegations were formed via a secure exchange initiated by a magic link. A user (User A) would:
+\begin{itemize}
+  \item Generate a delegation ID (DID) and a cryptographic key pair.
+  \item Store a \texttt{del\_request} object in CouchDB, indicating their intent to delegate.
+  \item Share a signed link with another user (User B), containing a delegation ID and private key.
+\end{itemize}
+
+The recipient could then accept (see Figure~\ref{fig:delegation-flow-accept}) or reject (see Figure~\ref{fig:delegation-flow-reject}) the request by submitting a signed response (\texttt{del\_response}) using the provided private key. This created a delegation agreement object (\texttt{del\_agreement}) locally on both clients.
+
+% Figure~\ref{fig:delegation-flow-accept} shows this successful flow:
+% \begin{itemize}
+%   \item User A shares a delegation link with User B.
+%   \item User B accepts the invitation.
+%   \item User A's vote is now controlled by User B.
+% \end{itemize}
+
+% If the delegate rejects the invitation, both users proceed independently, as shown in Figure~\ref{fig:delegation-flow-reject}.
+
+% \begin{enumerate}
+%   \item User A (delegator) generates a delegation link and shares it with User B (delegate).
+%   \item User B is prompted to accept or reject this invitation.
+%   \item If accepted (see Figure~\ref{fig:delegation-flow-accept}), User B's vote is used for User A. If rejected (see Figure~\ref{fig:delegation-flow-reject}), both vote independently.
+% \end{enumerate}
+
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[node distance=7cm,>=stealth,thick]
@@ -148,37 +218,12 @@ If B instead rejects the invitation (Figure~\ref{fig:delegation-flow-reject}), b
   \label{fig:delegation-flow-reject}
 \end{figure}
 
-This interaction flow has two key strengths. First, it ensured that delegations could not be made unilaterally - a voter could never become a delegate without their knowledge. Second, it provided a simple and intuitive interface for forming delegation links (which could be shared via email, social platforms, or by copying the link), lowering the barrier to entry for new users.
-
-However, while this implementation excelled at user autonomy and privacy, it lacked critical safeguards such as a consistent mechanism to prevent delegation cycles. The following section discusses the limitations of the original cycle-checking logic and outlines how these issues were addressed in the redesigned system.
-
-\subsubsection{Cycle Checking}
-Cycle prevention is necessary to ensure that delegated votes always reach a valid casting voter. If a cycle forms -- such as A delegating to B, B to C, and C back to A -- then no vote is cast at the end of that chain, causing all involved votes to be nullified. This can seriously undermine the integrity of the final result.
-
-The original implementation in vodle attempted to prevent such cycles but applied this logic inconsistently. Cycle detection relied on the local view of the delegation graph cached in each user's browser. Since there was no mechanism for synchronising delegation state between clients, different users could have contradictory views of the system. This meant that a delegation rejected on one device (due to a perceived cycle) might succeed on another. The lack of real-time propagation also led to user interface inconsistencies, where delegation controls displayed outdated or misleading information.
-
-Internally, the system attempted to detect cycles when a user received a delegation request by checking for existing direct or indirect delegations back to the requester. The code used a combination of local delegation maps, including the \verb|direct_delegation_map| and \verb|effective_delegation_map|, to approximate whether a cycle might form. The logic for determining if a cycle or two-way delegation would occur can be seen in the following code snippet:
-
-\begin{minted}{typescript}
-const effdel_vid = effdelmap.get(oid).get(myvid) || myvid;
-if ((dirdelmap.get(oid) || new Map()).get(myvid) == client_vid) {
-  two_way = true;
-} else if (effdel_vid == client_vid) {
-  cycle = true;
-}
-\end{minted}
-
-Here, the code checks if the effective delegate (casting voter) of the responder (\verb|effdel_vid|) is equal to the original requester (\verb|client_vid|). If so, it flags the possibility of a cycle.
-
-Despite these precautions, the absence of a global, shared delegation graph meant that cycle prevention was never fully reliable. Cycles could still occur due to race conditions or stale client views. This instability, coupled with the challenge of maintaining consistent cycle detection across browsers, was a key reason why delegation features were disabled in production at the time.
-
-In the redesigned system, these issues are addressed through a shared, synchronised data structure that tracks delegation across all users. This enables consistent validation of new delegations and real-time detection of cycles regardless of which client initiates or accepts a delegation. The design and implementation of this new cycle detection mechanism (as part of completing Objective 1) are described in Section~\ref{subsec:obj1_cycle_checking}.
-
-\subsubsection{Inconsistent User Interface}
-
-\section{Implement a Core Delegation Model into vodle}
-\label{sec:core_delegation_detailed}
-This section describes the design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It covers how the issues and constraints outlined in the previous section were addressed, including the design of the data structures used to represent delegations, the algorithms for preventing delegation cycles, and the user interface changes made to support the new delegation features.
+This model preserved autonomy and prevented ``silent'' delegation assignments. It also supported delegation over messaging platforms or email by encoding intent in a portable URL. However, it lacked deeper features such as consistent state tracking.
+\subsubsection{Transitive Resolution and Cycle Checking}
+The key weakness of the original system was its inability to detect delegation cycles reliably. Cycle detection was performed entirely on the client side using local state. Each browser cached a view of the delegation graph using several maps:
+\begin{itemize}
+  \item \texttt{direct}
+\end{itemize}
 
 \subsection{Cycle Checking}\label{subsec:obj1_cycle_checking}
 Robust cycle detection is a core requirement for any system implementing transitive delegation. In liquid democracy, cycles render votes unresolved and potentially lost, directly undermining the integrity of the outcome. Given vodle's dynamic and client-driven architecture, it was crucial to implement an efficient, client-side mechanism that could detect and prevent cycles in real time, without requiring server-side intervention or excessive computation.

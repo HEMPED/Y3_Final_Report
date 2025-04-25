@@ -21,71 +21,10 @@ Vodle's serverless architecture has several implications for the design and impl
   \item CouchDB's document-based storage model means that all data must be serialised and deserialised in JSON format. This affects how data structures are designed and manipulated, as well as how they are stored and retrieved from the database.
 \end{itemize}
 
-\subsection{CouchDB Storage and Write Constraints -- may remove/ shorten}
-\label{subsec:couchdb_limits}
+\subsubsection{Write Validation and Constraints}
+CouchDB enforces document-level security: users may only modify their own documents, and core artefacts (such as \texttt{poll.json} and results) are immutable once created. All updates must replace the full document in a single operation, with no support for merging concurrent changes.
 
-Vodle store all data in CouchDB in two types of databases: the \_users database and poll databases. The \_users database is a standard CouchDB database that stores user documents, while the poll databases are created dynamically for each poll and contain all relevant data for that poll.
-
-\begin{enumerate}
-  \item \textbf{\_users Database.}
-    \begin{itemize}
-      \item Each document ID is \texttt{org.couchdb.user:<username>}.
-      \item Only the account owner or an administrator may modify or delete their user document.
-    \end{itemize}
-
-  \item \textbf{Poll Databases.}
-    \begin{itemize}
-      \item Databases are named \texttt{poll-<POLLID>}.
-      \item Stores:
-        \begin{itemize}
-          \item The immutable poll definition (\texttt{poll.json}).
-          \item One vote document per voter (\texttt{vote-<user>}).
-        \end{itemize}
-    \end{itemize}
-\end{enumerate}
-
-\paragraph{Document-Level Security}
-CouchDB enforces security at the level of entire documents. This means that access control decisions are made based on the identity of the user attempting to write a document and the document's ID -- there is no support for restricting access to individual fields within a document. Additionally, CouchDB does not support merging concurrent changes; updates must replace the entire document in a single write operation. As a result, all write operations are either fully accepted or fully rejected by the database's \texttt{validate\_doc\_update} function. This strict model simplifies validation logic but introduces important constraints in the context of implemented liquid democracy, which are discussed in the remainder of this section.
-
-\subsubsection{Poll-DB Validation}
-When a client writes to a poll database, the \texttt{validate\_doc\_update} enforces:
-
-\begin{enumerate}
-  \item \textbf{User Documents:} IDs are prefixed with \texttt{~vodle.user.}, and only the owner may modify them:
-\begin{figure}[H]
-  \centering
-\begin{minted}[escapeinside=||]{typescript}
-if (!id.startsWith(`~{userCtx.name}§`)) {
-  throw({ forbidden: 'Only the document owner may modify this user doc.' });
-}
-\end{minted}    
-\caption{Code to prevent a user from modifying another user's document.}
-\end{figure}
-
-  \item \textbf{Immutable Poll Artefacts: } Documents like \texttt{poll.json} or results cannot be updated once created:
-\begin{figure}[H]
-    \begin{minted}[fontsize=\small,baselinestretch=1]{javascript}
-if (oldDoc && isPollArtifact(id)) {
-  throw({ forbidden: 'Poll documents are immutable once created.' });
-}
-    \end{minted}
-\caption{Code to prevent modification of poll artefacts.}
-\end{figure}
-\end{enumerate}
-
-\subsubsection{\_users-DB Validation}
-In the \_users database, a similar validation function is used to prevent users from modifying other users' documents, including the \texttt{vodle} service account.
-\begin{figure}[H]
-\begin{minted}[fontsize=\small,baselinestretch=1]{javascript}
-if (id !== `org.couchdb.user:{userCtx.name}`) {
-  throw({ forbidden: 'Users may only modify their own user document.' });
-}
-if (userCtx.name === 'vodle' || isPollService(userCtx.name)) {
-  throw({ forbidden: 'Service accounts are immutable.' });
-}
-\end{minted}
-\caption{Code to prevent a user from modifying another user's document.}
-\end{figure}
+This model simplifies validation logic, but it also imposes important constraints on implementing liquid democracy features. In particular, updating delegations or splitting votes requires replacing a user's entire vote document in a single, atomic write. This means that incremental updates (e.g., adjusting part of a delegation tree or partially reassigning vote weights) are not possible; the client must construct and submit a complete new version of the user's voting data each time. These constraints influenced both the design of weighted-delegation algorithms and the structure of delegation management within vodle.
 
 \subsection{Summary of Storage and Validation Constraints}
 \label{subsec:summary_storage_constraints}

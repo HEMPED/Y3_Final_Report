@@ -3,13 +3,13 @@ cls
 setlocal
 
 echo [1/4] Running pdflatex...
-pdflatex -shell-escape dissertation.tex >nul 2>&1
+pdflatex -shell-escape dissertation.tex 
 
 echo [2/4] Running bibtex...
-bibtex dissertation.aux >nul 2>&1
+bibtex dissertation.aux
 
 echo [3/4] Running pdflatex again...
-pdflatex -shell-escape dissertation.tex >nul 2>&1
+pdflatex -shell-escape dissertation.tex 
 
 echo [4/4] Final pass...
 pdflatex -shell-escape dissertation.tex

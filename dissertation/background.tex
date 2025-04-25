@@ -16,7 +16,7 @@ While liquid democracy was briefly introduced in Chapter~\ref{ch:introduction}, 
 
 \textbf{Representative democracy} addresses the scalability problem by allowing users to elect officials who vote on their behalf. This model is forms the basis of most modern democracies, enabling stable governance in large populations. It allows representatives to develop expertise and reduces the decision-making burden on the general population. However, the model has key limitations: between elections, representatives may act without sufficient accountability, and voters have limited influence over individual decisions \citep{blum_liquid_2016}. As a result, decision-making can become misaligned with the evolving preferences of the electorate.
 
-\textbf{Liquid democracy} attempts to reconcile these competing trade-offs. It allows each participant to either vote directly or delegate (entrust) their vote to another participant (a delegate). Delegates can in turn delegate their votes, forming chains of trust. This is known as \textit{transitive delegation}: a vote is passed along the chain until it reaches a user who casts it. Delegations are also \textit{revocable}, allowing users to reclaim and reassign their vote at any time.
+\textbf{Liquid democracy} attempts to reconcile these competing trade-offs. It allows each participant to either vote directly or delegate (entrust) their vote to another participant (a delegate). Delegates can in turn delegate their votes, forming chains of trust. This is known as \textit{transitive delegation}: voting power is passed along the chain until it reaches a user who casts a vote. Delegations are also \textit{revocable}, allowing users to reclaim and reassign their vote at any time.
 
 \begin{figure}[H]
   \centering
@@ -124,10 +124,10 @@ This phenomenon is not just theoretical. In the German Pirate Party's use of Liq
 
 Super-voting is not confined to traditional political platforms. In decentralised autonomous organisations (DAOs), which use token-based voting on blockchains, similar patterns emerge. \citet{hallWhatHappensWhen2024} found that in many DAOs, voting power was highly concentrated among a few delegates due to low overall participation. In some cases, such as Gitcoin, over 90\% of votes cast were controlled by the top five delegates.
 
-These examples underscore the importance of delegation mechanisms that can curb excessive power accumulation. Techniques such as vote splitting and delegation caps are essential to preserving fairness, especially in systems like vodle that prioritise inclusivity and trust-based participation.
+These examples underscore the importance of delegation mechanisms that can curb excessive power accumulation. Techniques such as weighted delegation and capping the maximum voting power of an individual are essential to preserving fairness, especially in systems like vodle that prioritise inclusivity and trust-based participation.
 
 \subsection{Variations of Liquid Democracy}
-This section explores several proposed extensions to liquid democracy that address the limitations outlined above. While many models offer theoretical advantages, particular attention is paid to ranked delegation and vote splitting -- two techniques that are not only promising from a fairness and robustness perspective, but also feasible to implement within vodle's existing architecture.
+This section explores several proposed extensions to liquid democracy that address the limitations outlined above. While many models offer theoretical advantages, particular attention is paid to ranked delegation and weighted delegation -- two techniques that are not only promising from a fairness and robustness perspective, but also feasible to implement within vodle's existing architecture.
 
 The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, enhancements have been proposed that modify how delegations function. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
 
@@ -165,18 +165,18 @@ In summary, ranked delegation enhances liquid democracy by reducing the risk of 
 Based on these considerations, the project adopts the MinSum rule. It offers a clear trade-off between delegation quality, computational efficiency, and user interpretability, making it well-suited for deployment within vodle. By selecting the path with the lowest total rank sum, MinSum prioritises higher-ranked delegates while avoiding unnecessarily long or indirect chains. This supports user trust and clarity by ensuring that final delegation paths reflect stated preferences in an understandable way.
 
 
-\subsection*{Vote Splitting -- TODO: ADD DIAGRAMS}\label{subsec:vote_splitting_background}
+\subsection*{Weighted Delegation -- TODO: ADD DIAGRAMS}\label{subsec:vote_splitting_background}
 
-Traditional delegation systems, which require voters to delegate their entire vote to a single individual, introduce significant risks such as vote loss through delegate abstentions, delegation cycles, and excessive concentration of voting power in the hands of a few super-voters. To mitigate these issues, vote splitting allows voters to divide their voting power among multiple delegates, rather than assigning it entirely to one. This approach provides greater flexibility and robustness while preserving voter intent more accurately.
+Traditional delegation systems, which require voters to delegate their entire vote to a single individual, introduce significant risks such as vote loss through delegate abstentions, delegation cycles, and excessive concentration of voting power in the hands of a few super-voters. To mitigate these issues, weighted delegation allows voters to divide their voting power among multiple delegates, rather than assigning it entirely to one. This approach provides greater flexibility and robustness while preserving voter intent more accurately.
 
-Vote splitting offers several key advantages:
+Weighted delegation offers several key advantages:
 \begin{itemize}
   \item \textbf{Increased resilience:} Distributing votes across multiple delegates mitigates the effect of abstentions by individual delegates.
   \item \textbf{Reduced concentration of power:} Allowing partial votes to different delegates decreases the likelihood of any single delegate becoming a super-voter.
   \item \textbf{Enhanced voter expression:} Voters can more precisely express their preferences and trust levels by allocating voting power proportionally to multiple individuals.
 \end{itemize}
 
-Several methodologies for implementing vote splitting have been explored in the literature, each with its strengths and weaknesses:
+Several methodologies for implementing weighted delegation have been explored in the literature, each with its strengths and weaknesses:
 
 \subsubsection*{Equal Vote Distribution~\citep{degrave2014}}
 Degrave's approach allows voters to distribute their votes evenly among multiple delegates. Voters select a group of delegates, and their vote is equally distributed amongst those that do not abstain.
@@ -187,7 +187,7 @@ Bersetche et al. introduce fractional delegation, allowing voters to explicitly 
 
 \subsubsection*{Trust Matrix Model (proposed by Heitzig) -- TODO: convergence + performance implications}
 
-This model was originally proposed by Jobst Heitzig, co-supervisor of this project, as a novel and highly expressive approach to vote splitting. It allows voters to define trust values \( \text{trust}_{i,j} \) for multiple delegates, including themselves, and combines these into an effective rating via an iterative computation:
+This model was originally proposed by Jobst Heitzig, co-supervisor of this project, as a novel and highly expressive approach to weighted delegation. It allows voters to define trust values \( \text{trust}_{i,j} \) for multiple delegates, including themselves, and combines these into an effective rating via an iterative computation:
 \begin{gather}
   \text{eff}_i = \text{trust}_{i,i} \cdot \text{self}_i + \sum_{j \neq i}\text{trust}_{i,j} \cdot \text{eff}_j
 \end{gather}
@@ -197,7 +197,7 @@ Here, each voter's trust values (including self-trust) must sum to at most 1. Th
 \subsubsection*{Summary of Approaches}
 % \begin{table}[H]
 %   \centering
-%   \caption{Comparison of Vote Splitting Mechanisms}
+%   \caption{Comparison of Weighted Delegation Mechanisms}
 %   \begin{tabular}{p{3.5cm} p{3.8cm} p{3.5cm} p{3cm}}
 %   \hline
 %   \textbf{Method} & \textbf{Voter Expressivity} & \textbf{Complexity (Comp. + UI)} & \textbf{Supports Self-Allocation} \\
@@ -277,7 +277,7 @@ In MaxParC, each user rates an option on a scale from $0$ to $100$. This rating 
   \caption{Visual representation of MaxParC from the perspective of a voter (Alice). Ratings represent conditional approval thresholds. An option is counted as approved by Alice if the approval bar (light grey) overlaps with her rating needle. Graphic from \citet{heitzig_fair_2024}.}
 \end{figure}
 
-Understanding how MaxParC processes ratings is essential for this project, as the proposed vote splitting mechanism must operate within its conditional approval framework. When a user splits their vote among multiple delegates, the system must ensure that their own rating continues to contribute appropriately. Specifically, if a user delegates $x\%$ of their rating to others, their final rating must not fall below $(100-x)\%$ of their original input. This constraint guarantees that the user's approval remains proportionally represented, even when part of their voting power is passed on to others.
+Understanding how MaxParC processes ratings is essential for this project, as the proposed weighte delegation mechanism must operate within its conditional approval framework. When a user splits their vote among multiple delegates, the system must ensure that their own rating continues to contribute appropriately. Specifically, if a user delegates $x\%$ of their rating to others, their final rating must not fall below $(100-x)\%$ of their original input. This constraint guarantees that the user's approval remains proportionally represented, even when part of their voting power is passed on to others.
 
 Integrating liquid democracy into vodle therefore requires careful design to align with MaxParC's logic, ensuring both technical compatibility and conceptual consistency.
 
@@ -311,9 +311,9 @@ Further discussion of the issues with this implementation as well as how it was 
 \section{Summary}
 The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle. Initially, the research highlighted critical limitations in traditional liquid democracy systems, such as the formation of delegation cycles, the risks associated with abstentions, and the disproportionate influence of super-voters. These insights showed the need for implementing delegation mechanisms that are capable of addressing these challenges effectively.
 
-Research into these mechanisms revealed several promising methods. Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness. Vote splitting was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates. Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
+Research into these mechanisms revealed several promising methods. Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness. Weighted delegation was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates. Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
 
-Among the vote splitting methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's goals of user autonomy and flexibility. By allowing voters to articulate nuanced trust relationships across multiple delegates, including themselves, the model offers a compelling balance between representation quality and individual control. While more computationally intensive than simpler approaches, it presents a viable strategy for robust vote splitting within a real-time voting system.
+Among the weighted delegation methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's goals of user autonomy and flexibility. By allowing voters to articulate nuanced trust relationships across multiple delegates, including themselves, the model offers a compelling balance between representation quality and individual control. While more computationally intensive than simpler approaches, it presents a viable strategy for robust weighted delegation within a real-time voting system.
 
 The technological constraints of vodle itself, especially the reliance on client-side processing due to the CouchDB architecture, demonstrated the need for efficient, lightweight implementation strategies.
 

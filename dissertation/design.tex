@@ -8,14 +8,14 @@ Each subsequent section aligns directly with one of the project objectives defin
 Vodle is built as a serverless web application that emphasises accessibility, client-side performance, and ease of deployment. Its architecture comprises two components:
 
 \begin{enumerate}
-  \item \textbf{Frontend:} Implemented using Angular and the Ionic framework, the frontend provides a responsive and modular interface that works across both desktop and mobile devices. The use of Angular facilitates the creation of component-based user interfaces, essential for introducing interactive features such as the ranked delegation UI and vote splitting sliders.
+  \item \textbf{Frontend:} Implemented using Angular and the Ionic framework, the frontend provides a responsive and modular interface that works across both desktop and mobile devices. The use of Angular facilitates the creation of component-based user interfaces, essential for introducing interactive features such as the ranked delegation UI and weighted delegation sliders.
   \item \textbf{Backend:} Vodle uses CouchDB as its database. There is no custom backend logic or middleware; instead, the frontend application communicates directly with CouchDB over HTTP.
 \end{enumerate}
 
 \subsubsection{Implications of This Architecture}
 Vodle's serverless architecture has several implications for the design and implementation of the delegation mechanisms, especially due to the absence of a traditional data processing backend. The following points summarise the key considerations:
 \begin{itemize}
-  \item All vote delegation logic, including transitive resolution, cycle detection, and vote splitting calculations, must be executed in the browser. This places constraints on performance and requires careful optimisation of algorithms used.
+  \item All vote delegation logic, including transitive resolution, cycle detection, and weighted delegation calculations, must be executed in the browser. This places constraints on performance and requires careful optimisation of algorithms used.
   \item CouchDB's document-based storage model means that all data must be serialised and deserialised in JSON format. This affects how data structures are designed and manipulated, as well as how they are stored and retrieved from the database.
 \end{itemize}
 
@@ -97,7 +97,7 @@ The architecture of vodle, particularly its reliance on CouchDB and the absence 
 
   \item \textbf{Validation logic is structural, not contextual.} Since CouchDB validation functions can only inspect the document being written, they cannot reason about relationships across documents. This prohibits logic such as resolving delegations server-side, enforcing uniqueness of votes, or validating delegation cycles at the point of write.
 
-  \item \textbf{Client-side logic carries the burden.} Due to previous point, all logic for delegation resolution, cycle checking, and vote splitting must be implemented in the client. This requires careful design to ensure that the frontend can handle complex delegation scenarios without overwhelming the user or causing performance issues.
+  \item \textbf{Client-side logic carries the burden.} Due to previous point, all logic for delegation resolution, cycle checking, and weighted delegation must be implemented in the client. This requires careful design to ensure that the frontend can handle complex delegation scenarios without overwhelming the user or causing performance issues.
 \end{itemize}
 
 Together, these constraints shape some of the design and implementation choices of the delegation features in vodle, which will be discussed in detail in the following sections.
@@ -148,43 +148,36 @@ Together, these constraints shape some of the design and implementation choices 
 \section{Implement a Core Delegation Model into vodle}\label{sec:core_delegation_detailed}
 This section outlines the design and implementation of the core delegation model within vodle, addressing Objective 1 of the project. It begins with an analysis of the pre-existing, partially implemented delegation system, identifying the limitations that motivated a full redesign. The second half of the section describes the final implementation, including the new data structures, algorithms, and interface improvements introduced.
 
-\subsection{Limitations of the Original System}
-Before the start of the project, vodle included a partially implemented vote delegation system. Although inactive and never released to users, it formed a useful starting point for development. The system introduced a basic invitation-based delegation model and supported transitive delegation. However, the implementation lacked the guarantees and consistency required for a production-ready system.
+\subsection{Limitations of the Pre-existing Implementation}
 
-Despite its incompleteness, the existing design had many key strengths. In particular:
+Before this project began, vodle included a partially implemented delegation system. Although disabled due to critical flaws, the system introduced several foundational ideas and structures that influenced the final design. This section introduces the key data structures used in the original model, explains the intended delegation flow, and analyses why a full redesign was necessary.
+
+\subsubsection*{Delegation Maps}
+
+The delegation mechanism relied on several maps to track how votes were delegated and resolved. These maps were stored and updated locally on each client:
+
 \begin{itemize}
-  \item \textbf{Explicit consent} was required before a delegation became active -- all delegations had to be accepted before they were activated.
-  \item \textbf{Privacy} as respected. No user could see another's voting choices unless they were directly involved in a delegation relationship.
-  \item \textbf{Reversibility} was supported. Delegations could be revoked or re-invited at any time, giving users ongoing control.
-  \item \textbf{Transitive delegation was supported}, allowing a user's vote to pass through multiple delegates (e.g. $A\to B\to C\to D$).
+    \item \textbf{direct\_delegation\_map}: This map recorded direct delegation relationships. For each option ID (\texttt{oid}), it stored a mapping from voter IDs to the user they directly delegated to.
+
+    \item \textbf{effective\_delegation\_map}: This map stored the final casting voter for each user by resolving the full transitive chain of delegations. For example, if user A delegated to B and B delegated to C, the effective delegate of A was C.
+
+    \item \textbf{inv\_effective\_delegation\_map}: The inverse of the effective map. For each user, it stored the set of voters whose votes were ultimately counted under them. This was useful for computing voting weights and for cycle detection.
 \end{itemize}
 
-These features formed a solid conceptual foundation and several were retained in the final system. However, the implementation had serious architectural flaws, particularly with regard to synchronisation and consistency.
+Each map was maintained locally by the browser and not synchronised across clients. This made the correctness of delegation state dependent on each user's local view.
 
-\subsubsection{Delegation Flow}
-Delegations were formed via a secure exchange initiated by a magic link. A user (User A) would:
-\begin{itemize}
-  \item Generate a delegation ID (DID) and a cryptographic key pair.
-  \item Store a \texttt{del\_request} object in CouchDB, indicating their intent to delegate.
-  \item Share a signed link with another user (User B), containing a delegation ID and private key.
-\end{itemize}
+\subsubsection*{Delegation Flow}
 
-The recipient could then accept (see Figure~\ref{fig:delegation-flow-accept}) or reject (see Figure~\ref{fig:delegation-flow-reject}) the request by submitting a signed response (\texttt{del\_response}) using the provided private key. This created a delegation agreement object (\texttt{del\_agreement}) locally on both clients.
+Delegation in vodle followed an explicit, link-based invitation model:
 
-% Figure~\ref{fig:delegation-flow-accept} shows this successful flow:
-% \begin{itemize}
-%   \item User A shares a delegation link with User B.
-%   \item User B accepts the invitation.
-%   \item User A's vote is now controlled by User B.
-% \end{itemize}
+\begin{enumerate}
+    \item A user (the delegator) generated a delegation ID (DID), created a key pair, and constructed a \texttt{del\_request} object specifying the options to delegate.
+    \item A magic link containing this information was shared with the intended delegate.
+    \item The delegate could accept or reject the invitation. If accepted, a signed \texttt{del\_response} was created, completing the delegation handshake.
+    \item Once accepted, a \texttt{del\_agreement} object was created and cached by both parties. This structure tracked which options were accepted and which were currently active.
+\end{enumerate}
 
-% If the delegate rejects the invitation, both users proceed independently, as shown in Figure~\ref{fig:delegation-flow-reject}.
-
-% \begin{enumerate}
-%   \item User A (delegator) generates a delegation link and shares it with User B (delegate).
-%   \item User B is prompted to accept or reject this invitation.
-%   \item If accepted (see Figure~\ref{fig:delegation-flow-accept}), User B's vote is used for User A. If rejected (see Figure~\ref{fig:delegation-flow-reject}), both vote independently.
-% \end{enumerate}
+This invitation model upheld user autonomy: users could not be delegated to without their explicit consent. Delegation could also be revoked at any time and overridden on a per-option basis.
 
 \begin{figure}[H]
   \centering
@@ -218,29 +211,47 @@ The recipient could then accept (see Figure~\ref{fig:delegation-flow-accept}) or
   \label{fig:delegation-flow-reject}
 \end{figure}
 
-This model preserved autonomy and prevented ``silent'' delegation assignments. It also supported delegation over messaging platforms or email by encoding intent in a portable URL. However, it lacked deeper features such as consistent state tracking.
-\subsubsection{Transitive Resolution and Cycle Checking}
-The key weakness of the original system was its inability to detect delegation cycles reliably. Cycle detection was performed entirely on the client side using local state. Each browser cached a view of the delegation graph using several maps:
-\begin{itemize}
-  \item \texttt{direct}
-\end{itemize}
 
-\subsection{Cycle Checking}\label{subsec:obj1_cycle_checking}
-Robust cycle detection is a core requirement for any system implementing transitive delegation. In liquid democracy, cycles render votes unresolved and potentially lost, directly undermining the integrity of the outcome. Given vodle's dynamic and client-driven architecture, it was crucial to implement an efficient, client-side mechanism that could detect and prevent cycles in real time, without requiring server-side intervention or excessive computation.
+\subsubsection*{Cycle Detection Failures}
 
-%The original implementation of cycle prevention in vodle was incomplete and inconsistently enforced. Because delegation data was locally cached and not always synchronised across clients, users could unknowingly create cycles that would only be caught (or missed) depending on the state of their browser session. This led to erratic user experiences, where a delegation might succeed on one device but be rejected on another.
-As previously discussed in Section~\ref{subsec:design_existing_implementation}, the original cycle detection relied on unsynchronised local state and was prone to failure. To resolve this, the new system introduces a shared, synchronised representation of the delegation graph, enabling consistent client-side validation of delegation requests. This redesign ensures that cycles are reliably detected and blocked in real time, regardless of which device initiates the delegation.
+The main flaw in the system was its inability to reliably prevent delegation cycles. A cycle occurs when a user indirectly delegates back to themselves, such as in the sequence A~$\rightarrow$~B~$\rightarrow$~C~$\rightarrow$~A. In such cases, the vote becomes trapped and is not cast.
 
-The remainder of this section details the algorithmic choices, data structures, and UI modifications used to implement reliable cycle detection in vodle.
-\subsubsection{Algorithm Design}
-The current delegations in a system can be represented as a directed graph where each user is represented as a node and each delegation is represented as a directed edge $(u,v)$, where $u$ is the delegator and $v$ is the delegate. The goal of the cycle-checking algorithm is to ensure that a proposed delegation does not create a cycle in this directed graph.
+Clients attempted to detect cycles during the delegation acceptance phase by examining local delegation maps. A typical check would confirm whether the proposed delegate was already an effective delegate of the user. If so, the client marked the request as cyclic and blocked it.
 
-A new delegation $X\to Y$ is valid if and only if $Y$ is \emph{not} reachable from $X$ in that DAG -- if $Y$ is not a descendant of $X$.
+However, because these maps were not synchronised, different clients could hold conflicting views of the delegation graph. A delegation that passed validation on one device might cause a cycle once accepted, or be silently invalidated by another. This undermined correctness and made vote resolution unpredictable.
 
-Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. The implementation of this algorithm is detailed in the next section.
+\subsubsection*{User Interface Limitations}
+
+\subsubsection*{Summary}
+
+The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for fine-grained control over delegated options, and supported transitive delegation. However, it relied entirely on client-local data and logic. Without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
+
+\subsection{Revised Implementation}
+This section describes the final design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It addresses the limitations of the original system by introducing a global, synchronised delegation graph, efficient cycle prevention, and consistent transitive resolution logic. The design preserves the invitation-based flow and per-option control from the earlier implementation while ensuring correctness across all clients.
+
+\subsubsection*{Cycle Checking: Algorithm and Rationale}
+We can represent delegation relationships as a directed graph, where users are nodes and delegations form directed edges. A valid vote delegation must not introduce cycles in this graph: for example, a sequence such as A~$\rightarrow$~B~$\rightarrow$~C~$\rightarrow$~A would result in all votes becoming trapped, with no final casting voter. Therefore, delegation cycles must be proactively prevented at the time a new delegation is proposed.
+
+A proposed delegation from user $X$ to user $Y$ is valid if and only if $Y$ is not a descendant of $X$ in the current delegation graph. That is, there must be no existing path from $Y$ back to $X$.
+
+% \subsection*{Delegation Graph and Cycle Checking}\label{subsec:obj1_cycle_checking}
+% Delegations are represented as a directed graph, where each user is a node and each delegation is a directed edge from a delegator to their delegate. Preventing cycles in this graph is essential to guarantee that every vote can be correctly resolved to a casting user.
+
+% Rather than recomputing the full graph for each delegation attempt, the algorithm maintains a data structure called the \texttt{inverse\_indirect\_map}, which stores the transitive descendants of each user.
+
+Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. The implementation details of this approach is detailed in the next section.
 
 \subsubsection{Implementation Details}
 A hashmap is used to store the descendants of each user. The keys are user IDs, and the values are sets of user IDs representing the direct delegates of that user. In the code, this hashmap is referred to as ``\verb|inverse_indirect_map|''.
+
+Suppose the following delegations exist:
+\begin{itemize}
+    \item A delegates to B
+    \item B delegates to C
+    \item C delegates to D
+\end{itemize}
+
+The resulting \texttt{inverse\_indirect\_map} is:
 \begin{figure}[H]
   \centering
   \begin{minted}{python}
@@ -250,7 +261,7 @@ A hashmap is used to store the descendants of each user. The keys are user IDs, 
       "D": {"C", "B", "A"}
     }
     \end{minted}
-  \caption{Example of a hashmap for users A, B, C, and D. User A has delegated to B, user B has delegated to C, and user C has delegated to D. Consequently, the descendants of user D are A, B and C.}
+  %\caption{Example of a hashmap for users A, B, C, and D. User A has delegated to B, user B has delegated to C, and user C has delegated to D. Consequently, the descendants of user D are A, B and C.}
   \label{fig:inverse_indirect_map}
 \end{figure}
 
@@ -357,8 +368,8 @@ This feature introduced ranked delegation using the MinSum rule, allowing users 
 \subsubsection{Challenges}
 The MinSum rule had to be implemented efficiently using only browser-based resources. Ranking resolution had to preserve user intent while avoiding delegation ambiguity. Providing visual feedback to help users understand how rankings would resolve added an additional layer of design complexity.
 
-\section{Implement a Vote Splitting Delegation Mechanism into Vodle}
-Vote splitting was implemented to allow users to distribute fractional influence to multiple delegates.
+\section{Implement a Vote Weighted Delegation Mechanism into Vodle}
+Weighte delegation was implemented to allow users to distribute fractional influence to multiple delegates.
 
 \begin{itemize}
   \item UI for assigning weights
@@ -374,7 +385,7 @@ Vote splitting was implemented to allow users to distribute fractional influence
 \end{itemize}
 
 \subsubsection{Challenges}
-The vote splitting logic needed to maintain consistency with the MaxParC aggregation model, while ensuring intuitive user experience. Edge cases (e.g., partially overlapping delegate chains or missing data) introduced complexity during testing. Rendering weight distributions clearly in the UI while keeping the interface lightweight was a recurring challenge.
+The weighted delegation logic needed to maintain consistency with the MaxParC aggregation model, while ensuring intuitive user experience. Edge cases (e.g., partially overlapping delegate chains or missing data) introduced complexity during testing. Rendering weight distributions clearly in the UI while keeping the interface lightweight was a recurring challenge.
 
 \section{Implement the Ability to Delegate Individual Options to Different Users}
 This feature enabled per-option delegation, allowing users to assign a different delegate for each item in a poll.
@@ -398,7 +409,7 @@ The simulation objective was de-scoped due to time constraints and prioritisatio
 \begin{itemize}
   \item All logic had to run client-side due to the serverless CouchDB architecture, limiting complexity and computational resources.
   \item A consistent JSON format was required for all data models, impacting flexibility in data design.
-  \item Trade-offs were made between expressive delegation types and usability, particularly in the option-specific and vote splitting interfaces.
+  \item Trade-offs were made between expressive delegation types and usability, particularly in the option-specific and weighted delegation interfaces.
 \end{itemize}
 
 \section{Summary}

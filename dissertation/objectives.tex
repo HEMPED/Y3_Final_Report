@@ -12,7 +12,7 @@ Core Objectives:
 
     \item \textbf{Implement Ranked Delegation into Vodle: } Add a backup delegation mechanism to vodle, allowing users to specify up to 3 delegates.
 
-    \item \textbf{Implement a Vote Splitting Delegation Mechanism into Vodle: } Add functionality to vodle to delegate fractions of their rating to different delegates. Use the \textit{will come back to when research written up} system to calculate final ratings.
+    \item \textbf{Implement a Weighte Delegation into Vodle: } Add functionality to vodle to delegate fractions of their rating to different delegates. Use the \textit{will come back to when research written up} system to calculate final ratings.
 
     \item \textbf{Implement the Ability to Delegate Individual Options to Different Users}: Allow users to delegate the ratings of specific options to different delegates.
 \end{enumerate}
@@ -79,7 +79,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
     
     \item \textbf{NFR3:} The system shall ensure that any data related to ranked delegation is stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
 \end{itemize}
-\subsection{Implement a Vote Splitting Delegation Mechanism into Vodle}
+\subsection{Implement Weighted Delegation into Vodle}
 \subsubsection{Functional Requirements}
 \begin{itemize}
     \item \textbf{FR1:} The system shall allow users to delegate their vote to multiple delegates simultaneously for a single poll.
@@ -97,7 +97,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 
     \item \textbf{NFR2:} All related data must be serialised as JSON strings to ensure compatibility with the CouchDB backend.
 
-    \item \textbf{NFR3:} The user interface for vote splitting shall be intuitive and allow users to adjust weights easily, using sliders or numeric inputs.
+    \item \textbf{NFR3:} The user interface for weighted delegation shall be intuitive and allow users to adjust weights easily, using sliders or numeric inputs.
 \end{itemize}
 \subsection{Implement the Ability to Delegate Individual Options to Different Users}
 \subsubsection{Functional Requirements}
@@ -122,7 +122,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 \begin{itemize}
     \item \textbf{FR1:} The simulation system shall model individual agents representing voters, each capable of voting, abstaining, or delegating their vote according to a selected delegation rule.
 
-    \item \textbf{FR2:} The system shall support multiple delegation mechanisms, including standard transitive delegation, ranked delegation (with the MinSum delegation rule), and vote splitting.
+    \item \textbf{FR2:} The system shall support multiple delegation mechanisms, including standard transitive delegation, ranked delegation (with the MinSum delegation rule), and weighted delegation.
 
     \item \textbf{FR3:} The system shall allow configuration of simulation parameters such as number of agents, delegation probabilities and abstention rates.
 

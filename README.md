@@ -17,7 +17,7 @@ To see dissertation pdf go to `./dissertation/dissertation.pdf` \
     - Super Voters
   - Existing Variations of Liquid Democracy
     - Ranked Delegation
-    - Weighted Delegation / Vote Splitting
+    - Weighted Delegation
       - Other versions -> don't go into too much detail as it will not be chosen
       - Introduce the one created by Jobst
         - Prove it converges etc.

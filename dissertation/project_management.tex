@@ -3,7 +3,7 @@
 This chapter outlines the project's management approach, including the development methodology, planning, and reflections on the process. It also considers legal and ethical issues and assesses key risks associated with the project.
 
 \section{Methodology}
-The project adopted an agile methodology, chosen for its flexibility, iterative development cycle, and emphasis on frequent customer feedback. The work involved incrementally building a series of interdependent features into vodle -- starting with a core delegation mechanism, and progressively expanding functionality to include ranked delegation, vote splitting, and finally, per-option delegation. This iterative approach allowed each new feature to build directly upon the last, ensuring ongoing compatibility and adaptability in design decisions as the system evolved.
+The project adopted an agile methodology, chosen for its flexibility, iterative development cycle, and emphasis on frequent customer feedback. The work involved incrementally building a series of interdependent features into vodle -- starting with a core delegation mechanism, and progressively expanding functionality to include ranked delegation, weighted delegation, and finally, per-option delegation. This iterative approach allowed each new feature to build directly upon the last, ensuring ongoing compatibility and adaptability in design decisions as the system evolved.
 
 Agile methodology was particularly suitable for this project due to the involvement of an active ``customer'' figure: Jobst Heitzig, co-supervisor and original creator of vodle. Heitzig played a crucial role in defining system expectations and guiding design decisions based on practical, real-world considerations. Regular meetings, held fortnightly with both Jobst Heitzig and Markus Brill, facilitated continuous feedback and review of progress, enabling rapid adaptation of development plans. This feedback cycle closely reflects the Agile Manifesto's principles of early and continuous delivery, as well as close collaboration between developers and stakeholders \citep{agilemanifesto2001}.
 
@@ -19,7 +19,7 @@ The project plan was organised into objectives (see Section \ref{ch:project_obje
 \begin{itemize}
     \item \textbf{Core Objective 1:} Implement a Core Delegation Model into Vodle.
     \item \textbf{Core Objective 2:} Implement Ranked Delegation into Vodle.
-    \item \textbf{Core Objective 3:} Implement a Vote Splitting Delegation Mechanism into Vodle.
+    \item \textbf{Core Objective 3:} Implement Weighted Delegation into Vodle.
     \item \textbf{Core Objective 4:} Implement the Ability to Delegate Individual Options to Different Users.
     \item \textbf{Extension Objective 1:} Simulate Delegation Mechanisms.
 \end{itemize}
@@ -37,13 +37,13 @@ This objective-led structure was well-suited to the agile approach, allowing eac
 \section{Changes to the Project Plan}
 The original project plan, illustrated in the Gantt chart (Figure~\ref{fig:gantt}), outlined a linear progression through the core objectives. However, several adjustments were made during the course of the project to reflect evolving priorities and unforeseen technical challenges.
 
-The most significant change was the decision to de-scope the extension objective (simulating delegation mechanisms). This was prompted by two main factors. First, implementing the core objectives proved more technically demanding than initially anticipated -- particularly ranked delegation and vote splitting. These challenges required more time and attention than expected, leaving limited capacity to complete the extension objective without compromising the quality of the core deliverables.
+The most significant change was the decision to de-scope the extension objective (simulating delegation mechanisms). This was prompted by two main factors. First, implementing the core objectives proved more technically demanding than initially anticipated -- particularly ranked delegation and weighted delegation. These challenges required more time and attention than expected, leaving limited capacity to complete the extension objective without compromising the quality of the core deliverables.
 
 Second, during the background research phase, it became clear that similar investigations into delegation behaviour had already been conducted -- most notably by \citet{brill_liquid_2021}. Although their study did not use agent based modelling, instead using networks from synthetic and real-world networks (such as partial networks from Facebook, Twitter, Slashdot, etc.), it provided a comprehensive empirical evaluation of ranked delegation rules using various metrics such as maximum vote path length, average vote path rank, the number of isolated voters (voters without a delegation path) and many more.
 
 Given the depth and relevance of these findings, replicating the analysis through agent-based modelling, especially within the project's limited timeframe, was deemed unnecessary. Instead, the project focused on fully delivering and refining the core objectives, which aligned more directly with vodle's platform goals and would have a better impact on the user experience of vodle.
 
-A second change involved reversing the development order of objectives 3 and 4. Originally, objective 3 (vote splitting) was scheduled to follow objective 2. However, during the Christmas development period, it became clear that objective 4 (per-option delegation) could be completed more quickly and required fewer algorithmic dependencies. To maintain development momentum, objective 4 was brought forward.
+A second change involved reversing the development order of objectives 3 and 4. Originally, objective 3 (weighted delegation) was scheduled to follow objective 2. However, during the Christmas development period, it became clear that objective 4 (per-option delegation) could be completed more quickly and required fewer algorithmic dependencies. To maintain development momentum, objective 4 was brought forward.
 
 This adjustment helped mitigate project risk. Objective 4 involved minimal changes to the database schema and integrated easily with UI components developed for earlier objectives. In contrast, objective 3 introduced more complex computational logic and performance concerns, which demanded additional design, testing and changes to the database. Tackling objective 4 earlier helped avoid potential cascading delays and ensured a smoother integration process later in development.
 
@@ -61,7 +61,7 @@ The most significant deviations from the original plan included:
 \begin{itemize}
     \item \textbf{Objective 1 (Core Delegation Model)} commenced approximately one week later than planned. This delay stemmed from the need for deeper familiarization with vodle's existing codebase, particularly its database schema and frontend architecture. Understanding these components was essential to ensure that new delegation features could integrate seamlessly without disrupting existing functionality. This initial exploration phase, while time consuming, was crucial for establishing a solid foundation for subsequent development.
     \item \textbf{Objective 2 (Ranked Delegation)} extended significantly beyond its initial timeframe. Originally scheduled for completion during the Christmas break, development continued until Term 2, Week 3. This extension was primarily due to the unforeseen complexities (as discussed in Section~\ref{sec:design_ranked_delegation}) which required both sophisticated transitive resolution logic and intuitive user interface feedback mechanisms, which proved more challenging than initially estimated.
-    \item \textbf{Objectives 3 and 4}'s order was swapped, as discussed earlier in this section. While the original plan positioned Objective 3 (Vote Splitting) to follow Objective 2, development logistics and dependency considerations prompted a shift to implement Objective 4 (Per-Option Delegation) first. This decision minimised integration risks, as Objective 4 required fewer schema modifications and built more directly on existing UI components, in particular those developed for Objective 2 (Ranked Delegation).
+    \item \textbf{Objectives 3 and 4}'s order was swapped, as discussed earlier in this section. While the original plan positioned Objective 3 (Weighted Delegation) to follow Objective 2, development logistics and dependency considerations prompted a shift to implement Objective 4 (Per-Option Delegation) first. This decision minimised integration risks, as Objective 4 required fewer schema modifications and built more directly on existing UI components, in particular those developed for Objective 2 (Ranked Delegation).
     \item \textbf{Extension Objective (Simulation)} was ultimately descoped from the project plan. This decision reflected both time constraints imposed by the extended development periods for core objectives and the discovery of existing comprehensive research on delegation behavior by \citet{brill_liquid_2021}. Focusing resources on delivering robust implementations of the core objectives was deemed more valuable than duplicating existing research.
 \end{itemize}
 
@@ -101,7 +101,7 @@ Data loss or corruption & Low & Use Git for version control and take regular loc
 
 \textbf{Likelihood:} High
 
-\textbf{Description:} Advanced features such as ranked delegation and vote splitting may prove more complex than initially anticipated. Unexpected complexity can lead to delays, reduced functionality, or incomplete implementations, potentially affecting the project's timeline and deliverables.
+\textbf{Description:} Advanced features such as ranked delegation and weighted delegaion may prove more complex than initially anticipated. Unexpected complexity can lead to delays, reduced functionality, or incomplete implementations, potentially affecting the project's timeline and deliverables.
 
 \textbf{Mitigation:} Core objectives have been clearly defined and prioritised, ensuring focus remains on essential functionality. In cases of higher than anticipated complexity, resources will be redirected towards completing critical core features first, while the extension objective (agent based modelling) can be scaled back or postponed as needed. Regular agile reviews will monitor progress closely, facilitating early identification and management of complexity-related issues.
 
@@ -138,7 +138,7 @@ The use of Git branching strategies and comprehensive local testing successfully
 
 \textbf{Feature Complexity Exceeds Estimates}
 
-This materialised as the most significant risk, particularly during the implementation of ranked delegation (Objective 2) and vote splitting mechanisms (Objective 3). The algorithmic complexity and UI considerations extended development beyond initial estimates.
+This materialised as the most significant risk, particularly during the implementation of ranked delegation (Objective 2) and weighted delegation (Objective 3). The algorithmic complexity and UI considerations extended development beyond initial estimates.
 The strategy of prioritising core objectives proved invaluable, allowing the project to successfully deliver all essential functionality. The decision to descope the extension objective demonstrates effective risk management balancing ambition with practical constraints.
 In hindsight, breaking complex features into smaller subtasks during planning might have improved estimation accuracy, though the agile methodology compensated through its inherent flexibility.
 

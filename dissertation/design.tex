@@ -38,7 +38,7 @@ The architecture of vodle, particularly its reliance on CouchDB and the absence 
 
   \item \textbf{Validation logic is structural, not contextual.} Since CouchDB validation functions can only inspect the document being written, they cannot reason about relationships across documents. This prohibits logic such as resolving delegations server-side, enforcing uniqueness of votes, or validating delegation cycles at the point of write.
 
-  \item \textbf{Client-side logic carries the burden.} Due to previous point, all logic for delegation resolution, cycle checking, and weighted delegation must be implemented in the client. This requires careful design to ensure that the frontend can handle complex delegation scenarios without overwhelming the user or causing performance issues.
+  \item \textbf{Client-side logic carries the burden.} Due to the previous point, all logic for delegation resolution, cycle checking, and weighted delegation must be implemented in the client. This requires careful design to ensure that the frontend can handle complex delegation scenarios without overwhelming the user or causing performance issues.
 \end{itemize}
 
 Together, these constraints shape some of the design and implementation choices of the delegation features in vodle, which will be discussed in detail in the following sections.
@@ -254,8 +254,6 @@ This section describes the design and implementation of ranked delegation in vod
 The implementation of ranked delegation in vodle is poll-specific: each user may specify a ranked list of up to three delegates for a given poll. These preferences are evaluated using the MinSum delegation rule (see Section~\ref{subsec:background_ranked_delegation}), which selects the delegation path with the lowest cumulative rank cost. This ensures that the system respects the user's stated preferences as closely as possible, while avoiding unnecessarily long or indirect delegation chains.
 
 \subsection{Data Structures}
-[Why did we need a new map?]
-
 Each voter's ranked delegates are stored in the \texttt{direct\_delegation\_map}, which maps a user ID to a list of delegation entries. Each entry is a triple:
 \[
 [\text{delegate\_id}, \text{rank}, \text{status}]
@@ -266,6 +264,8 @@ where:
     \item \texttt{rank} is the position in the ranking (1 = most preferred).
     \item \texttt{status} indicates whether the delegation is accepted (1), pending (0), rejected (0), or active (2).
 \end{itemize}
+
+This new map was necessary because the existing \texttt{inverse_indirect_map}, used for cycle detection, only tracked resolved descendant relationships and did not retain information about alternative delegation paths or their ranks. Ranked delegation, by contrast, required maintaining multiple potential delegates per user, their relative preferences, and their acceptance statuses. Without a dedicated structure like \texttt{direct_delegation_map}, it would not have been possible to correctly resolve delegation paths according to user preferences using the MinSum rule.
 
 For example, if only User A has delegated and they rank User B first, User C second, and User D third, and B and C accept the delegation while D does not respond, the resulting structure is:
 

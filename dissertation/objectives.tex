@@ -46,8 +46,6 @@ Each requirement is formulated to be measurable and testable. This allows for ob
     \item \textbf{FR3:} The system shall resolve delegations transitively, such that if User A delegates to B and B delegates to C, User C is the final casting voter for A's vote.
 
     \item \textbf{FR4:} The system shall allow users to override a delegate's decision for specific poll options by submitting a direct vote.
-    
-    \item \textbf{FR5:} The user interface for delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}
@@ -56,6 +54,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
     \item \textbf{NFR2:} Any changes to the database schema must be backward compatible, ensuring that existing data is not lost or corrupted during the upgrade process.
     \item \textbf{NFR3:} Any additional data stored in the database must be encrypted, using the same encryption method as the existing data, to ensure user privacy and consistency with the existing system.
     \item \textbf{NFR3:} The system shall preserve user privacy by ensuring that individual voting preferences and delegation choices are not visible to other users. The only information visible to a delegated user shall be the final vote cast on their behalf.
+    \item \textbf{NFR4:} The user interface for delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
 \end{itemize}
 
 \subsection{Implement Ranked Delegation into Vodle}
@@ -86,9 +85,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 
     \item \textbf{FR2:} The system shall allow users to assign a weight to each delegate such that the total weight does not exceed 0.99.
 
-    \item \textbf{FR3:} The system shall use the algorithm described in subsection \ref{sub-section:vote-splitting} to calculate the final rating for each option based on the weights assigned to each delegate.
-
-    \item \textbf{FR5:} The system shall provide users with a visual interface to edit the weights assigned to each delegate, with either sliders or numeric inputs for easy adjustment.
+    \item \textbf{FR3:} The system shall use the algorithm described in Section~\ref{subsec:background_weighted_delegation} to calculate the final rating for each option based on the weights assigned to each delegate.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}

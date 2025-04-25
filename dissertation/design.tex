@@ -9,7 +9,9 @@ Vodle is built as a serverless web application that emphasises accessibility, cl
 
 \begin{enumerate}
   \item \textbf{Frontend:} Implemented using Angular and the Ionic framework, the frontend provides a responsive and modular interface that works across both desktop and mobile devices. The use of Angular facilitates the creation of component-based user interfaces, essential for introducing interactive features such as the ranked delegation UI and weighted delegation sliders.
-  \item \textbf{Backend:} Vodle uses CouchDB as its database. There is no custom backend logic or middleware; instead, the frontend application communicates directly with CouchDB over HTTP.
+  \item \textbf{Backend:} Vodle uses CouchDB as its database. There is no custom backend logic or middleware
+  %\footnote{Except for a small number of permission management scripts implemented directly in CouchDB via CouchDB ``design functions''.};
+  instead, the frontend application communicates directly with CouchDB over HTTP.
 \end{enumerate}
 
 \subsubsection{Implications of This Architecture}
@@ -52,11 +54,11 @@ When a client writes to a poll database, the \texttt{validate\_doc\_update} enfo
   \item \textbf{User Documents:} IDs are prefixed with \texttt{~vodle.user.}, and only the owner may modify them:
 \begin{figure}[H]
   \centering
-\begin{minted}{typescript}
+\begin{minted}[escapeinside=||]{typescript}
 if (!id.startsWith(`~{userCtx.name}§`)) {
   throw({ forbidden: 'Only the document owner may modify this user doc.' });
 }
-\end{minted}
+\end{minted}    
 \caption{Code to prevent a user from modifying another user's document.}
 \end{figure}
 

@@ -260,7 +260,7 @@ Each voter's ranked delegates are stored in the \texttt{direct\_delegation\_map}
 \]
 where:
 \begin{itemize}
-    \item \texttt{delegate\_id} is the user ID of the delegate.
+    \item \texttt{delegate\_id} uniquely identifies a delegation.
     \item \texttt{rank} is the position in the ranking (1 = most preferred).
     \item \texttt{status} indicates whether the delegation is accepted (1), pending (0), rejected (0), or active (2).
 \end{itemize}
@@ -517,24 +517,151 @@ reorder_button_clicked() {
 
 Saving the updated order commits the changes to the local delegation structure and immediately triggers a re-computation of the active delegation paths using the MinSum resolution rule as previously discussed.
 
-\section{Implement Weighted Delegation Mechanism into Vodle}
-Weighted delegation was implemented to allow users to distribute fractional influence to multiple delegates.
+\subsection{Summary -- TODO}
 
+\section{Implement Weighted Delegation Mechanism into Vodle}
+
+Weighted delegation allows users to distribute their voting power fractionally across multiple delegates, rather than entrusting it entirely to a single individual. This mechanism enhances resilience against vote loss, mitigates the emergence of super-voters, and enables users to represent nuanced trust relationships more accurately. This section outlines the design and implementation of weighted delegation in vodle, addressing Objective 4 of the project.
+
+The system builds upon the trust matrix model introduced in Section~\ref{subsec:background_weighted_delegation} but adapts it to vodle's client-driven, real-time environment, where all computation must be efficiently performed within the browser.
+
+\subsection{Data Structures}
+
+To accommodate weighted delegation, the \texttt{direct\_delegation\_map} was adapted to store the trust values instead of ranks:
+
+\[
+[delegation\_id, trust\_value, status]
+\]
+
+where:
 \begin{itemize}
-  \item UI for assigning weights
-  \item modify\verb|direct_delegation_map|to include weights [[delegationid, weight, status]...]
-  \item Computation of weighted vote outcomes
-  \item Constraints:
-  \begin{itemize}
-    \item Weight sum limit (\texttt{< 1.0})
-    \item Error handling
-  \end{itemize}
-  \item Optimisations to limit database writes.
-  \item Algorithm integration and frontend testing
+    \item \texttt{delegation\_id} uniquely identifies a delegation.
+    \item \texttt{trust\_value} is an integer between 1 and 99, representing the proportion of trust assigned to this delegate.
+    \item \texttt{status} indicates whether the delegation has been accepted (1), or is pending or rejected (0).
 \end{itemize}
 
-\subsubsection{Challenges}
-The weighted delegation logic needed to maintain consistency with the MaxParC aggregation model, while ensuring intuitive user experience. Edge cases (e.g., partially overlapping delegate chains or missing data) introduced complexity during testing. Rendering weight distributions clearly in the UI while keeping the interface lightweight was a recurring challenge.
+Storing trust as an integer percentage simplifies user interactions, avoids floating-point precision issues during UI editing, and is internally converted to decimals during computation.
+
+In addition to the updated \texttt{direct\_delegation\_map}, two new maps were introduced:
+\begin{itemize}
+    \item \texttt{self\_map}: stores each user's direct, self-assigned ratings.
+    \item \texttt{effective\_map}: stores each user's final, computed ratings after resolving delegations.
+\end{itemize}
+
+Maintaining both maps streamlines client-side computations and ensures separation of direct and effective (delegated) ratings.
+
+\subsection{User Interface Extensions}
+
+Ensuring that weighted delegation remains accessible to a broad range of users was a key design goal. Therefore, the interface carefully balances simplicity for casual users with advanced options for power users.
+
+The delegation invitation dialog was extended to include a trust assignment slider (see Figure~\ref{fig:trust-slider}). Sliders were chosen over free-text inputs to reduce the risk of input errors and to provide immediate visual feedback. The maximum value on the slider dynamically adjusts based on the remaining unallocated trust: users begin with 99\% trust available (reserving a minimum of 1\% for self-trust), and the slider maximum decreases as trust is assigned.
+
+\begin{figure}[h]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/trust-slider-placeholder.png}
+    \caption{Delegation invitation dialog with trust percentage slider.}
+    \label{fig:trust-slider}
+\end{figure}
+
+Additionally, the delegation management dialog (introduced for ranked delegation) was extended to show trust percentages. An ``expert mode'' (see Figure~\ref{fig:expert-mode}) was also added, allowing users to manually edit trust values. Manual edits are validated according to the following rules:
+\begin{itemize}
+    \item The total delegated trust must not exceed 99\%.
+    \item Each delegate must be assigned between 1\% and 99\%.
+\end{itemize}
+
+This dual-interface design ensures accessibility for casual users while granting full control to those who need it.
+
+\begin{figure}[h]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/expert-mode-placeholder.png}
+    \caption{Expert mode interface for manually editing trust values.}
+    \label{fig:expert-mode}
+\end{figure}
+
+\subsection{Effective Rating Calculation}
+
+The weighted delegation resolution algorithm ensures that updates to ratings or trust assignments propagate accurately through the delegation network. This is crucial because vodle operates entirely client-side: no backend process is available to recalculate or correct inconsistencies. Therefore, any updates must be performed reliably and efficiently in the user's browser.
+
+The central function responsible for computing updated ratings is \texttt{update\_effective\_votes()}. It is triggered when users modify either their self-assigned ratings or their delegation relationships:
+
+\begin{minted}{typescript}
+call_update_effective_votes() {
+    const ret = this.G.Del.update_effective_votes(
+      this.pid, this.self_rating_map);
+    this.effective_rating_map = new Map(ret);
+}
+\end{minted}
+
+The computation proceeds iteratively according to the following steps:
+
+\begin{enumerate}
+    \item \textbf{Initialisation:} At the first iteration, the self-assigned ratings are used as a starting point for the effective ratings:
+    \begin{minted}{typescript}
+effective_rating_map = new Map(self_rating_map);
+    \end{minted}
+    \item \textbf{Update Step:} For each user and poll option, the effective rating is recalculated based on the user's assigned trust distribution, following:
+    \begin{equation}
+      \text{effective}_{x, i} = \text{trust}_{i,i} \cdot \text{rating}_{x,i} + \sum_{j \neq i} \text{trust}_{i,j} \cdot \text{effective}_{x,j}
+      \label{eq:effective_rating}
+    \end{equation}      
+    \item \textbf{Epsilon-based Convergence Check:} After recalculating all ratings, the system checks whether the change in ratings (compared to the previous iteration) is below a small threshold, \texttt{acceptable\_diff}.
+\end{enumerate}
+
+The \texttt{acceptable\_diff} value is a configurable threshold that determines when iterative recalculation should stop. It prevents unnecessary updates by halting once changes between successive iterations fall below the precision relevant to users. In this implementation, the value was set to 1, matching the precision with which users can assign ratings, therefore saving computational efficiency without affecting visible accuracy.
+
+\begin{minted}{typescript}
+const acceptable_diff = environment.delegation.weighted_epsilon;
+var acceptable_diff_reached = true;
+\end{minted}
+
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \textbf{Recursion and Termination:} If convergence has not been reached, the function recursively calls itself with the newly calculated ratings. However, to prevent infinite recursion in unforeseen cases, a maximum recursion depth is enforced as a safeguard.
+\end{enumerate}
+
+\begin{minted}{typescript}
+if (count > 15) {
+    for (const [id, ratings] of effective_map) {
+        const flooredRatings = new Map<string, number>();
+        for (const [oid, value] of ratings) {
+            flooredRatings.set(oid, Math.floor(value));
+        }
+        effective_map.set(id, flooredRatings);
+    }
+    this.G.D.set_self_and_effective_waps(pid, effective_map, self_rating_map);
+    return effective_map;
+}
+\end{minted}
+
+If recursion exceeds 15 iterations, the system forcibly terminates the process by flooring all effective ratings to integer values and saving the result. This ensures responsiveness and protects the client application from excessive computation time, even in unforeseen cases.
+
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item \textbf{Finalisation:} Once convergence is achieved or the maximum depth is reached, the final effective ratings are floored to integers just before they are saved. Deferring flooring until the final step preserves numerical accuracy during intermediate calculations and avoids the accumulation of rounding errors across recursive calls.
+\end{enumerate}
+
+In summary, the use of an epsilon threshold ensures that minor floating-point inaccuracies do not trigger unnecessary iterations, while the recursion depth limit guarantees the system remains performant and stable even in complex delegation graphs.
+
+\subsection{Summary -- TODO}
+
+% \section{Implement Weighted Delegation Mechanism into Vodle}
+% Weighted delegation was implemented to allow users to distribute fractional influence to multiple delegates.
+
+% \begin{itemize}
+%   \item UI for assigning weights
+%   \item modify\verb|direct_delegation_map|to include weights [[delegationid, weight, status]...]
+%   \item Computation of weighted vote outcomes
+%   \item Constraints:
+%   \begin{itemize}
+%     \item Weight sum limit (\texttt{< 1.0})
+%     \item Error handling
+%   \end{itemize}
+%   \item Optimisations to limit database writes.
+%   \item Algorithm integration and frontend testing
+% \end{itemize}
+
+% \subsubsection{Challenges}
+% The weighted delegation logic needed to maintain consistency with the MaxParC aggregation model, while ensuring intuitive user experience. Edge cases (e.g., partially overlapping delegate chains or missing data) introduced complexity during testing. Rendering weight distributions clearly in the UI while keeping the interface lightweight was a recurring challenge.
 
 \section{Implement Per-Option Delegation}
 This feature enabled per-option delegation, allowing users to assign a different delegate for each item in a poll.
@@ -554,17 +681,9 @@ This mechanism required updates to the internal delegation logic to handle resol
 \section{Simulate Delegation Mechanisms -- Can Remove?}
 The simulation objective was de-scoped due to time constraints and prioritisation of implementation work. While initial planning and framework selection (Mesa) were completed, no functional simulation code was delivered. The decision to drop this extension is discussed further in the Project Management chapter.
 
-\section{Design Decisions and Trade-offs}
-\begin{itemize}
-  \item All logic had to run client-side due to the serverless CouchDB architecture, limiting complexity and computational resources.
-  \item A consistent JSON format was required for all data models, impacting flexibility in data design.
-  \item Trade-offs were made between expressive delegation types and usability, particularly in the option-specific and weighted delegation interfaces.
-\end{itemize}
-
 \section{Summary}
 \begin{itemize}
-  \item Each objective was successfully implemented within the constraints of the vodle platform.
-  \item Challenges were primarily technical (client-side performance, real-time resolution) and design-oriented (clarity and control for users).
-  \item The final implementation offers a modular, extensible delegation system that addresses the key theoretical and practical limitations outlined in earlier chapters.
+  \item Each core objective was successfully implemented within the constraints of the vodle platform.
+  \item recap challenges.
 \end{itemize}
 

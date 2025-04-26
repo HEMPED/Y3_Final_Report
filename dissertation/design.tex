@@ -4,6 +4,10 @@ This chapter describes the design and implementation of the delegation mechanism
 
 Each subsequent section aligns directly with one of the project objectives defined previously, explaining the rationale behind key design choices, algorithms, and interface elements. Emphasis is placed on the critical design trade-offs and challenges encountered, highlighting how constraints such as the serverless architecture and client-side computation informed implementation decisions.
 
+\subsubsection{Delegation Modes at Poll Creation}
+
+When creating a poll, users can select the delegation mode to be used: standard delegation, ranked delegation, weighted delegation, or per-option delegation. The selected mode determines which delegation features are enabled for users during the voting process.
+
 \section{System Architecture Overview}\label{sec:design_architecture}
 Vodle is built as a serverless web application that emphasises accessibility, client-side performance, and ease of deployment. Its architecture comprises two components:
 
@@ -519,7 +523,99 @@ Saving the updated order commits the changes to the local delegation structure a
 
 \subsection{Summary -- TODO}
 
-\section{Implement Weighted Delegation Mechanism into Vodle}
+\section{Implement Per-Option Delegation}
+\label{sec:design_per_option_delegation}
+
+This section describes the design and implementation of per-option delegation in vodle, addressing Objective 3.
+
+Per-option delegation allows users to specify different delegates for different options within the same poll, offering significantly greater flexibility than poll-wide delegation. This model is particularly suited to scenarios where a user may trust different individuals' expertise depending on the topic or option.
+
+Supporting per-option delegation required significant changes to vodle's delegation architecture. Both the \texttt{direct\_delegation\_map} and \texttt{inverse\_indirect\_map} were refactored to operate on a per-option basis:
+
+\begin{itemize}
+  \item \texttt{direct\_delegation\_map}: Now maps each \texttt{option\_id} to a nested map of \texttt{user\_id} to delegation data:
+  \[
+    \texttt{option\_id} \rightarrow \texttt{user\_id} \rightarrow [\texttt{delegation\_id}, \texttt{null}, \texttt{status}]
+  \]
+  The \texttt{null} placeholder was reserved for compatibility with future extensions, such as storing trust values for weighted delegation.
+
+  \item \texttt{inverse\_indirect\_map}: Similarly adapted to maintain descendant relationships independently for each option:
+  \[
+    \texttt{option\_id} \rightarrow \texttt{user\_id} \rightarrow \text{list of users who delegate to this user (directly or indirectly)}
+  \]
+\end{itemize}
+
+This restructuring introduced complexity in data storage and serialisation, as CouchDB requires all nested structures to be serialised cleanly into JSON. Careful handling was necessary to ensure that per-option delegation maps could be correctly saved and retrieved without introducing inconsistencies.
+
+Delegation resolution logic was also updated. The same cycle-checking and transitive delegation algorithm described in Section~\ref{sec:core_delegation_detailed} was applied independently to each option's delegation graph. Resolving per-option graphs separately ensures that cycles and voting power transfers are correctly handled for each option without cross-interference.
+
+From a user interface perspective, several significant modifications were introduced to support per-option delegation.
+
+\subsection{Per-Option Selection During Invitation}
+
+The delegation invitation screen was extended to allow users to select one or more options when inviting a delegate. To prevent conflicting assignments, only options that the user had not already delegated were shown:
+
+\begin{minted}{typescript}
+this.option_names = [];
+this.options_selected = new Set<string>();
+
+for (const id of this.parent.p.oids) {
+  if (this.parent.option_delegated.has(id)) {
+    if (this.parent.option_delegated.get(id) !== '') {
+      continue;
+    }
+  }
+  this.option_names.push({id: id, name: this.parent.p.options[id].name});
+  this.options_selected.add(id);
+}
+\end{minted}
+
+This dynamic filtering ensured that delegation states remained consistent even when users created multiple delegations in quick succession.
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.8\textwidth]{figures/per-option-delegation-invite-placeholder.png}
+  \caption{Delegation invitation dialog allowing users to select one or more poll options to delegate. Only options without existing delegations are shown.}
+  \label{fig:per-option-delegation-invite}
+\end{figure}
+
+Enabling selection of multiple options within a single delegation invitation simplified the user experience while preserving the flexibility introduced by per-option control.
+
+\subsection{Information Screen for Managing Delegations}
+
+To manage active delegations, an information dialog was introduced. This screen lists all currently delegated options, displays the assigned delegate for each option, and provides revoke buttons allowing users to individually cancel delegations.
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.8\textwidth]{figures/per-option-delegation-management-placeholder.png}
+  \caption{Information dialog showing active per-option delegations. Users can view assigned delegates and revoke delegations individually for each option.}
+  \label{fig:per-option-delegation-management}
+\end{figure}
+
+Maintaining correct UI state in this dialog required careful synchronisation with the underlying data structures, ensuring that revoked delegations were properly reflected both visually and in the stored delegation maps.
+
+Finally, the added complexity of supporting different delegation modes (standard, ranked, weighted, and per-option) across the same voting system increased the burden on validation logic. Additional consistency checks were implemented to prevent mixed delegation modes from creating invalid or conflicting states, particularly when users revoked or edited delegations mid-poll.
+
+In summary, per-option delegation greatly enhances the flexibility of vodle's decision-making model, allowing users to tailor their delegation choices to the specific context of each poll option. Despite the substantial architectural and interface changes required, the feature was successfully integrated without compromising client-side performance or the overall user experience.
+
+\subsection{Summary -- TODO}
+
+
+% \section{Implement Per-Option Delegation}
+% This feature enabled per-option delegation, allowing users to assign a different delegate for each item in a poll.
+
+% \begin{itemize}
+%   \item Per-option delegate selection interface
+%   \item Independent resolution of each delegated option
+%   \item talk about altering maps to make them nested map - need to take care to serialise.
+%   \item \verb|direct_delegation_map|: \verb|option_id| -> \verb|user_id| -> [delegationid, null, status]
+%   \item \verb|inverse_indirect_map|: \verb|option_id| -> \verb|user_id| -> list of users who have delegated to them, either directly or indirectly.
+% \end{itemize}
+
+% \subsubsection{Challenges}
+% This mechanism required updates to the internal delegation logic to handle resolution at the option level. The user interface also had to be adapted to display multiple concurrent delegate selections without overwhelming the user. Debugging resolution logic for hybrid delegation modes (e.g., one direct, one split, one ranked) was non-trivial.
+
+\section{Implement Weighted Delegation into Vodle}
 
 Weighted delegation allows users to distribute their voting power fractionally across multiple delegates, rather than entrusting it entirely to a single individual. This mechanism enhances resilience against vote loss, mitigates the emergence of super-voters, and enables users to represent nuanced trust relationships more accurately. This section outlines the design and implementation of weighted delegation in vodle, addressing Objective 4 of the project.
 
@@ -663,25 +759,10 @@ In summary, the use of an epsilon threshold ensures that minor floating-point in
 % \subsubsection{Challenges}
 % The weighted delegation logic needed to maintain consistency with the MaxParC aggregation model, while ensuring intuitive user experience. Edge cases (e.g., partially overlapping delegate chains or missing data) introduced complexity during testing. Rendering weight distributions clearly in the UI while keeping the interface lightweight was a recurring challenge.
 
-\section{Implement Per-Option Delegation}
-This feature enabled per-option delegation, allowing users to assign a different delegate for each item in a poll.
-
-\begin{itemize}
-  \item Per-option delegate selection interface
-  \item Independent resolution of each delegated option
-  \item talk about nested map - need to take care to serialise.
-  \item \verb|direct_delegation_map|: \verb|option_id| -> \verb|user_id| -> [delegationid, null, status]
-  \item \verb|inverse_indirect_map|: \verb|option_id| -> \verb|user_id| -> list of users who have delegated to them, either directly or indirectly.
-  \item Storage schema modifications
-\end{itemize}
-
-\subsubsection{Challenges}
-This mechanism required updates to the internal delegation logic to handle resolution at the option level. The user interface also had to be adapted to display multiple concurrent delegate selections without overwhelming the user. Debugging resolution logic for hybrid delegation modes (e.g., one direct, one split, one ranked) was non-trivial.
-
 \section{Simulate Delegation Mechanisms -- Can Remove?}
 The simulation objective was de-scoped due to time constraints and prioritisation of implementation work. While initial planning and framework selection (Mesa) were completed, no functional simulation code was delivered. The decision to drop this extension is discussed further in the Project Management chapter.
 
-\section{Summary}
+\section{Summary -- TODO}
 \begin{itemize}
   \item Each core objective was successfully implemented within the constraints of the vodle platform.
   \item recap challenges.

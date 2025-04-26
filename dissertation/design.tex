@@ -127,22 +127,32 @@ However, because these maps were not synchronised, different clients could hold 
 The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for control over which options used the delegated rating, and supported transitive delegation. However, it relied entirely on client-local data and logic. Without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
 
 \subsection{Revised Implementation}
-This section describes the final design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It addresses the limitations of the original system by introducing a global, synchronised delegation graph, efficient cycle prevention, and consistent transitive resolution logic. The design preserves the invitation-based flow and per-option control from the earlier implementation while ensuring correctness across all clients.
+% This section describes the final design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It addresses the limitations of the original system by introducing a global, synchronised delegation graph, efficient cycle prevention, and consistent transitive resolution logic. The design preserves the invitation-based flow and per-option control from the earlier implementation while ensuring correctness across all clients.
+To address the critical flaws in the original delegation system, a redesigned core delegation model was implemented. The revised system maintains a global, synchronised view of delegation relationships, ensures efficient cycle prevention, and preserves user autonomy through an explicit invitation model. This section details the design decisions, algorithms, and implementation work undertaken.
 
 \subsubsection*{Cycle Checking: Algorithm and Rationale}
 We can represent delegation relationships as a directed graph, where users are nodes and delegations form directed edges. A valid vote delegation must not introduce cycles in this graph: for example, a sequence such as A~$\rightarrow$~B~$\rightarrow$~C~$\rightarrow$~A would result in all votes becoming trapped, with no final casting voter. Therefore, delegation cycles must be proactively prevented at the time a new delegation is proposed.
 
 A proposed delegation from user $X$ to user $Y$ is valid if and only if $Y$ is not a descendant of $X$ in the current delegation graph. That is, there must be no existing path from $Y$ back to $X$.
 
-% \subsection*{Delegation Graph and Cycle Checking}\label{subsec:obj1_cycle_checking}
-% Delegations are represented as a directed graph, where each user is a node and each delegation is a directed edge from a delegator to their delegate. Preventing cycles in this graph is essential to guarantee that every vote can be correctly resolved to a casting user.
+Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. Cycle checking is performed when a delegation link is opened, because it is only at that point that the system knows the identity of the intended delegate, an any user could theoretically click on the link.
 
-% Rather than recomputing the full graph for each delegation attempt, the algorithm maintains a data structure called the \texttt{inverse\_indirect\_map}, which stores the transitive descendants of each user.
+If a cycle is detected during delegation acceptance, the system prevents the delegation and notifies the user why (see Figure~\ref{fig:del-accept-cycle}).
 
-Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. The implementation details of this approach is detailed in the next section.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/delaccept_cycle.png}
+  \caption{User is prevented from accepting a delegation that would create a cycle.}\label{fig:del-accept-cycle}
+\end{figure}
 
 \subsubsection{Implementation Details}
-A hashmap is used to store the descendants of each user. The keys are user IDs, and the values are sets of user IDs representing the direct delegates of that user. In the code, this hashmap is referred to as ``\verb|inverse_indirect_map|''.
+Building on the algorithm described above, this section explains how cycle checking and delegation resolution were practically implemented in vodle, including the key data structures and user interface workflows.
+
+The descendant sets used for cycle checking are accessed through a hashmap referred to as the \texttt{inverse\_indirect\_map} in the code, which is synchronised across all clients to ensure consistent delegation resolution. Each entry in the \texttt{inverse\_indirect\_map} has the following structure:
+\begin{itemize}
+  \item \textbf{Key:} a user ID representing a delegate.
+  \item \textbf{Value:} a set of user IDs representing all users (both direct and indirect) who have delegated to the user identified by the key.
+\end{itemize}
 
 Suppose the following delegations exist:
 \begin{itemize}
@@ -161,9 +171,10 @@ The resulting \texttt{inverse\_indirect\_map} is:
       "D": {"C", "B", "A"}
     }
     \end{minted}
-  %\caption{Example of a hashmap for users A, B, C, and D. User A has delegated to B, user B has delegated to C, and user C has delegated to D. Consequently, the descendants of user D are A, B and C.}
   \label{fig:inverse_indirect_map}
 \end{figure}
+
+Whenever a user modifies the \texttt{inverse\_indirect\_map} (for example, by accepting or revoking a delegation), the updated map is serialised into JSON and pushed to the CouchDB database. Other clients then pull and de-serialise the latest version, ensuring that all users maintain a consistent and up-to-date view of the global delegation graph.
 
 This map enables several key operations required for maintaining a consistent and cycle-free delegation graph:
 
@@ -178,7 +189,7 @@ This map enables several key operations required for maintaining a consistent an
         cycle = true;
       }
     \end{minted}
-    \caption{Code for checking if a delegation is valid. This check is triggered when a user clicks on a delegate link. The map is retrieved from the synchronised local cache, and the set of descendants is used to confirm that a cycle would not be formed.}
+    \caption{Code for checking if a delegation is valid.}
   \end{figure}
 
   \item \textbf{Add Delegation Edge:} When a new delegation \(X \to Y\) is accepted, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to include both \(X\) and all of \(X\)'s current descendants.
@@ -186,67 +197,67 @@ This map enables several key operations required for maintaining a consistent an
   \item \textbf{Remove Delegation Edge:} When a delegation \(X \!\to\! Y\) is removed, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to remove both \(X\) and all of \(X\)'s current descendants.
 \end{itemize}
 
-\subsubsection{User Interface -- TODO: add screenshots and actually fill in}
-\begin{itemize}
-\item Create delegation invite line
-\item Accept screen
-\item Accept screen when there is a cycle
-\item UI from user A POV (votes are being controlled)
-\begin{itemize}
-  \item Note Fixes:
-  \item controls some-all-none of your votes
-  \item your vote is used for n-other delegates
-\end{itemize}
-\item UI from user B POV (Is a delegate)
-\end{itemize}
+% \subsubsection{User Interface -- TODO: add screenshots and actually fill in}
+% \begin{itemize}
+% \item Create delegation invite line
+% \item Accept screen
+% \item Accept screen when there is a cycle
+% \item UI from user A POV (votes are being controlled)
+% \begin{itemize}
+%   \item Note Fixes:
+%   \item controls some-all-none of your votes
+%   \item your vote is used for n-other delegates
+% \end{itemize}
+% \item UI from user B POV (Is a delegate)
+% \end{itemize}
 
-\begin{figure}[H]
-  \centering
-  \begin{subfigure}[t]{0.28\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/deldialog.png}
-    \caption{User A's invitation screen.}
-    \label{fig:del-dialog}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.68\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/delaccept.png}
-    \caption{User B's delegation acceptance screen when there is no cycle.}
-    \label{fig:del-accept}
+% \begin{figure}[H]
+%   \centering
+%   \begin{subfigure}[t]{0.28\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/deldialog.png}
+%     \caption{User A's invitation screen.}
+%     \label{fig:del-dialog}
+%   \end{subfigure}
+%   \hfill
+%   \begin{subfigure}[b]{0.68\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/delaccept.png}
+%     \caption{User B's delegation acceptance screen when there is no cycle.}
+%     \label{fig:del-accept}
     
-    \vspace{1em}
+%     \vspace{1em}
     
-    \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/delaccept_cycle.png}
-    \caption{User A's screen after opening a delegation link from User C (who User B has delegated to).}
-    \label{fig:del-accept-cycle}
-  \end{subfigure}
-  \caption{Screens shown to Users A and B during the delegation invitation and response process.}
-  \label{fig:delegation-accept-flow}
-\end{figure}
+%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/delaccept_cycle.png}
+%     \caption{User A's screen after opening a delegation link from User C (who User B has delegated to).}
+%     \label{fig:del-accept-cycle}
+%   \end{subfigure}
+%   \caption{Screens shown to Users A and B during the delegation invitation and response process.}
+%   \label{fig:delegation-accept-flow}
+% \end{figure}
 
 
-\begin{figure}[H]
-  \centering
-  \begin{subfigure}[t]{0.8\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../common/vodle_screenshots/userA_after.png}
-    \caption{User A (delegator) can now see that their waps are controlled by User B.}
-    \label{fig:userA_after}
-  \end{subfigure}
+% \begin{figure}[H]
+%   \centering
+%   \begin{subfigure}[t]{0.8\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{../common/vodle_screenshots/userA_after.png}
+%     \caption{User A (delegator) can now see that their waps are controlled by User B.}
+%     \label{fig:userA_after}
+%   \end{subfigure}
 
-  \vspace{1em}
+%   \vspace{1em}
 
-  \begin{subfigure}[t]{0.8\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/userB_after.png}
-    \caption{User B (delegate) can see that their vote also determines the outcome for one other user (User A).}
-    \label{fig:userB_after}
-  \end{subfigure}
+%   \begin{subfigure}[t]{0.8\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/userB_after.png}
+%     \caption{User B (delegate) can see that their vote also determines the outcome for one other user (User A).}
+%     \label{fig:userB_after}
+%   \end{subfigure}
 
-  \caption{Delegate's (bottom) and delegator's (top) screens after a delegation has been accepted.}
-  \label{fig:delegation_flow_ui}
-\end{figure}
+%   \caption{Delegate's (bottom) and delegator's (top) screens after a delegation has been accepted.}
+%   \label{fig:delegation_flow_ui}
+% \end{figure}
 
 \subsection{Summary}
 
@@ -778,4 +789,4 @@ Weighted delegation enabled users to distribute their voting power fractionally 
 % \end{itemize}
 
 \section{Summary}
-This chapter detailed the design and implementation of the delegation mechanisms introduced into vodle, addressing each of the project's core objectives. Beginning with a robust core delegation model, the system ensured global consistency and cycle prevention while preserving user autonomy. Ranked delegation added backup delegations based on user preference, while per-option delegation allowed fine-grained control over delegation assignments for different poll options. Weighted delegation further extended flexibility by allowing voting power to be distributed proportionally across multiple trusted delegates. Across all features, the designs were carefully adapted to vodle's serverless, client-driven architecture, ensuring correctness, performance, and a responsive user experience. Despite the technical challenges, each major objective was fully achieved, laying a strong foundation for future extensions.
+The revised core delegation model established a synchronised, cycle-free system for managing vote delegations in vodle. By maintaining global delegation maps and enforcing efficient cycle prevention at the point of delegation acceptance, the system guarantees consistent vote resolution across all clients. Explicit invitation flows and integrated user interface updates uphold user autonomy and improve the transparency and usability of the delegation process, providing a robust foundation for the advanced delegation mechanisms introduced in the following sections.

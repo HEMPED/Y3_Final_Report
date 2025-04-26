@@ -65,7 +65,7 @@ The delegation mechanism relied on several maps to track how votes were delegate
     \item \textbf{inv\_effective\_delegation\_map}: The inverse of the effective map. For each user, it stored the set of voters whose votes were ultimately counted under them. This was useful for computing voting weights and for cycle detection.
 \end{itemize}
 
-Each map was maintained locally by the browser and not synchronised across clients. This made the correctness of delegation state dependent on each user's local view.
+Each map was maintained locally by the browser and not synchronised consistently across clients. This made the correctness of delegation state dependent on each user's local view.
 
 \subsubsection*{Delegation Flow}
 
@@ -119,12 +119,12 @@ The main flaw in the system was its inability to reliably prevent delegation cyc
 
 Clients attempted to detect cycles during the delegation acceptance phase by examining local delegation maps. A typical check would confirm whether the proposed delegate was already an effective delegate of the user. If so, the client marked the request as cyclic and blocked it.
 
-However, because these maps were not synchronised, different clients could hold conflicting views of the delegation graph. A delegation that passed validation on one device might cause a cycle once accepted, or be silently invalidated by another. This undermined correctness and made vote resolution unpredictable.
+However, because these maps were not always synchronised, different clients could hold conflicting views of the delegation graph. A delegation that passed validation on one device might cause a cycle once accepted, or be silently invalidated by another. This undermined correctness and made vote resolution unpredictable.
 
 
 \subsubsection*{Summary}
 
-The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for control over which options used the delegated rating, and supported transitive delegation. However, it relied entirely on client-local data and logic. Without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
+The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for control over which options used the delegated rating, and supported transitive delegation. However, without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
 
 \subsection{Revised Implementation}
 % This section describes the final design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It addresses the limitations of the original system by introducing a global, synchronised delegation graph, efficient cycle prevention, and consistent transitive resolution logic. The design preserves the invitation-based flow and per-option control from the earlier implementation while ensuring correctness across all clients.
@@ -137,7 +137,7 @@ A proposed delegation from user $X$ to user $Y$ is valid if and only if $Y$ is n
 
 Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. Cycle checking is performed when a delegation link is opened, because it is only at that point that the system knows the identity of the intended delegate, an any user could theoretically click on the link.
 
-If a cycle is detected during delegation acceptance, the system prevents the delegation and notifies the user why (see Figure~\ref{fig:del-accept-cycle}).
+If a cycle is detected during delegation acceptance, the system blocks the delegation from being accepted whilst explaining why to the user (see Figure~\ref{fig:del-accept-cycle}).
 
 \begin{figure}[H]
   \centering
@@ -193,8 +193,14 @@ This map enables several key operations required for maintaining a consistent an
   \end{figure}
 
   \item \textbf{Add Delegation Edge:} When a new delegation \(X \to Y\) is accepted, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to include both \(X\) and all of \(X\)'s current descendants.
+\[
+  \forall u \text{ such that } Y \in \texttt{desc}(u) \cup \{Y\},\quad \texttt{desc}(u) \leftarrow \texttt{desc}(u) \cup \{X\} \cup \texttt{desc}(X)
+\]
 
   \item \textbf{Remove Delegation Edge:} When a delegation \(X \!\to\! Y\) is removed, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to remove both \(X\) and all of \(X\)'s current descendants.
+\[
+  \forall u \text{ such that } Y \in \texttt{desc}(u) \cup \{Y\},\quad \texttt{desc}(u) \leftarrow \texttt{desc}(u) \setminus \left( \{X\} \cup \texttt{desc}(X) \right)
+\]
 \end{itemize}
 
 % \subsubsection{User Interface -- TODO: add screenshots and actually fill in}

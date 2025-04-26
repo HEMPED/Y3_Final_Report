@@ -126,7 +126,7 @@ However, because these maps were not always synchronised, different clients coul
 
 The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for control over which options used the delegated rating, and supported transitive delegation. However, without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
 
-\subsection{Revised Implementation}
+\subsection{Revised Implementation}\label{subsec:design_core}
 % This section describes the final design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It addresses the limitations of the original system by introducing a global, synchronised delegation graph, efficient cycle prevention, and consistent transitive resolution logic. The design preserves the invitation-based flow and per-option control from the earlier implementation while ensuring correctness across all clients.
 To address the critical flaws in the original delegation system, a redesigned core delegation model was implemented. The revised system maintains a global, synchronised view of delegation relationships, ensures efficient cycle prevention, and preserves user autonomy through an explicit invitation model. This section details the design decisions, algorithms, and implementation work undertaken.
 

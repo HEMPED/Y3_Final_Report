@@ -30,7 +30,7 @@ To support this, requirements are organised into two categories: functional (F) 
 
 Each requirement is formulated to be measurable and testable. This allows for objective evaluation during development, facilitates verification against the project goals, and helps identify areas for improvement as the system evolves.
 
-\subsection{Implement a Core Delegation Model into Vodle}
+\subsection{Implement a Core Delegation Model into Vodle}\label{subsec:requirements_core}
 \subsubsection{Functional Requirements}
 \begin{itemize}
     \item \textbf{FR1:} The system shall correctly handle the delegation process from invitation to acceptance.
@@ -78,7 +78,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
     
     \item \textbf{NFR3:} The system shall ensure that any data related to ranked delegation is stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
 \end{itemize}
-\subsection{Implement Weighted Delegation into Vodle}
+\subsection{Implement Weighted Delegation into Vodle}\label{subsec:requirements_weighte}
 \subsubsection{Functional Requirements}
 \begin{itemize}
     \item \textbf{FR1:} The system shall allow users to delegate their vote to multiple delegates simultaneously for a single poll.
@@ -96,7 +96,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 
     \item \textbf{NFR3:} The user interface for weighted delegation shall be intuitive and allow users to adjust weights easily, using sliders or numeric inputs.
 \end{itemize}
-\subsection{Implement Per-Option Delegation}
+\subsection{Implement Per-Option Delegation}\label{subsec:requirements_option}
 \subsubsection{Functional Requirements}
 \begin{itemize}
     \item \textbf{FR1:} The system shall allow users to assign different delegates for each individual option or subset of options within a poll.
@@ -114,7 +114,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 
     \item \textbf{NFR2:} The delegation data must be serialised in a format compatible with CouchDB (e.g., JSON-encoded) to maintain compatibility with vodle's storage system.
 \end{itemize}
-\subsection{Simulate Delegation Mechanisms}
+\subsection{Simulate Delegation Mechanisms}\label{subsec:requirements_sim}
 \subsubsection{Functional Requirements}
 \begin{itemize}
     \item \textbf{FR1:} The simulation system shall model individual agents representing voters, each capable of voting, abstaining, or delegating their vote according to a selected delegation rule.

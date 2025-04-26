@@ -65,7 +65,7 @@ The delegation mechanism relied on several maps to track how votes were delegate
     \item \textbf{inv\_effective\_delegation\_map}: The inverse of the effective map. For each user, it stored the set of voters whose votes were ultimately counted under them. This was useful for computing voting weights and for cycle detection.
 \end{itemize}
 
-Each map was maintained locally by the browser and not synchronised across clients. This made the correctness of delegation state dependent on each user's local view.
+Each map was maintained locally by the browser and not synchronised consistently across clients. This made the correctness of delegation state dependent on each user's local view.
 
 \subsubsection*{Delegation Flow}
 
@@ -119,12 +119,12 @@ The main flaw in the system was its inability to reliably prevent delegation cyc
 
 Clients attempted to detect cycles during the delegation acceptance phase by examining local delegation maps. A typical check would confirm whether the proposed delegate was already an effective delegate of the user. If so, the client marked the request as cyclic and blocked it.
 
-However, because these maps were not synchronised, different clients could hold conflicting views of the delegation graph. A delegation that passed validation on one device might cause a cycle once accepted, or be silently invalidated by another. This undermined correctness and made vote resolution unpredictable.
+However, because these maps were not always synchronised, different clients could hold conflicting views of the delegation graph. A delegation that passed validation on one device might cause a cycle once accepted, or be silently invalidated by another. This undermined correctness and made vote resolution unpredictable.
 
 
 \subsubsection*{Summary}
 
-The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for control over which options used the delegated rating, and supported transitive delegation. However, it relied entirely on client-local data and logic. Without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
+The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for control over which options used the delegated rating, and supported transitive delegation. However, without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
 
 \subsection{Revised Implementation}
 % This section describes the final design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It addresses the limitations of the original system by introducing a global, synchronised delegation graph, efficient cycle prevention, and consistent transitive resolution logic. The design preserves the invitation-based flow and per-option control from the earlier implementation while ensuring correctness across all clients.
@@ -137,7 +137,7 @@ A proposed delegation from user $X$ to user $Y$ is valid if and only if $Y$ is n
 
 Instead of checking for this condition directly using a depth-first search (DFS) or breadth-first search (BFS), a more efficient approach is to maintain a list of all descendants for each user. This allows us to check if $Y$ is in the list of descendants of $X$ in constant time. Cycle checking is performed when a delegation link is opened, because it is only at that point that the system knows the identity of the intended delegate, an any user could theoretically click on the link.
 
-If a cycle is detected during delegation acceptance, the system prevents the delegation and notifies the user why (see Figure~\ref{fig:del-accept-cycle}).
+If a cycle is detected during delegation acceptance, the system blocks the delegation from being accepted whilst explaining why to the user (see Figure~\ref{fig:del-accept-cycle}).
 
 \begin{figure}[H]
   \centering
@@ -193,23 +193,15 @@ This map enables several key operations required for maintaining a consistent an
   \end{figure}
 
   \item \textbf{Add Delegation Edge:} When a new delegation \(X \to Y\) is accepted, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to include both \(X\) and all of \(X\)'s current descendants.
+\[
+  \forall u \text{ such that } Y \in \texttt{desc}(u) \cup \{Y\},\quad \texttt{desc}(u) \leftarrow \texttt{desc}(u) \cup \{X\} \cup \texttt{desc}(X)
+\]
 
   \item \textbf{Remove Delegation Edge:} When a delegation \(X \!\to\! Y\) is removed, the system must ensure that the descendant relationship is updated consistently. Specifically, for $Y$ and every user \(u\) such that \(Y \in \texttt{desc}(u)\), their descendants must be updated to remove both \(X\) and all of \(X\)'s current descendants.
+\[
+  \forall u \text{ such that } Y \in \texttt{desc}(u) \cup \{Y\},\quad \texttt{desc}(u) \leftarrow \texttt{desc}(u) \setminus \left( \{X\} \cup \texttt{desc}(X) \right)
+\]
 \end{itemize}
-
-% \subsubsection{User Interface -- TODO: add screenshots and actually fill in}
-% \begin{itemize}
-% \item Create delegation invite line
-% \item Accept screen
-% \item Accept screen when there is a cycle
-% \item UI from user A POV (votes are being controlled)
-% \begin{itemize}
-%   \item Note Fixes:
-%   \item controls some-all-none of your votes
-%   \item your vote is used for n-other delegates
-% \end{itemize}
-% \item UI from user B POV (Is a delegate)
-% \end{itemize}
 
 % \begin{figure}[H]
 %   \centering
@@ -265,10 +257,9 @@ The core delegation model successfully replaced the original, flawed system by i
 
 \section{Implement Ranked Delegation into Vodle}\label{sec:design_ranked_delegation}
 
+To enhance the resilience of delegation relationships and reduce the risk of vote loss, ranked delegation was introduced. This extension allows users to specify multiple trusted delegates in a preferred order, ensuring that their vote remains effective even if their primary delegate abstains or becomes part of a delegation cycle. Ranked delegation is resolved according to the MinSum rule, striking a balance between favouring the most preferred available delegate and shortest path.
 
-To enhance the resilience of delegation relationships and reduce the risk of vote loss, ranked delegation was introduced. This extension allows users to specify multiple trusted delegates in a preferred order, ensuring that their vote remains effective even if their primary delegate abstains or becomes unavailable. Ranked delegation is resolved according to the MinSum rule, favouring the most preferred available delegate while preserving transitive consistency.
-
-The implementation of ranked delegation in vodle is poll-specific: each user may specify a ranked list of up to three delegates for a given poll. These preferences are evaluated using the MinSum delegation rule (see Section~\ref{subsec:background_ranked_delegation}), which selects the delegation path with the lowest cumulative rank cost. This ensures that the system respects the user's stated preferences as closely as possible, while avoiding unnecessarily long or indirect delegation chains.
+The implementation of ranked delegation in vodle is as follows: each user may specify a ranked list of up to three delegates for a given poll. These preferences are evaluated using the MinSum delegation rule (see Section~\ref{subsec:background_ranked_delegation}), which selects the delegation path with the lowest cumulative rank cost. This ensures that the system respects the user's stated preferences as closely as possible, while avoiding unnecessarily long or indirect delegation chains.
 
 \subsection{Data Structures}
 Each voter's ranked delegates are stored in the \texttt{direct\_delegation\_map}, which maps a user ID to a list of delegation entries. Each entry is a triple:
@@ -282,9 +273,11 @@ where:
     \item \texttt{status} indicates whether the delegation is accepted (1), pending (0), rejected (0), or active (2).
 \end{itemize}
 
-This new map was necessary because the existing \texttt{inverse\_indirect\_map}, used for cycle detection, only tracked resolved descendant relationships and did not retain information about alternative delegation paths or their ranks. Ranked delegation, by contrast, required maintaining multiple potential delegates per user, their relative preferences, and their acceptance statuses. Without a dedicated structure like \texttt{direct\_delegation\_map}, it would not have been possible to correctly resolve delegation paths according to user preferences using the MinSum rule.
+This new map was necessary because the existing \texttt{inverse\_indirect\_map}, used for cycle detection, only tracked resolved descendant relationships and did not retain information about alternative, unused delegations. Ranked delegation, by contrast, required maintaining multiple potential delegates per user, their relative preferences, and their acceptance statuses.
 
-For example, if only User A has delegated and they rank User B first, User C second, and User D third, and B and C accept the delegation while D does not respond, the resulting structure is:
+%Without a dedicated structure like \texttt{direct\_delegation\_map}, it would not have been possible to correctly resolve delegation paths according to user preferences using the MinSum rule.
+
+For example, if only User A has delegated and they rank User B first, User C second, and User D third, and B and C accept the delegation while D does not respond, the resulting map is:
 
 \begin{figure}[H]
   \begin{minted}{python}
@@ -362,7 +355,7 @@ private min_sum(pid: string, vid: string): string[] {
 
 \subsubsection*{3. Updating delegation statuses atomically}
 
-The function \texttt{min\_sum\_all} runs this logic for every delegating user. Once the best path is identified, each edge in that path is marked as active (`2`). Previously active edges that are no longer on any minimal path are demoted to inactive accepted (`1`).
+The function \texttt{min\_sum\_all} runs this logic for every delegating user. Once the best path is identified, each edge in that path is marked as active (`2'). Previously active edges that are no longer on any minimal path are demoted to inactive (`1').
 
 If no valid path is found (e.g.\ due to rejection or cycles), all active statuses are cleared. This ensures that outdated or invalid delegation edges never persist.
 
@@ -403,9 +396,9 @@ This resolution pipeline ensures that delegation is transitive, preference-aware
 
 In traditional liquid democracy models, participants typically make a fixed decision at the outset: either to vote directly, delegate their vote, or abstain entirely. However, vodle allows users to submit or modify their votes at any time before the poll closes, meaning no final commitment is made until voting ends.
 
-As a result, in our project a casting voter is defined dynamically as: any user who has assigned a non-zero rating to at least one option is treated as a casting voter.
+As a result, in our project a casting voter is defined dynamically: any user who has assigned a non-zero rating to at least one option is treated as a casting voter.
 
-This definition is directly motivated by the interpretation of ratings in MaxParC (see Section~\ref{subsec:background_maxparc}). In MaxParC, a rating expresses a conditional willingness to approve an option depending on the behaviour of others. Therefore, a non-zero rating of at least one represents active participation in the consensus formation process.
+This definition is directly motivated by the interpretation of ratings in MaxParC (see Section~\ref{subsec:background_maxparc}). In MaxParC, a rating expresses a conditional willingness to approve an option depending on the behaviour of others. Therefore, a non-zero rating of at least one option represents active participation in the poll.
 
 Accordingly, vodle treats any user with a non-zero rating as a valid casting voter in the context of resolving delegation paths. This ensures that delegation chains terminate at users who are actively contributing to consensus, prevents misclassifying participants as abstainers, and aligns delegation resolution with the principles of vodle. 
 
@@ -453,7 +446,7 @@ The management interface is provided through an information dialog listing all c
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{../common/vodle_screenshots/ranked_where_info_button.png}
-  \caption{The information dialog can be accessed by tapping the information icon, (i), in the delegation info banner.}
+  \caption{The information dialog can be accessed by tapping the information icon (second icon from the left) in the delegation info banner.}
 \end{figure}
 
 \begin{figure}[H]
@@ -471,7 +464,7 @@ The management interface is provided through an information dialog listing all c
   \caption{Reordering mode enabled. Users can drag delegates to reorder their ranks and then save.}
   \end{subfigure}
   
-  \caption{Information dialog for managing and reordering ranked delegations.}
+  \caption{Information dialog for managing and reordering ranked delegations which appears after clicking the information button.}
 \end{figure}
 
 \subsubsection{Drag-and-Drop Reordering Logic}
@@ -607,33 +600,11 @@ To manage active delegations, an information dialog was introduced. This screen 
 
 Maintaining correct UI state in this dialog required careful synchronisation with the underlying data structures, ensuring that revoked delegations were properly reflected both visually and in the stored delegation maps.
 
-Finally, the added complexity of supporting different delegation modes (standard, ranked, weighted, and per-option) across the same voting system increased the burden on validation logic. Additional consistency checks were implemented to prevent mixed delegation modes from creating invalid or conflicting states, particularly when users revoked or edited delegations mid-poll.
-
-In summary, per-option delegation greatly enhances the flexibility of vodle's decision-making model, allowing users to tailor their delegation choices to the specific context of each poll option. Despite the substantial architectural and interface changes required, the feature was successfully integrated without compromising client-side performance or the overall user experience.
-
-
-
-% \section{Implement Per-Option Delegation}
-% This feature enabled per-option delegation, allowing users to assign a different delegate for each item in a poll.
-
-% \begin{itemize}
-%   \item Per-option delegate selection interface
-%   \item Independent resolution of each delegated option
-%   \item talk about altering maps to make them nested map - need to take care to serialise.
-%   \item \verb|direct_delegation_map|: \verb|option_id| -> \verb|user_id| -> [delegationid, null, status]
-%   \item \verb|inverse_indirect_map|: \verb|option_id| -> \verb|user_id| -> list of users who have delegated to them, either directly or indirectly.
-% \end{itemize}
-
-% \subsubsection{Challenges}
-% This mechanism required updates to the internal delegation logic to handle resolution at the option level. The user interface also had to be adapted to display multiple concurrent delegate selections without overwhelming the user. Debugging resolution logic for hybrid delegation modes (e.g., one direct, one split, one ranked) was non-trivial.
-
 \subsection{Summary}
 
-Per-option delegation introduced the ability for users to assign different delegates to individual poll options, greatly increasing the flexibility of the delegation system. This required refactoring core delegation data structures to operate independently for each option and adapting the cycle detection and resolution logic accordingly. The user interface was also extended to support multi-option delegation invitations and fine-grained management of active delegations.
+Per-option delegation introduced the ability for users to assign different delegates to individual poll options, greatly increasing the flexibility of the delegation system. This required refactoring core delegation data structures to operate independently for each option and adapting the cycle detection and resolution logic accordingly. The user interface was also extended to support multi-option delegation invitations and the management of multiple active delegations.
 
 \section{Implement Weighted Delegation into Vodle}
-
-% Weighted delegation allows users to distribute their voting power fractionally across multiple delegates, rather than entrusting it entirely to a single individual. This mechanism enhances resilience against vote loss, mitigates the emergence of super-voters, and enables users to represent nuanced trust relationships more accurately. This section outlines the design and implementation of weighted delegation in vodle, addressing Objective 4 of the project.
 
 Building on the earlier delegation models, weighted delegation was introduced to enable users to distribute their voting power fractionally across multiple trusted delegates. This approach enhances resilience against vote loss, mitigates the emergence of super-voters, and allows users to express nuanced trust relationships more accurately. This section outlines the design and implementation of weighted delegation in vodle, addressing Objective 4 of the project.
 
@@ -718,14 +689,25 @@ effective_rating_map = new Map(self_rating_map);
       \text{effective}_{x, i} = \text{trust}_{i,i} \cdot \text{rating}_{x,i} + \sum_{j \neq i} \text{trust}_{i,j} \cdot \text{effective}_{x,j}
       \label{eq:effective_rating}
     \end{equation}      
-    \item \textbf{Epsilon-based Convergence Check:} After recalculating all ratings, the system checks whether the change in ratings (compared to the previous iteration) is below a small threshold, \texttt{acceptable\_diff}.
+    \item \textbf{Convergence Check:} After recalculating all ratings, the system checks whether the change in ratings (compared to the previous iteration) is below a small threshold, \texttt{acceptable\_diff}.
 \end{enumerate}
 
 The \texttt{acceptable\_diff} value is a configurable threshold that determines when iterative recalculation should stop. It prevents unnecessary updates by halting once changes between successive iterations fall below the precision relevant to users. In this implementation, the value was set to 1, matching the precision with which users can assign ratings, therefore saving computational efficiency without affecting visible accuracy.
 
 \begin{minted}{typescript}
-const acceptable_diff = environment.delegation.weighted_epsilon;
-var acceptable_diff_reached = true;
+if (acceptable_diff_reached){
+  // Math.floor to every value:
+  for (const [id, ratings] of newEffectiveMap) {
+    const flooredRatings = new Map<string, number>();
+    for (const [oid, value] of ratings) {
+      flooredRatings.set(oid, Math.floor(value));
+    }
+    newEffectiveMap.set(id, flooredRatings);
+  }
+  this.G.D.set_self_and_effective_waps(
+    pid, newEffectiveMap, self_rating_map);
+  return newEffectiveMap;
+}
 \end{minted}
 
 \begin{enumerate}
@@ -742,7 +724,8 @@ if (count > 15) {
         }
         effective_map.set(id, flooredRatings);
     }
-    this.G.D.set_self_and_effective_waps(pid, effective_map, self_rating_map);
+    this.G.D.set_self_and_effective_waps(
+      pid, effective_map, self_rating_map);
     return effective_map;
 }
 \end{minted}
@@ -754,7 +737,7 @@ If recursion exceeds 15 iterations, the system forcibly terminates the process b
     \item \textbf{Finalisation:} Once convergence is achieved or the maximum depth is reached, the final effective ratings are floored to integers just before they are saved. Deferring flooring until the final step preserves numerical accuracy during intermediate calculations and avoids the accumulation of rounding errors across recursive calls.
 \end{enumerate}
 
-In summary, the use of an epsilon threshold ensures that minor floating-point inaccuracies do not trigger unnecessary iterations, while the recursion depth limit guarantees the system remains performant and stable even in complex delegation graphs.
+In summary, the use of an acceptable threshold ensures that minor floating-point inaccuracies do not trigger unnecessary iterations, while the recursion depth limit guarantees the system remains performant and stable even in unexpectated situations.
 
 
 % \section{Implement Weighted Delegation Mechanism into Vodle}
@@ -780,7 +763,7 @@ In summary, the use of an epsilon threshold ensures that minor floating-point in
 
 Weighted delegation enabled users to distribute their voting power fractionally across multiple delegates, based on assigned trust percentages. The trust matrix model was adapted to vodle's client-side environment, with an efficient iterative computation of effective ratings. The user interface was expanded to provide both a simple slider-based system for casual users and an expert mode for manual trust editing, balancing usability and precision.
 
-\section{Simulate Delegation Mechanisms -- needed?}
+%\section{Simulate Delegation Mechanisms -- needed?}
 
 % \section{Summary}
 % \begin{itemize}
@@ -789,4 +772,5 @@ Weighted delegation enabled users to distribute their voting power fractionally 
 % \end{itemize}
 
 \section{Summary}
-The revised core delegation model established a synchronised, cycle-free system for managing vote delegations in vodle. By maintaining global delegation maps and enforcing efficient cycle prevention at the point of delegation acceptance, the system guarantees consistent vote resolution across all clients. Explicit invitation flows and integrated user interface updates uphold user autonomy and improve the transparency and usability of the delegation process, providing a robust foundation for the advanced delegation mechanisms introduced in the following sections.
+
+This chapter detailed the design and implementation of the delegation mechanisms introduced into vodle, addressing each of the project's core objectives. Beginning with a robust core delegation model, the system ensured global consistency and cycle prevention while preserving user autonomy. Ranked delegation added backup delegations based on user preference, while per-option delegation allowed finer control over delegation assignments for different poll options. Weighted delegation further extended flexibility by allowing voting power to be distributed proportionally across multiple trusted delegates. Across all features, the designs were carefully adapted to vodle's serverless, client-driven architecture, ensuring correctness, performance, and a responsive user experience. Despite the technical challenges, each major objective was fully achieved, laying a strong foundation for future extension work.

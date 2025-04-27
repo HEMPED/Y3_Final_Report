@@ -1,8 +1,56 @@
-\chapter{Future Work}\label{ch:future_work}
+\chapter{Future Work}
+
+This project has successfully designed and implemented a flexible liquid democracy system within vodle, enabling more expressive and inclusive decision-making processes. However, several promising directions remain for further development. These future works can be broadly categorised into three areas: empirical evaluation through agent-based modelling, enhancement of user support features, and optimisation of system performance for scalability. Each of these directions is discussed below.
+
+\section{Agent-Based Modelling for Delegation Dynamics}
+
+While the foundations for agent-based modelling (ABM) were established during the project, full implementation remains an important area for future work. ABM can provide valuable insights into the emergent behaviour of complex delegation networks, particularly in understanding how individual strategies impact collective outcomes.
+
+Future work could involve:
 
 \begin{itemize}
-    \item More algorithms for ranked delegation
-    \item db write protection thing
-    \item adapt to work with slack
-    \item Global Delegations -- like liquid feedback
+    \item \textbf{Simulation of Delegation Strategies}: Modelling various agent behaviours, such as frequent delegation, abstention tendencies, or preference volatility, to observe their effects on decision quality and vote distribution.
+    \item \textbf{Analysis of Emergent Phenomena}: Investigating conditions under which super-voters emerge and assessing the robustness of delegation mechanisms against vote loss and power concentration.
+    \item \textbf{Evaluation of System Resilience}: Testing the system's ability to maintain fair and efficient representation under dynamic and potentially adversarial scenarios.
 \end{itemize}
+
+Such simulations would provide empirical evidence for the resilience and fairness of the implemented delegation modes and offer practical guidance for further system design~\cite{goel2016diffusion, brilliquid}.
+
+\section{Enhancing User Support for Delegation Decisions}
+
+Although the current interface provides slider-based input and real-time validation for trust allocation, additional features could further assist users in making effective delegation decisions.
+
+Potential enhancements include:
+
+\begin{itemize}
+    \item \textbf{Delegation Recommendations}: Algorithms could suggest potential delegates based on historical alignment of voting behaviour or participation levels, while respecting user autonomy and privacy~\cite{colony}.
+    \item \textbf{Dynamic Trust Adjustment}: Trust allocations could be adapted automatically in response to delegate inactivity, ensuring that votes continue to be meaningfully represented~\cite{burke2007trust}.
+    \item \textbf{Global Delegates}: Allowing users to specify a default or ``global'' delegate who would automatically represent them across all polls unless explicitly overridden. This feature, similar to the approach taken by LiquidFeedback~\cite{liquidfeedbackbook}, would streamline participation for users who trust certain individuals consistently, reducing friction and improving long-term engagement while maintaining the ability to vote directly or set per-poll delegates if desired.
+    \item \textbf{Feedback Mechanisms}: Providing users with private insights into how their delegations influence outcomes, encouraging greater transparency without compromising system-wide privacy.
+\end{itemize}
+
+These features would help users better understand and manage their delegation structures, increasing confidence and autonomy within the platform.
+
+\section{Performance Optimisation for Scalability}
+
+As vodle scales to larger user bases and more complex delegation networks, performance considerations become increasingly critical. Several optimisations could be explored:
+
+\begin{itemize}
+    \item \textbf{Incremental Computation}: Updating only the affected parts of the delegation graph when changes occur, rather than recomputing full graphs.
+    \item \textbf{Client-Side Parallelism}: Leveraging browser Web Workers to perform intensive computations asynchronously, maintaining a responsive user experience~\cite{performanceopt}.
+    \item \textbf{Optimised Data Structures}: Designing lightweight, efficient serialisation formats to minimise client-server communication overhead.
+\end{itemize}
+
+These optimisations would ensure that the system remains efficient and scalable, even for complex, real-time decision processes.
+
+\section{Broader Applications and Integration}
+
+The delegation mechanisms introduced in this project are applicable beyond the initial scope of rating systems. Potential broader applications include:
+
+\begin{itemize}
+    \item \textbf{Organisational Decision-Making}: Adapting vodle for use in institutional governance, committee voting, or other structured decision environments.
+    \item \textbf{Civic Participation Platforms}: Deploying the system in municipal or community settings to facilitate participatory democracy initiatives~\cite{civictech}.
+    \item \textbf{Blockchain Governance}: Integrating flexible delegation models within decentralised autonomous organisations (DAOs) to enhance participation and resilience~\cite{colony}.
+\end{itemize}
+
+Exploring these avenues would validate the generality and robustness of the developed features and contribute to more democratic, transparent decision-making systems across domains.

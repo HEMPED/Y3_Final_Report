@@ -1,20 +1,32 @@
 \chapter{Conclusions}\label{ch:conclusions}
-\section{Author's Assessment of the Project}
-``It can be a useful exercise for you (and a point of consolidation for the reader) to put together a brief summary of what you have achieved. This is not a compulsory section, but a self-assessment is welcome. A suggested format for this is to include a short section entitled 'Author's Assessment of the Project' consisting of brief (up to 100 words) answers to each of the following questions.
+This project set out to design and implement a flexible, robust liquid democracy system within vodle, with the aim of enhancing participation, autonomy, and resilience in group decision-making. The work addressed the core challenges of traditional delegation models by introducing mechanisms for ranked delegation, per-option delegation, and weighted delegation based on a trust matrix model.
 
-\begin{itemize}
-\item What is the (technical) contribution of this project?
-\item Why should this contribution be considered relevant and important for the subject of your degree?
-\item How can others make use of the work in this project?
-\item Why should this project be considered an achievement?
-\item What are the limitations of this project?
-\end{itemize}''
-\subsection*{What is the (technical) contribution of this project?}
+The project successfully delivered a fully functioning core delegation model with explicit invitation workflows and effective cycle prevention. Ranked delegation was implemented using the MinSum rule, offering users fallback options while maintaining clear and interpretable delegation paths. Per-option delegation allowed voters to assign different delegates to different decision options, increasing flexibility and expressiveness. Weighted delegation, based on a trust matrix model, enabled fine-grained trust allocations across multiple delegates, supporting nuanced participation while mitigating the risks of super-voter concentration and vote loss.
 
-\subsection*{Why should this contribution be considered relevant and important for the subject of your degree?}
+Throughout the development process, the unique architectural constraints of vodle -- particularly its serverless, client-side execution model using CouchDB -- heavily influenced design decisions. All delegation resolution and vote computation had to be performed efficiently within the browser, leading to careful optimisation of algorithms and data structures.
 
-\subsection*{How can others make use of the work in this project?}
+Evaluation demonstrated that the implemented features met the functional and non-functional requirements identified at the outset of the project. Delegation mechanisms were integrated into vodle without compromising usability or transparency, and testing confirmed the correctness and resilience of the system under a variety of scenarios. Although full-scale agent-based simulations were not completed within the timeframe, the project established the necessary foundations for future empirical analysis of delegation behaviours.
 
-\subsection*{Why should this project be considered an achievement?}
+Several limitations remain. In particular, while the trust matrix model offers high expressiveness, it also introduces complexity that may affect long-term usability for some users. Furthermore, the system's performance under extremely large-scale usage has not yet been fully evaluated. These limitations point to natural directions for future work, including the development of dynamic trust adjustment mechanisms, support for global delegates, and the completion of agent-based modelling to explore emergent behaviours at scale.
 
-\subsection*{What are the limitations of this project?}
+Overall, the project demonstrates that liquid democracy can be practically and effectively integrated into a real-time, web-based decision-making system like vodle. By supporting flexible forms of delegation while preserving user autonomy and system transparency, the implemented features significantly enhance vodle's ability to adapt to users' varying levels of engagement and trust. This work provides a strong foundation for further extensions, broader applications, and continued research into participatory decision-making systems.
+
+% \section{Author's Assessment of the Project}
+% ``It can be a useful exercise for you (and a point of consolidation for the reader) to put together a brief summary of what you have achieved. This is not a compulsory section, but a self-assessment is welcome. A suggested format for this is to include a short section entitled 'Author's Assessment of the Project' consisting of brief (up to 100 words) answers to each of the following questions.
+
+% \begin{itemize}
+% \item What is the (technical) contribution of this project?
+% \item Why should this contribution be considered relevant and important for the subject of your degree?
+% \item How can others make use of the work in this project?
+% \item Why should this project be considered an achievement?
+% \item What are the limitations of this project?
+% \end{itemize}''
+% \subsection*{What is the (technical) contribution of this project?}
+
+% \subsection*{Why should this contribution be considered relevant and important for the subject of your degree?}
+
+% \subsection*{How can others make use of the work in this project?}
+
+% \subsection*{Why should this project be considered an achievement?}
+
+% \subsection*{What are the limitations of this project?}

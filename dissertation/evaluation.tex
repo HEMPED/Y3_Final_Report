@@ -2,201 +2,196 @@
 
 This chapter evaluates the design and implementation of the delegation features introduced into vodle, assessing their effectiveness against the original objectives and requirements. It reviews the testing methodology, evaluates completion against functional and non-functional requirements, discusses performance results, presents feedback received, identifies limitations, and concludes with an overall assessment.
 
-\section{Testing}
+\section{Testing -- TODO}
 
-Testing was conducted through a combination of manual exploratory testing, targeted unit tests, and integration testing across multiple devices and user accounts. Key areas of focus included:
+% Testing was conducted through a combination of manual exploratory testing, targeted unit tests, and integration testing across multiple devices and user accounts. Key areas of focus included:
 
-\begin{itemize}
-    \item Correct resolution of delegation graphs under standard, ranked, weighted, and per-option delegation modes.
-    \item Enforcement of cycle prevention at delegation acceptance.
-    \item Correct override behaviour when users cast direct votes.
-    \item Cross-device synchronisation of delegation changes via CouchDB replication.
-    \item Responsiveness of delegation operations under scaling to 200 users.
-\end{itemize}
+% \begin{itemize}
+%     \item Correct resolution of delegation graphs under standard, ranked, weighted, and per-option delegation modes.
+%     \item Enforcement of cycle prevention at delegation acceptance.
+%     \item Correct override behaviour when users cast direct votes.
+%     \item Cross-device synchronisation of delegation changes via CouchDB replication.
+%     \item Responsiveness of delegation operations under scaling to 200 users.
+% \end{itemize}
 
 \section{Evaluation Against Objectives}
 
+This section evaluates the project against the specific functional and non-functional requirements outlined in Chapter~\ref{ch:project_objectives}. For each project objective, a table summarising whether each requirement was achieved is presented, followed by a detailed discussion providing evidence and references to the implementation. Where necessary, placeholders are included for requirements requiring further confirmation or referencing.
+
 \subsection{Objective 1: Implement a Core Delegation Model}
 
-\textbf{Functional Requirements (Section~\ref{subsec:requirements_core}):}
-\begin{itemize}
-    \item \textbf{FR1.1:} Users can invite others to act as their delegate. \textit{Achieved.}
-    
-    Implemented through the explicit invitation link process (Section~\ref{subsec:design_core}, \textbf{[Placeholder for del inv sc]}).
-    \item \textbf{FR1.2:} Users can accept delegation requests. \textit{Achieved.} 
-    
-    Acceptance workflow implemented (Section~\ref{subsec:design_core}, Figure 4.1).
-    \item \textbf{FR1.3:} Users are prevented from delegating to themselves. \textit{Achieved.}
-    
-    Validation checks prevent self-delegation (Section 4.2.2).
-    \item \textbf{FR1.4:} Delegation cycles are detected and prevented. \textit{Achieved.} 
-    
-    Cycle checking implemented using \texttt{inverse\_indirect\_map} (Section 4.2.2, Figure 4.3).
-    \item \textbf{FR2:} Users can view and revoke delegations. \textit{Achieved.} 
-    
-    Delegation management UI provided (Section 4.3.5, Figure 4.8).
-    \item \textbf{FR3:} Delegations are resolved transitively. \textit{Achieved.} 
-    
-    Effective delegation resolution explained (Section 4.2.2).
-    \item \textbf{FR4:} Users can override delegated votes. \textit{Achieved.}
-    
-    \textit{[PLACEHOLDER]} (Need to reference specific override implementation section.)
-\end{itemize}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{9cm}|c|}
+\hline
+\textbf{Requirement} & \textbf{Met?} \\ \hline
+FR1.1: Users can invite others to act as their delegate & Achieved \\ \hline
+FR1.2: Users can accept delegation requests & Achieved \\ \hline
+FR1.3: Users are prevented from delegating to themselves & Achieved \\ \hline
+FR1.4: Delegation cycles are detected and prevented & Achieved \\ \hline
+FR2: Users can view and revoke delegations & Achieved \\ \hline
+FR3: Delegations are resolved transitively & Achieved \\ \hline
+FR4: Users can override delegated votes & [PLACEHOLDER] \\ \hline
+NFR1: Delegation data stored as JSON & Achieved \\ \hline
+NFR2: Schema changes backward compatible & Achieved \\ \hline
+NFR3: Privacy preserved (only final outcomes visible) & [PLACEHOLDER] \\ \hline
+NFR4: Delegation UI intuitive & Achieved \\ \hline
+\end{tabular}
+\caption{Evaluation of Objective 1: Core Delegation Model Requirements}
+\label{tab:objective1_requirements}
+\end{table}
 
-\textbf{Non-Functional Requirements:}
+\textbf{Discussion:}
+
+\textbf{Discussion:}
+
 \begin{itemize}
-    \item \textbf{NFR1:} Delegation data stored as JSON. \textit{Achieved.}
-    
-    CouchDB structure described (Section 4.1, 4.1.1).
-    \item \textbf{NFR2:} Schema changes backward compatible. \textit{Achieved.}
-    
-    No breaking changes introduced (Section 4.1.1).
-    \item \textbf{NFR3:} Privacy preserved (only final outcome visible).
-    
-    \textit{[PLACEHOLDER]} (Need explicit confirmation.)
-    \item \textbf{NFR4:} Delegation UI intuitive. \textit{Achieved.}
-    
-    UI improvements described for delegation processes (Section 4.2.2, 4.3.5).
+    \item \textbf{FR1.1 and FR1.2:} Achieved through the delegation invitation system, where users generate a secure, unique link to invite another user to act as their delegate (Section~\ref{subsec:design_core}, Figure~\ref{fig:delegation-flow-accept}). This process includes both sending and accepting a delegation request, ensuring that all delegations are consensual.
+    \item \textbf{FR1.3:} Validation checks during the acceptance phase ensure users cannot delegate to themselves, which would otherwise compromise the integrity and correctness of the delegation graph (Section~\ref{subsec:design_core}).
+    \item \textbf{FR1.4:} Cycle prevention is enforced proactively when accepting a delegation. By maintaining the \texttt{inverse\_indirect\_map} data structure, cycles are detected immediately and blocked, ensuring the graph remains a Directed Acyclic Graph (DAG) (Figure~\ref{fig:del-accept-cycle}).
+    \item \textbf{FR2:} Users can view their current delegations and revoke them through an intuitive management screen. Revocations are processed immediately and synchronised across devices (Section~\ref{subsec:design_core}).
+    \item \textbf{FR3:} Delegations resolve transitively, meaning that if A delegates to B and B delegates to C, then A effectively delegates to C unless overridden (Section~\ref{subsec:design_core}). This supports complex chains of trust.
+    \item \textbf{FR4:} \textbf{[PLACEHOLDER]} -- Further detail needed to confirm and reference where users casting a direct vote cancels any delegation chain influence.
+    \item \textbf{NFR1 and NFR2:} Delegation data is stored within CouchDB in a lightweight JSON format, ensuring compatibility with existing poll data and facilitating synchronisation (Section~\ref{subsec:summary_storage_constraints}).
+    \item \textbf{NFR3:} \textbf{[PLACEHOLDER]} -- Explicit confirmation needed that only final effective votes (not delegation paths) are visible to other users.
+    \item \textbf{NFR4:} Delegation interactions are presented with minimal user interface friction, aligning with vodle's existing design standards and ensuring ease of use even for first-time users (Section~\ref{subsec:design_core}).
 \end{itemize}
 
 \subsection{Objective 2: Implement Ranked Delegation}
 
-\textbf{Functional Requirements (Section 3.1.2):}
-\begin{itemize}
-    \item \textbf{FR1:} Users can specify up to 3 ranked delegates. \textit{Achieved.} 
-    
-    Ranking functionality implemented (Section 4.3.1, 4.3.2).
-    \item \textbf{FR2:} Ranked delegation resolution follows MinSum rule. \textit{Achieved.}
-    
-    MinSum application detailed (Section 4.3.2).
-    \item \textbf{FR3:} Users can override ranked delegation by direct voting.
-    
-    \textit{[PLACEHOLDER]} (Need to reference specific override logic.)
-    \item \textbf{FR4:} Users can view, reorder, and revoke ranked delegations. \textit{Achieved.}
-    
-    Drag-and-drop interface described (Section 4.3.5, Figure 4.8).
-\end{itemize}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{9cm}|c|}
+\hline
+\textbf{Requirement} & \textbf{Met?} \\ \hline
+FR1: Users can specify up to 3 ranked delegates & Achieved \\ \hline
+FR2: Ranked delegation resolution follows MinSum rule & Achieved \\ \hline
+FR3: Users can override ranked delegation by direct voting & [PLACEHOLDER] \\ \hline
+FR4: Users can view, reorder, and revoke ranked delegations & Achieved \\ \hline
+NFR1: Actions complete within 2 seconds for 100 users & Achieved \\ \hline
+NFR2: UI intuitive & Achieved \\ \hline
+NFR3: Data stored as JSON & Achieved \\ \hline
+\end{tabular}
+\caption{Evaluation of Objective 2: Ranked Delegation Requirements}
+\label{tab:objective2_requirements}
+\end{table}
 
-\textbf{Non-Functional Requirements:}
+\textbf{Discussion:}
+
 \begin{itemize}
-    \item \textbf{NFR1:} Actions complete within 2 seconds for 100 users. \textit{Achieved.} 
-    
-    Performance evaluation confirms responsiveness (Section 5.3).
-    \item \textbf{NFR2:} UI intuitive. \textit{Achieved.} 
-    
-    Ranked delegation popup shown (Section 4.3.5, Figure 4.7).
-    \item \textbf{NFR3:} Data stored as JSON. \textit{Achieved.} 
-    
-    CouchDB integration described (Section 4.1).
+    \item \textbf{FR1:} Users are able to assign up to three delegates in a ranked order when setting up a delegation. The system enforces that each rank is unique and that users cannot assign duplicate ranks (Section~\ref{sec:design_ranked_delegation}).
+    \item \textbf{FR2:} Resolution of delegations uses the MinSum rule, where the chain of delegation with the minimum cumulative rank is selected. This ensures user preferences are respected as closely as possible (Section~\ref{sec:design_ranked_delegation}).
+    \item \textbf{FR3:} \textbf{[PLACEHOLDER]} -- Clarify the override behaviour where direct votes supersede ranked delegation chains.
+    \item \textbf{FR4:} Users are provided with an interactive drag-and-drop interface that allows the easy reordering and removal of ranked delegates. Changes are persisted and immediately reflected in delegation graphs (Section~\ref{sec:design_ranked_delegation}).
+    \item \textbf{NFR1:} Performance tests show that updating or modifying ranked delegations remains responsive even for polls with over 100 users (Section~\ref{ch:evaluation}).
+    \item \textbf{NFR2 and NFR3:} The ranked delegation UI maintains the visual language of \textit{vodle} and stores data using the consistent JSON format required by CouchDB.
 \end{itemize}
 
 \subsection{Objective 3: Implement Weighted Delegation}
 
-\textbf{Functional Requirements (Section 3.1.3):}
-\begin{itemize}
-    \item \textbf{FR1:} Users can delegate to multiple users simultaneously. \textit{Achieved.} 
-    
-    Weighted trust sliders implemented (Section 4.5.2, Figure 4.11).
-    \item \textbf{FR2:} Trust weights sum to no more than 0.99. \textit{Achieved.} 
-    
-    Validation constraints applied (Section 4.5.2).
-    \item \textbf{FR3:} Trust matrix model used for final rating calculation. \textit{Achieved.} 
-    
-    Iterative calculation explained (Section 4.5.3).
-\end{itemize}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{9cm}|c|}
+\hline
+\textbf{Requirement} & \textbf{Met?} \\ \hline
+FR1: Users can delegate to multiple users simultaneously & Achieved \\ \hline
+FR2: Trust weights sum to no more than 0.99 & Achieved \\ \hline
+FR3: Trust matrix model used for final rating calculation & Achieved \\ \hline
+NFR1: Weighted delegation calculated client-side & Achieved \\ \hline
+NFR2: Data serialised as JSON & Achieved \\ \hline
+NFR3: UI provided for adjusting trust weights & Achieved \\ \hline
+\end{tabular}
+\caption{Evaluation of Objective 3: Weighted Delegation Requirements}
+\label{tab:objective3_requirements}
+\end{table}
 
-\textbf{Non-Functional Requirements:}
+\textbf{Discussion:}
+
 \begin{itemize}
-    \item \textbf{NFR1:} Weighted delegation calculated client-side. \textit{Achieved.} 
-    
-    Computation fully client-driven (Section 4.5.3).
-    \item \textbf{NFR2:} Data serialised as JSON. \textit{Achieved.} 
-    
-    Data structures follow CouchDB model (Section 4.1).
-    \item \textbf{NFR3:} UI provided for adjusting trust weights. \textit{Achieved.} 
-    
-    Trust slider and expert mode described (Section 4.5.2, 4.5.3).
+    \item \textbf{FR1:} Users are allowed to delegate to multiple users at once, distributing trust among them via fractional weights (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{FR2:} Trust weights are validated to ensure the total does not exceed 0.99, preserving a portion of direct voting ability if the user wishes (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{FR3:} The final ratings are calculated using an iterative trust matrix model, ensuring that delegation chains propagate weights correctly while converging rapidly to stable outcomes (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{NFR1:} All computations are performed client-side, preserving user autonomy and minimising server load (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{NFR2:} Weighted delegation data is serialised as JSON and integrated into the existing CouchDB schema.
+    \item \textbf{NFR3:} The user interface supports both a standard trust slider and an expert mode for advanced manual adjustments (Section~\ref{sec:design_per_option_delegation}).
 \end{itemize}
 
 \subsection{Objective 4: Implement Per-Option Delegation}
 
-\textbf{Functional Requirements (Section 3.1.4):}
-\begin{itemize}
-    \item \textbf{FR1:} Users can assign different delegates per option. \textit{Achieved.} 
-    
-    Per-option delegation implemented (Section 4.4.1, Figure 4.9).
-    \item \textbf{FR2:} Option-specific delegation resolution independent. \textit{Achieved.} 
-    
-    Option resolution explained (Section 4.4).
-    \item \textbf{FR3:} Users can override delegated votes for specific options. 
-    
-    \textit{[PLACEHOLDER]} (Need reference for per-option override behaviour.)
-    \item \textbf{FR4:} UI for per-option viewing and revocation. \textit{Achieved.}
-    
-    Information dialog shown (Section 4.4.2, Figure 4.10).
-\end{itemize}
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{9cm}|c|}
+\hline
+\textbf{Requirement} & \textbf{Met?} \\ \hline
+FR1: Users can assign different delegates per option & Achieved \\ \hline
+FR2: Option-specific delegation resolution independent & Achieved \\ \hline
+FR3: Users can override delegated votes per option & [PLACEHOLDER] \\ \hline
+FR4: UI for per-option viewing and revocation & Achieved \\ \hline
+NFR1: UI clearly indicates delegate per option & Achieved \\ \hline
+NFR2: Data storage remains CouchDB compatible & Achieved \\ \hline
+\end{tabular}
+\caption{Evaluation of Objective 4: Per-Option Delegation Requirements}
+\label{tab:objective4_requirements}
+\end{table}
 
-\textbf{Non-Functional Requirements:}
+\textbf{Discussion:}
+
 \begin{itemize}
-    \item \textbf{NFR1:} UI clearly indicates delegate per option. \textit{Achieved.} 
-    
-    Interface explained (Section 4.4.2).
-    \item \textbf{NFR2:} Data storage remains CouchDB compatible. \textit{Achieved.}
-    
-    JSON format maintained (Section 4.1).
+    \item \textbf{FR1:} Users can delegate to different users for each poll option individually. This feature was integrated seamlessly into the delegation invitation workflow (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{FR2:} Delegation resolution is option-specific, meaning users can have entirely different delegation trees depending on the option voted upon (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{FR3:} \textbf{[PLACEHOLDER]} -- Confirm specific logic where a user's direct vote on an option overrides any delegation for that option.
+    \item \textbf{FR4:} A detailed information dialog shows active per-option delegations and allows individual revocation, improving transparency and user control (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{NFR1 and NFR2:} The user interface clearly indicates option-specific delegations, and data storage follows JSON formatting conventions compatible with CouchDB.
 \end{itemize}
 
 \subsection{Extension Objective: Simulate Delegation Mechanisms}
 
-As discussed in Chapter~\ref{ch:project_management}, the simulation objective was descoped due to time constraints and the complexity of core delegation feature implementation.
-
-\section{Summary of Requirement Completion}
-
-\begin{table}[h]
+\begin{table}[H]
 \centering
-\begin{tabular}{|l|c|l|}
+\begin{tabular}{|p{9cm}|c|}
 \hline
-\textbf{Requirement Area} & \textbf{Met?} & \textbf{Evidence Reference or Note} \\ \hline
-Core Delegation (Objective 1) & Yes & Section 4.2 \\ \hline
-Ranked Delegation (Objective 2) & Yes & Section 4.3 \\ \hline
-Weighted Delegation (Objective 3) & Yes & Section 4.5 \\ \hline
-Per-Option Delegation (Objective 4) & Yes & Section 4.4 \\ \hline
-Extension (Simulation) & No & Descoped (Chapter 6) \\ \hline
+\textbf{Requirement} & \textbf{Met?} \\ \hline
+Simulation of delegation mechanisms through agent-based modelling & Not Achieved \\ \hline
 \end{tabular}
-\caption{Summary of Requirement Completion}
+\caption{Evaluation of Extension Objective: Simulation}
+\label{tab:objective5_requirements}
 \end{table}
+
+\vspace{1em}
+
+\noindent \textbf{Discussion:}
+
+The simulation objective was descoped during the project to prioritise the core feature set (Chapter~\ref{ch:project_management}).
 
 \section{Performance Evaluation}
 
 Performance testing indicated:
 
 \begin{itemize}
-    \item \textbf{Cycle Detection:} Constant-time validation (Section 4.2.2).
-    \item \textbf{Delegation Resolution:} Millisecond-level resolution time up to 200 users (Section 5.3).
-    \item \textbf{Weighted Computations:} Trust matrix convergence within few iterations (Section 4.5.3).
-    \item \textbf{Cross-Client Synchronisation:} CouchDB replication delay under 5 seconds (Section 5.3).
-    \item \textbf{Scalability:} Acceptable for target size; client-only architecture may limit extreme scaling.
+    \item Cycle Detection: Constant-time validation (Section~\ref{subsec:design_core}).
+    \item Delegation Resolution: Millisecond resolution up to 200 users.
+    \item Weighted Computations: Trust matrix convergence in few iterations.
+    \item Cross-Client Synchronisation: CouchDB replication delays under 5 seconds.
+    \item Scalability: Acceptable for small-medium group sizes.
 \end{itemize}
 
 \section{Feedback}
 
-Feedback from the customer (Jobst Heitzig) included:
+The customer, Jobst Heitzig, stated:
 
-\begin{itemize}
-    \item Strong support for the trust matrix weighted delegation mechanism.
-    \item Positive feedback on usability improvements for ranked delegation.
-    \item Concerns about complexity of trust weight adjustment for casual users.
-\end{itemize}
+\begin{quote}
+``The added user interface components are well designed and integrate very well with the existing UI and UX. The implemented back-end logic works seamlessly with the rather complicated existing data management... Overall, this delegation extension will likely be rolled out with the next release of the app.''
+\end{quote}
 
 \section{Limitations}
 
 \begin{itemize}
-    \item \textbf{Client-Side Computation:} Resolution and weighting handled locally.
-    \item \textbf{Eventual Consistency:} Replication model leads to brief inconsistencies.
-    \item \textbf{Trust Matrix Complexity:} Advanced users manage easily; casual users may struggle.
-    \item \textbf{Simulation Extension:} Agent-based modelling not completed due to descoping.
+    \item Client-Side Computation: Delegation resolution and weighting handled locally.
+    \item Eventual Consistency: Replication model leads to brief inconsistencies.
+    \item Trust Matrix Complexity: Advanced users manage easily; casual users may struggle.
+    \item Simulation Extension: Agent-based modelling was not completed.
 \end{itemize}
 
 \section{Overall Assessment}
 
-The project successfully delivered a robust, flexible delegation system for vodle. Core, ranked, per-option, and weighted mechanisms were all implemented, addressing major technical and usability challenges. Despite descoping the simulation extension, the work provides a strong foundation for future development and deployment.
+The project successfully delivered a robust and flexible delegation system for vodle. Core, ranked, per-option, and weighted delegation mechanisms were all implemented, addressing major technical and usability challenges. Despite descoping the simulation extension, the work meets the project's primary goals and provides a strong foundation for future development and deployment.

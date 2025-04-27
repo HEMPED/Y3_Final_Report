@@ -99,7 +99,7 @@ Abstentions are especially impactful when they occur at the end of a larger dele
   \label{fig:delegation-abstention}
 \end{figure}
 
-\subsection*{Super-Voters}
+\subsection*{Super-Voters}\label{subsec:bg_supervoter}
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[->, >=stealth, thick, node distance=2.5cm, square/.style={regular polygon,regular polygon sides=4}]
@@ -182,7 +182,7 @@ Several methodologies for implementing weighted delegation have been explored in
 Degrave's approach allows voters to distribute their votes evenly among multiple delegates. Voters select a group of delegates, and their vote is equally distributed amongst those that do not abstain.
 Although this system is intuitive and reduces the impact of abstentions, it lacks flexibility as voters cannot express differing trust levels towards each delegate. Additionally, a critical limitation is the inability for voters to allocate any portion of their vote to themselves, meaning voters are forced to either delegate their entire voting power or none of it, severely limiting personal control over a user's final vote.
 
-\subsubsection{Fractional Delegation~\citep{bersetche2024}}
+\subsubsection*{Fractional Delegation~\citep{bersetche2024}}
 
 \citeauthor{bersetche2024} proposes a generalisation of liquid democracy in which voters are allowed to divide their voting weight arbitrarily among multiple delegates, while optionally retaining a fraction for themselves. Each agent expresses their preferences through a delegation matrix, where each entry specifies the proportion of voting weight delegated to a given individual. This approach enables a more flexible expression of trust relationships compared to classical single-delegation models.
 

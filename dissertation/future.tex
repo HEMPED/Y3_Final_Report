@@ -191,11 +191,15 @@ This design follows the structure used in LiquidFeedback~\citep{behrens_liquidfe
 
 Adding global delegations would support vodle's principles of user autonomy and flexibility. Users would be able to remain represented without requiring continuous management of each decision, while retaining the ability to override default delegations on a case-by-case basis.
 
-From a technical perspective, implementing global delegations would introduce several challenges. In the current system, user identifiers are poll-specific to preserve anonymity. This design prevents persistent links between users across polls, complicating the implementation of global delegations. Supporting global delegations would therefore require introducing new user identifier that are only used for the global delegation system, allowing the feature to be implemented without compromising the privacy of vodle and maintaining compatibility with its existing user identifier logic.
+From a technical perspective, implementing global delegations would introduce several challenges. In the current system, user identifiers are poll-specific to preserve privacy by preventing identifiers from being reverse-engineered to track users across polls. This design prevents persistent links between users, complicating the implementation of global delegations. Supporting global delegations would therefore require introducing persistent identifiers that are scoped exclusively to the delegation system, allowing global delegation to be implemented without compromising privacy or interfering with the existing logic for creating and assigning user IDs. 
 
-At the user interface level, global delegations would require an additional management screen where users can view, edit, and revoke persistent delegations. Clear indicators during voting would distinguish between globally delegated votes and poll-specific delegations, preserving transparency.
+Delegations would be stored within user profile metadata, and the delegation resolution process would first check for an active per-poll delegation before falling back to a user's global delegation. Additionally, cycle prevention mechanisms would need to account for both local and global delegations when validating new polls.
 
-Overall, global delegations would reduce friction in the delegation process, support varying levels of user engagement, and further enhance the scalability of liquid democracy within vodle.
+In addition to backend changes, global delegations would also require user-facing features to support delegation management and maintain transparency.
+
+At the user interface level, an additional management screen would allow users to view, edit, and revoke their global delegations. Clear indicators during voting would distinguish between globally delegated votes and poll-specific delegations, preserving transparency.
+
+Overall, global delegations would reduce delegation management friction, support varying participation levels, and further enhance the scalability of liquid democracy within vodle.
 
 \subsection{Delegation Expiry Mechanisms}
 

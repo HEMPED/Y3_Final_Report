@@ -127,7 +127,6 @@ However, because these maps were not always synchronised, different clients coul
 The original delegation system implemented many strong conceptual ideas. It preserved user autonomy through an invitation model, allowed for control over which options used the delegated rating, and supported transitive delegation. However, without a global, synchronised delegation graph, the system could not reliably detect cycles or ensure consistent resolution of votes. These limitations made it unsuitable for deployment and motivated a full redesign, described in the next section.
 
 \subsection{Revised Implementation}\label{subsec:design_core}
-% This section describes the final design and implementation of the core delegation mechanism in vodle, which allows users to delegate their votes to others. It addresses the limitations of the original system by introducing a global, synchronised delegation graph, efficient cycle prevention, and consistent transitive resolution logic. The design preserves the invitation-based flow and per-option control from the earlier implementation while ensuring correctness across all clients.
 To address the critical flaws in the original delegation system, a redesigned core delegation model was implemented. The revised system maintains a global, synchronised view of delegation relationships, ensures efficient cycle prevention, and preserves user autonomy through an explicit invitation model. This section details the design decisions, algorithms, and implementation work undertaken.
 
 \subsubsection*{Cycle Checking: Algorithm and Rationale}
@@ -203,53 +202,43 @@ This map enables several key operations required for maintaining a consistent an
 \]
 \end{itemize}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{subfigure}[t]{0.28\linewidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/deldialog.png}
-%     \caption{User A's invitation screen.}
-%     \label{fig:del-dialog}
-%   \end{subfigure}
-%   \hfill
-%   \begin{subfigure}[b]{0.68\linewidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/delaccept.png}
-%     \caption{User B's delegation acceptance screen when there is no cycle.}
-%     \label{fig:del-accept}
-    
-%     \vspace{1em}
-    
-%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/delaccept_cycle.png}
-%     \caption{User A's screen after opening a delegation link from User C (who User B has delegated to).}
-%     \label{fig:del-accept-cycle}
-%   \end{subfigure}
-%   \caption{Screens shown to Users A and B during the delegation invitation and response process.}
-%   \label{fig:delegation-accept-flow}
-% \end{figure}
+\subsubsection{Direct Vote Override Integration}
 
+The original vodle implementation included basic support for per-option overriding of delegated votes: when a user had active delegations, a banner such as ``\texttt{B controls some of your waps as your delegate}'' was displayed, and users could manually toggle between using their delegate's rating or submitting their own per poll option. However, the existing override functionality was inconsistent and often failed to update the UI correctly when delegation states changed. As part of this project, the override system was revised and extended to integrate reliably with the redesigned core delegation model, as well as the new ranked, weighted, and per-option delegation mechanisms developed during this project.
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{subfigure}[t]{0.8\linewidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{../common/vodle_screenshots/userA_after.png}
-%     \caption{User A (delegator) can now see that their waps are controlled by User B.}
-%     \label{fig:userA_after}
-%   \end{subfigure}
+The toggle for each poll option was backed by the \texttt{rate\_yourself\_toggle[option\_id]} array. When set to \texttt{true}, the user's own rating was applied; otherwise, the delegated rating was used. The number of options under delegation was tracked using the following logic:
 
-%   \vspace{1em}
+\begin{minted}{typescript}
+n_delegated = 0;
+for (const oid of this.p.oids) {
+    if (!this.rate_yourself_toggle[oid]) {
+        n_delegated++;
+    }
+}
+\end{minted}
 
-%   \begin{subfigure}[t]{0.8\linewidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{../common/initial_vodle_screenshots/userB_after.png}
-%     \caption{User B (delegate) can see that their vote also determines the outcome for one other user (User A).}
-%     \label{fig:userB_after}
-%   \end{subfigure}
+This allowed the banner text to dynamically reflect the delegation status, by setting the appropriate translation key depending on how many options were still delegated:
 
-%   \caption{Delegate's (bottom) and delegator's (top) screens after a delegation has been accepted.}
-%   \label{fig:delegation_flow_ui}
-% \end{figure}
+\begin{minted}{typescript}
+const all_most_some_none = 
+    n_delegated === this.p.oids.length ? 'all' : 
+    2 * n_delegated > this.p.oids.length ? 'most' :
+    n_delegated > 0 ? 'some' : 'none';
+
+delegate_controls_string = 'poll.delegate-controls-' + all_most_some_none;
+\end{minted}
+
+The user interface provided a clear visual distinction: when a user toggled to ``my own,'' their individual rating immediately replaced any delegated rating for that option. Otherwise, the delegate's rating continued to apply.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{../common/vodle_screenshots/override.png}
+    \caption{User interface after delegating: users can selectively submit their own ratings instead of accepting delegated ratings. Additionally, pressing the trash can icon on the yellow banner allows then to revoke their delegation.}
+    \label{fig:vote_override}
+\end{figure}
+
+Overall, this mechanism ensured that delegation never prevented individual user agency, aligning with vodle's principle of retaining user control at all stages of the voting process.
+
 
 \subsection{Summary}
 
@@ -452,13 +441,13 @@ The management interface is provided through an information dialog listing all c
 \begin{figure}[H]
   \centering
   
-  \begin{subfigure}{0.45\textwidth}
+  \begin{subfigure}[t]{0.45\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../common/vodle_screenshots/ranked_info.png}
   \caption{Initial view of the information dialog showing delegates, ranks, and revoke buttons.}
   \end{subfigure}
   \hfill
-  \begin{subfigure}{0.45\textwidth}
+  \begin{subfigure}[t]{0.45\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../common/vodle_screenshots/ranked_info_reorder.png}
   \caption{Reordering mode enabled. Users can drag delegates to reorder their ranks and then save.}
@@ -580,7 +569,7 @@ This dynamic filtering ensured that delegation states remained consistent even w
 
 \begin{figure}[H]
   \centering
-  % \includegraphics[width=0.8\textwidth]{figures/per-option-delegation-invite-placeholder.png}
+  \includegraphics[width=0.4\textwidth]{../common/peroption/invite.png}
   \caption{Delegation invitation dialog allowing users to select one or more poll options to delegate. Only options without existing delegations are shown.}
   \label{fig:per-option-delegation-invite}
 \end{figure}
@@ -593,7 +582,15 @@ To manage active delegations, an information dialog was introduced. This screen 
 
 \begin{figure}[H]
   \centering
-  % \includegraphics[width=0.8\textwidth]{figures/per-option-delegation-management-placeholder.png}
+  \includegraphics[width=\textwidth]{../common/peroption/sc.png}
+  \caption{User interface after delegating with per-option delegation.}
+  \label{fig:per-option-delegation-management}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{../common/peroption/info.png}
   \caption{Information dialog showing active per-option delegations. Users can view assigned delegates and revoke delegations individually for each option.}
   \label{fig:per-option-delegation-management}
 \end{figure}
@@ -641,9 +638,9 @@ Ensuring that weighted delegation remains accessible to a broad range of users w
 
 The delegation invitation dialog was extended to include a trust assignment slider (see Figure~\ref{fig:trust-slider}). Sliders were chosen over free-text inputs to reduce the risk of input errors and to provide immediate visual feedback. The maximum value on the slider dynamically adjusts based on the remaining unallocated trust: users begin with 99\% trust available (reserving a minimum of 1\% for self-trust), and the slider maximum decreases as trust is assigned.
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
-    % \includegraphics[width=0.8\textwidth]{figures/trust-slider-placeholder.png}
+    \includegraphics[width=0.4\textwidth]{../common/weighted_sc/inv.png}
     \caption{Delegation invitation dialog with trust percentage slider.}
     \label{fig:trust-slider}
 \end{figure}
@@ -656,11 +653,22 @@ Additionally, the delegation management dialog (introduced for ranked delegation
 
 This dual-interface design ensures accessibility for casual users while granting full control to those who need it.
 
-\begin{figure}[h]
-    \centering
-    % \includegraphics[width=0.8\textwidth]{figures/expert-mode-placeholder.png}
-    \caption{Expert mode interface for manually editing trust values.}
-    \label{fig:expert-mode}
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.45\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../common/weighted_sc/info.png}
+  \caption{Initial view of the information dialog showing delegates, their trust level, and revoke buttons.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.45\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../common/weighted_sc/expert.png}
+  \caption{Export mode enabled. Users can edit the trust of their delegations and save.}
+  \end{subfigure}
+  
+  \caption{Information dialog for managing and editing weighted delegations which appears after clicking the information button.}
+  \label{fig:weighted_info}
 \end{figure}
 
 \subsection{Effective Rating Calculation}
@@ -712,7 +720,7 @@ if (acceptable_diff_reached){
 
 \begin{enumerate}
     \setcounter{enumi}{3}
-    \item \textbf{Recursion and Termination:} If convergence has not been reached, the function recursively calls itself with the newly calculated ratings. However, to prevent infinite recursion in unforeseen cases, a maximum recursion depth is enforced as a safeguard.
+    \item \textbf{Recursion and Termination:} If convergence is not reached, the function recursively calls itself with the updated ratings. To guard against unexpected issues such as infinite loops due to numerical instability, a maximum recursion depth of 15 was imposed. Benchmarking results (Chapter~\ref{ch:evaluation}) showed that even in worst-case scenarios with 500 voters, convergence typically occurred within fewer than 10 iterations. Setting the limit at 15 provides a safe margin while ensuring the application remains responsive even if an unforeseen problem arises.
 \end{enumerate}
 
 \begin{minted}{typescript}
@@ -730,34 +738,11 @@ if (count > 15) {
 }
 \end{minted}
 
-If recursion exceeds 15 iterations, the system forcibly terminates the process by flooring all effective ratings to integer values and saving the result. This ensures responsiveness and protects the client application from excessive computation time, even in unforeseen cases.
-
 \begin{enumerate}
     \setcounter{enumi}{4}
     \item \textbf{Finalisation:} Once convergence is achieved or the maximum depth is reached, the final effective ratings are floored to integers just before they are saved. Deferring flooring until the final step preserves numerical accuracy during intermediate calculations and avoids the accumulation of rounding errors across recursive calls.
 \end{enumerate}
 
-In summary, the use of an acceptable threshold ensures that minor floating-point inaccuracies do not trigger unnecessary iterations, while the recursion depth limit guarantees the system remains performant and stable even in unexpectated situations.
-
-
-% \section{Implement Weighted Delegation Mechanism into Vodle}
-% Weighted delegation was implemented to allow users to distribute fractional influence to multiple delegates.
-
-% \begin{itemize}
-%   \item UI for assigning weights
-%   \item modify\verb|direct_delegation_map|to include weights [[delegationid, weight, status]...]
-%   \item Computation of weighted vote outcomes
-%   \item Constraints:
-%   \begin{itemize}
-%     \item Weight sum limit (\texttt{< 1.0})
-%     \item Error handling
-%   \end{itemize}
-%   \item Optimisations to limit database writes.
-%   \item Algorithm integration and frontend testing
-% \end{itemize}
-
-% \subsubsection{Challenges}
-% The weighted delegation logic needed to maintain consistency with the MaxParC aggregation model, while ensuring intuitive user experience. Edge cases (e.g., partially overlapping delegate chains or missing data) introduced complexity during testing. Rendering weight distributions clearly in the UI while keeping the interface lightweight was a recurring challenge.
 
 \subsection{Summary}
 

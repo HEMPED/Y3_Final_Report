@@ -1,6 +1,6 @@
 \chapter{Introduction}\label{ch:introduction}
 
-\section{Context and Motivation -- TODO}
+\section{Context and Motivation}
 
 In group settings ranging from online communities to organisations, collective decision making is both essential and difficult to scale. Direct democracy empowers individuals by letting everyone vote on every issue, but struggles with engagement as participation grows. Representative democracy improves scalability but often reduces accountability and flexibility \citep{ford_delegative_2002, blum_liquid_2016}
 
@@ -18,15 +18,27 @@ The system introduces several key features:
 \begin{itemize}
   \item \textbf{Ranked delegation}, allowing users to specify trusted delegates in order of preference.
   \item \textbf{Per-option delegation}, enabling different delegates for different options within a poll.
-  \item \textbf{Weighte delegation}, using a trust-based model to distribute voting power across multiple delegates.
+  \item \textbf{Weighted delegation}, using a trust-based model to distribute voting power across multiple delegates.
 \end{itemize}
 
 These features are designed to enhance participation, reduce the concentration of voting power, and improve the resilience of the platform. The project focuses on creating an intuitive and efficient implementation that aligns with vodle's existing architecture and emphasises user autonomy.
 
 \section{Structure of This Report}
 
-The remainder of this report is structured as follows:
+This report is structured as follows:
 
 \begin{itemize}
-  \item will list
+    \item \textbf{Chapter~\ref{ch:background}} provides background research, covering the principles of liquid democracy, key challenges such as delegation cycles and super-voters, variations like ranked and weighted delegation, existing implementations, agent-based modelling techniques, and the technical context of vodle.
+    
+    \item \textbf{Chapter~\ref{ch:project_objectives}} defines the project objectives and requirements, detailing the implementation goals for core, ranked, weighted, and per-option delegation features, as well as an extension objective to simulate delegation dynamics.
+    
+    \item \textbf{Chapter~\ref{ch:design_implementation}} describes the design and implementation of the delegation features, outlining architectural decisions, data structures, algorithms, user interface extensions, and system constraints.
+    
+    \item \textbf{Chapter~\ref{ch:evaluation}} evaluates the project outcomes through unit and performance testing, assessment against the project objectives, analysis of known limitations, and reflection on user feedback.
+    
+    \item \textbf{Chapter~\ref{ch:project_management}} reflects on project management activities, including the chosen development methodology, project timeline, risk management practices, and legal and ethical considerations.
+    
+    \item \textbf{Chapter~7} discusses future work, identifying potential directions for extending the system, such as completion of the extension objective and further enhancements to vodle's delegation features.
+    
+    \item \textbf{Chapter~\ref{ch:conclusions}} concludes the report, summarising the key contributions and suggesting avenues for continued research and development.
 \end{itemize}

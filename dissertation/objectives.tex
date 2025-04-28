@@ -52,7 +52,6 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 \begin{itemize}
     \item \textbf{NFR1:} All delegation-related data must be stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
     \item \textbf{NFR2:} Any changes to the database schema must be backward compatible, ensuring that existing data is not lost or corrupted during the upgrade process.
-    \item \textbf{NFR3:} Any additional data stored in the database must be encrypted, using the same encryption method as the existing data, to ensure user privacy and consistency with the existing system.
     \item \textbf{NFR3:} The system shall preserve user privacy by ensuring that individual voting preferences and delegation choices are not visible to other users. The only information visible to a delegated user shall be the final vote cast on their behalf.
     \item \textbf{NFR4:} The user interface for delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
 \end{itemize}
@@ -72,11 +71,9 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 
 \subsubsection{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{NFR1:} The system shall ensure that the ranked delegation process does not introduce significant latency in the voting process, maintaining a response time of less than 2 seconds for delegation-related actions when the number of delegates is less than 100.
-
-    \item \textbf{NFR2:} The user interface for ranked delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
+    \item \textbf{NFR1:} The user interface for ranked delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
     
-    \item \textbf{NFR3:} The system shall ensure that any data related to ranked delegation is stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
+    \item \textbf{NFR2:} The system shall ensure that any data related to ranked delegation is stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
 \end{itemize}
 \subsection{Implement Weighted Delegation into Vodle}\label{subsec:requirements_weighte}
 \subsubsection{Functional Requirements}
@@ -134,7 +131,7 @@ Each requirement is formulated to be measurable and testable. This allows for ob
 
     \item \textbf{NFR2:} The system shall be developed using Mesa to take advantage of existing data science libraries such as NumPy, Pandas, and Matplotlib for analysis and visualisation.
 
-    \item \textbf{NFR4:} The simulation design shall support reproducibility by enabling fixed random seeds and storing configuration settings alongside output data.
+    \item \textbf{NFR3:} The simulation design shall support reproducibility by enabling fixed random seeds and storing configuration settings alongside output data.
 
 \end{itemize}
 

@@ -1,0 +1,149 @@
+\chapter{Future Work}\label{ch:future}
+
+This project established a foundation for flexible, transitive, ranked, and weighted delegation within vodle. While the primary development goals were achieved, several areas remain for extension and refinement. These include the development of agent-based simulation tools to better understand delegation dynamics, and the expansion of vodle's delegation features to support a wider range of use cases. Addressing these areas would strengthen both theoretical understanding and practical deployment of liquid democracy systems.
+
+\section{Agent-Based Modelling for Delegation Dynamics}
+
+Agent-based modelling (ABM) provides a method for analysing how local decisions and interactions aggregate into system-level outcomes~\citep{bonabeau2002agent}. Although the simulation objective outlined in Section~\ref{sec:background_abm} was descoped during this project (see Section~\ref{ch:project_management}), ABM remains a promising approach for investigating delegation dynamics, particularly in large or complex settings.
+
+Prior research has examined delegation behaviour primarily through observational studies and mathematical models. However, few studies have simulated how trust, strategic behaviour, and delegation reluctance evolve dynamically over time. This section outlines future directions for developing agent-based simulations that capture these behaviours, supported by appropriate evaluation metrics.
+
+\subsection{Prior Simulation Studies of Liquid Democracy}
+
+Several studies have explored delegation structures within liquid democracy systems, although most focus on static analyses rather than dynamic agent behaviour.
+
+\subsubsection{Observational Studies}
+
+\citet{kling2015votingbehaviourpoweronline} analysed delegation graphs from the LiquidFeedback platform, highlighting the emergence of super-voters. While informative, this study was observational, examining static snapshots rather than modelling how delegations evolve.
+
+\subsubsection{Mathematical Modelling and Synthetic Evaluation}
+
+\citet{brill_liquid_2021} and evaluated various delegation rules on both synthetic and real-world datasets. However, their models assumed fixed agent preferences without modelling trust evolution or delegation reassignment.
+
+\subsubsection{Formal Binary Models}
+
+\citet{christoffBinaryVotingDelegable2017} introduced logical frameworks for binary voting settings, focusing on aggregation rules and rationality. Their work assumed a given delegation graph, without modelling agent decision-making processes.
+
+\subsubsection{Summary}
+
+While prior work has characterised the static properties of delegation networks, the dynamic formation and adaptation of delegation links based on agent-level behaviour remains underexplored. ABM provides a natural framework to investigate these dynamics.
+
+\subsection{Baseline Agent-Based Model}
+
+A baseline simulation could model agents defined by:
+
+\begin{itemize}
+    \item \textbf{Voting Intention}: An initial preference (\texttt{Yes}, \texttt{No}, or \texttt{Abstain}).
+    \item \textbf{Delegation Willingness} ($w_i$): Propensity to delegate rather than vote directly.
+    \item \textbf{Trust Vector} ($T_i$): Trust scores towards potential delegates.
+    \item \textbf{Memory}: Record of past delegation outcomes for trust updates.
+\end{itemize}
+
+At each polling event:
+
+\begin{enumerate}
+    \item \textbf{Delegation Decision}: If trust and willingness exceed thresholds $\theta$ and $\theta'$, the agent delegates; otherwise, it votes directly.
+    \item \textbf{Delegate Selection}: The agent selects the highest-trust available delegate.
+    \item \textbf{Trust Update}: Trust increases if delegate outcomes align with the agent's preferences and decreases otherwise.
+\end{enumerate}
+
+Delegation chains would be resolved via a predefined rule (e.g., minimal rank sum), and the process would iterate across multiple polls.
+
+\subsection{Extensions to the Baseline Model}
+
+Realism can be enhanced through several extensions:
+
+\subsubsection{Dynamic Trust Evolution}
+
+Trust levels evolve based on delegate performance, with recent outcomes weighted more heavily to model realistic memory effects~\citep{casella_2022}.
+
+\subsubsection{Delegation Reassignment}
+
+Agents periodically re-evaluate their delegations, switching delegates or reverting to direct voting if trust falls below acceptable thresholds.
+
+\subsubsection{User Behaviour and Strategic Delegation}
+
+Incorporating heterogeneity in agent behaviour, including:
+
+\begin{itemize}
+    \item \textbf{Overconfident Delegation}: Agents delegate even when it reduces decision quality, as discussed in~\citet{casella_2022}.
+    \item \textbf{Reluctance to Delegate}: Agents prefer self-representation despite potential benefits from delegation.
+\end{itemize}
+
+Such diversity better captures real-world voter behaviour and system robustness.
+
+\subsection{Evaluation Metrics}
+
+Simulation outcomes could be evaluated through:
+
+\subsubsection{Voting Power Distribution}
+
+Applying inequality measures:
+
+\begin{itemize}
+    \item \textbf{Lorenz Curve}: Depicts cumulative voting power distribution~\citep{cowell_measuring_inequality}.
+    \item \textbf{Gini Coefficient}: Quantifies inequality, with 0 indicating perfect equality and 1 maximal inequality.
+    \item \textbf{Maximum Voting Weight}: Tracks concentration of power.
+\end{itemize}
+
+\subsubsection{Delegation Network Structure}
+
+Analysing:
+
+\begin{itemize}
+    \item \textbf{Average Delegation Path Length}.
+    \item \textbf{Cycle Frequency}: Even if prevented.
+    \item \textbf{Connectivity and Robustness}.
+\end{itemize}
+
+\subsubsection{Comparative Analysis}
+
+Comparing metrics across different delegation modes (core, ranked, weighted) to assess relative fairness and stability.
+
+\subsection{Summary}
+
+Agent-based simulations could reveal how delegation networks emerge, concentrate power, or adapt over time. This would inform design choices for more robust and equitable liquid democracy systems.
+
+\section{Potential Extensions for Vodle}
+
+While vodle's current delegation features substantially extend user flexibility, further enhancements could improve scalability, transparency, and long-term usability.
+
+\subsection{Global Delegations}
+
+Currently, delegations are poll-specific. Global delegations -- persisting across polls unless overridden -- would reduce friction for users who consistently trust certain delegates. This mirrors systems like LiquidFeedback~\citep{behrens_liquidfeedback_2014}.
+
+Implementation would require:
+
+\begin{itemize}
+    \item Persistent delegation identifiers, scoped to delegation only (preserving poll privacy).
+    \item Resolution logic combining global and local delegations.
+    \item New UI components for managing global settings.
+\end{itemize}
+
+\subsection{Delegation Expiry Mechanisms}
+
+Persistent delegations risk becoming outdated. Introducing optional expiry periods (e.g., six months) would encourage regular review and prevent passive concentration of voting power.
+
+Expiry mechanisms would involve:
+
+\begin{itemize}
+    \item Expiry timestamps on delegations.
+    \item Automatic fallback to backup delegates or direct voting.
+    \item User notifications prior to expiry.
+\end{itemize}
+
+\subsection{Auditability of Delegation Chains}
+
+Transparency into delegation paths increases trust. Vodle could offer auditability features inspired by the ``Golden Rule'' of Google Votes~\citep{hardt_google_2015}:
+
+\begin{itemize}
+    \item Users can view the number of delegation steps their vote traversed.
+    \item Public delegates opt-in to visibility; others remain anonymised.
+\end{itemize}
+
+This balances accountability with privacy, strengthening user confidence.
+
+\section{Summary}
+
+Extending vodle with agent-based modelling tools and platform enhancements would significantly advance its capabilities. Simulation could illuminate delegation stability, inequality, and resilience under realistic behaviour. Platform features like global delegations, expiry, and privacy-respecting auditability would further improve usability, transparency, and trust. Together, these directions offer a path toward a more scalable, adaptive, and fair implementation of liquid democracy principles.
+

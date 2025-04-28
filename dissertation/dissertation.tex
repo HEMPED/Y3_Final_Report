@@ -31,8 +31,10 @@
 
 \pagestyle{plain}
 
+%TC:ignore
 \input{acknowledgements.tex}
 \input{abstract.tex}
+%TC:endignore
 \clearpage
 
 \tableofcontents
@@ -58,7 +60,8 @@
 \input{design.tex}
 \input{evaluation.tex}
 \input{project_management.tex}
-\input{future.tex}
+% \input{future.tex}
+\input{future_copy.tex}
 \input{conclusions.tex}
 
 \clearpage
@@ -67,9 +70,11 @@
 \bibliographystyle{../common/plainnat}
 \bibliography{../common/bibliography}
 
+%TC:ignore
 \begin{appendices}
 \input{appendices/unit.tex}
 \input{appendices/perf.tex}
 \end{appendices}
+%TC:endignore
 
 \end{document}

@@ -424,6 +424,7 @@ Only unused ranks are displayed to the user, avoiding manual validation and main
   \centering
   \includegraphics[width=0.4\linewidth]{../common/vodle_screenshots/ranked_inv.png}
   \caption{Delegation invitation popup showing dynamically filtered rank options. In this case, rank 1 has already been used, so only ranks 2 and 3 are available for selection.}
+  \label{fig:ranked_invite}
 \end{figure}
 
 \subsection{Managing and Reordering Delegations}
@@ -546,6 +547,32 @@ Delegation resolution logic was also updated. The same cycle-checking and transi
 
 From a user interface perspective, several significant modifications were introduced to support per-option delegation.
 
+\subsection{Displaying Correct Delegate Name}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../common/peroption/sc.png}
+  \caption{User interface after delegating with per-option delegation.}
+  \label{fig:per-option-delegation-sc}
+\end{figure}
+
+Per-option delegation required updating the system to dynamically retrieve and display the correct delegate's nickname depending on the poll option. This ensures that users are always shown who controls their rating for each option.
+
+The \texttt{get\_delegate()} function was extended (see below) to support this behaviour. When per-option delegation is enabled, it checks whether an option-specific delegation exists and retrieves the corresponding delegate's nickname.
+
+\begin{minted}{typescript}
+  get_delegate(oid?: string) {
+    ...
+    if (oid) {
+      return this.G.Del.get_delegate_nickname(
+        this.pid, this.option_delegated.get(oid));
+    }
+    ...
+  }
+\end{minted}
+
+Figure~\ref{fig:per-option-delegation-sc} shows an example of the resulting user interface, where different options display different delegate names as appropriate.
+
 \subsection{Per-Option Selection During Invitation}
 
 The delegation invitation screen was extended to allow users to select one or more options when inviting a delegate. To prevent conflicting assignments, only options that the user had not already delegated were shown:
@@ -579,13 +606,6 @@ Enabling selection of multiple options within a single delegation invitation sim
 \subsection{Information Screen for Managing Delegations}
 
 To manage active delegations, an information dialog was introduced. This screen lists all currently delegated options, displays the assigned delegate for each option, and provides revoke buttons allowing users to individually cancel delegations.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{../common/peroption/sc.png}
-  \caption{User interface after delegating with per-option delegation.}
-  \label{fig:per-option-delegation-management}
-\end{figure}
 
 
 \begin{figure}[H]

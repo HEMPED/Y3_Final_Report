@@ -2,43 +2,37 @@
 
 \section{Context and Motivation}
 
-In group settings ranging from online communities to organisations, collective decision making is both essential and difficult to scale. Direct democracy empowers individuals by letting everyone vote on every issue, but struggles with engagement as participation grows. Representative democracy improves scalability but often reduces accountability and flexibility \citep{ford_delegative_2002, blum_liquid_2016}
+Collective decision-making is essential across a wide range of settings, from online communities to formal organisations. However, traditional models face challenges as participation scales. In direct democracy, individuals vote on every issue, promoting transparency and personal agency, but engagement tends to decline as decision-making burdens increase \citep{ford_delegative_2002}. Representative democracy addresses scalability by electing intermediaries, but often does so at the cost of accountability and flexibility \citep{blum_liquid_2016}.
 
-Liquid democracy is a hybrid model that aims to balance these trade-offs. It allows individuals to either vote directly or delegate their voting power to others they trust. This approach combines the transparency and agency of direct democracy with the scalability of representation, offering a dynamic alternative for participatory systems.
+Liquid democracy emerges as a hybrid approach designed to balance these trade-offs. Individuals can either vote directly or delegate their vote to a trusted peer, blending the transparency of direct democracy with the scalability of representation \citep{ford_delegative_2002, blum_liquid_2016}. Unlike traditional representation, where elected representatives remain fixed for a term, liquid democracy allows delegations to change at any time and enables individuals to reclaim their voting power whenever they choose. This flexibility helps systems adapt to varying levels of user engagement and expertise.
 
-This project applies liquid democracy within vodle, a web-based platform for group decision making. Vodle allows users to express nuanced preferences across decision options and promotes open, participatory decision making. However, it inherits a common limitation: users may lack the time, interest, or confidence to engage with every decision, leading to underrepresentation and disengagement.
+This project applies liquid democracy to \textit{vodle}, an existing web-based platform for group decision-making. While vodle supports nuanced expression of preferences across decision options, it inherits a common weakness: users may lack the time, expertise, or motivation to engage with every decision, leading to underrepresentation and disengagement \citep{ford_delegative_2002, blum_liquid_2016}.
 
-By integrating liquid democracy into vodle, the project aims to give users more flexibility in how their preferences are represented. Delegation features allow users to stay involved even when they choose not to vote directly, making the platform more scalable, inclusive, and responsive to varying levels of user engagement -- all while maintaining transparency and user control.
+Integrating liquid democracy features aims to address these limitations by giving users more flexible ways to participate. Through delegation, users can remain active in decision processes even when unable or unwilling to vote directly, enhancing the platform's inclusiveness, scalability, and responsiveness -- while preserving transparency and individual control.
 
 \section{Project Goals}
 
-The goal of this project is to design and implement a liquid democracy system within vodle. This involves building flexible delegation mechanisms that support diverse participation styles and address the limitations of traditional direct voting.
+The goal of this project is to design and implement a flexible, scalable, and transparent liquid democracy system for vodle. The system should allow users to delegate their votes in ways that preserve autonomy, promote engagement, and accommodate a range of different behaviours and participation levels.
 
-The system introduces several key features:
+Specific objectives include:
 \begin{itemize}
-  \item \textbf{Ranked delegation}, allowing users to specify trusted delegates in order of preference.
-  \item \textbf{Per-option delegation}, enabling different delegates for different options within a poll.
-  \item \textbf{Weighted delegation}, using a trust-based model to distribute voting power across multiple delegates.
+    \item Allowing users to delegate their voting power to others while ensuring that all votes are correctly attributed and included in the final outcome.
+    \item Supporting ranked delegation with backup options.
+    \item Supporting weighted delegation based on trust.
+    \item Allowing delegation on a per-option basis.
+    \item Ensuring that users can revoke delegations or override them by voting directly at any time.
 \end{itemize}
-
-These features are designed to enhance participation, reduce the concentration of voting power, and improve the resilience of the platform. The project focuses on creating an intuitive and efficient implementation that aligns with vodle's existing architecture and emphasises user autonomy.
 
 \section{Structure of This Report}
 
-This report is structured as follows:
+This report is organised as follows:
 
 \begin{itemize}
-    \item \textbf{Chapter~\ref{ch:background}} provides background research, covering the principles of liquid democracy, key challenges such as delegation cycles and super-voters, variations like ranked and weighted delegation, existing implementations, agent-based modelling techniques, and the technical context of vodle.
-    
-    \item \textbf{Chapter~\ref{ch:project_objectives}} defines the project objectives and requirements, detailing the implementation goals for core, ranked, weighted, and per-option delegation features, as well as an extension objective to simulate delegation dynamics.
-    
-    \item \textbf{Chapter~\ref{ch:design_implementation}} describes the design and implementation of the delegation features, outlining architectural decisions, data structures, algorithms, user interface extensions, and system constraints.
-    
-    \item \textbf{Chapter~\ref{ch:evaluation}} evaluates the project outcomes through unit and performance testing, assessment against the project objectives, analysis of known limitations, and reflection on user feedback.
-    
-    \item \textbf{Chapter~\ref{ch:project_management}} reflects on project management activities, including the chosen development methodology, project timeline, risk management practices, and legal and ethical considerations.
-    
-    \item \textbf{Chapter~7} discusses future work, identifying potential directions for extending the system, such as completion of the extension objective and further enhancements to vodle's delegation features.
-    
-    \item \textbf{Chapter~\ref{ch:conclusions}} concludes the report, summarising the key contributions and suggesting avenues for continued research and development.
+    \item Chapter~\ref{ch:background} reviews background material relevant to the project, including the principles of liquid democracy, challenges such as delegation cycles and abstentions, variations like ranked and weighted delegation, real-world implementations, the use of agent-based modelling, and the technical context of vodle.
+    \item Chapter~\ref{ch:project_objectives} defines the objectives and requirements of the project, establishing the functionality and quality expectations for the liquid democracy features.
+    \item Chapter~\ref{ch:design_implementation} presents the design and implementation of the system, describing the delegation mechanisms developed and the technical solutions employed to meet the project requirements.
+    \item Chapter~\ref{ch:evaluation} evaluates the system through unit testing, performance analysis, and an assessment of how well the project objectives have been achieved.
+    \item Chapter~\ref{ch:project_management} discusses the project management approach, including the methodology used, the project plan and changes, risk assessment, and ethical considerations.
+    \item Chapter~\ref{ch:future} proposes directions for future work, including extensions to vodle and simulation studies of delegation dynamics.
+    \item Chapter~\ref{ch:conclusions} summarises the project's outcomes and provides concluding reflections.
 \end{itemize}

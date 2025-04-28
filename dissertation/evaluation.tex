@@ -180,7 +180,7 @@ NFR2: Data stored as JSON & Achieved \\ \hline
     \item \textbf{FR2:} The MinSum rule is used (see Section~\ref{sec:design_ranked_delegation}).
     \item \textbf{FR4:} Toggles are implemented, allowing users to switch between their delegate's and their own vote (see Figure~\ref{fig:vote_override}).
     \item \textbf{FR4:} Users are provided with a drag-and-drop dialog that allows for reordering and removal of ranked delegates (see Section~\ref{sec:design_ranked_delegation}).
-    \item \textbf{NFR1:} The system automatically selects the most preferred (lowest ranked) available delegate, minimising user effort and making the ranked delegation implementation intuitive and easy to understand. (See Section~\ref{sec:design_ranked_delegation}.)
+    \item \textbf{NFR1:} The system automatically selects the most preferred (lowest ranked) available delegate in the invitation dialog, minimising user effort and making the ranked delegation implementation intuitive and easy to understand. (See Section~\ref{sec:design_ranked_delegation}, Figure~\ref{fig:ranked_invite}).
     \item \textbf{NFR2:} Has been achieved using the same methods as Objective 1.
 \end{itemize}
 
@@ -205,8 +205,8 @@ NFR3: UI provided for adjusting trust weights & Achieved \\ \hline
 \subsubsection{Discussion:}
 
 \begin{itemize}
-    \item \textbf{FR1:} Users are allowed to delegate to multiple users at once, distributing trust among them via fractional weights (Section~\ref{sec:design_per_option_delegation}).
-    \item \textbf{FR2:} Trust weights are validated to ensure the total does not exceed 0.99, preserving a portion of direct voting ability if the user wishes (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{FR1:} This can be seen in Figure~\ref{fig:weighted_info}.
+    \item \textbf{FR2:} Invitation dialog was extended to perform allow users to specify a trust level (from 1 to the amount of trust available to delegate), see Figure~\ref{fig:trust-slider}.
     \item \textbf{FR3:} The final ratings are calculated using an iterative trust matrix model, ensuring that delegation chains propagate weights correctly while converging rapidly to stable outcomes (Section~\ref{sec:design_per_option_delegation}).
     \item \textbf{NFR1:} Weighted delegation is calculated client-side. (See Section~\ref{sec:design_per_option_delegation}.)
     \item \textbf{NFR2:} Weighted delegation data is stored using the same method as Objective 1.
@@ -235,9 +235,9 @@ NFR2: Data storage remains CouchDB compatible & Achieved \\ \hline
 \subsubsection{Discussion:}
 
 \begin{itemize}
-    \item \textbf{FR1:} Users can delegate to different users for each poll option individually. This feature was integrated seamlessly into the delegation invitation workflow (Section~\ref{sec:design_per_option_delegation}).
-    \item \textbf{FR2:} Delegation resolution is option-specific, meaning users can have entirely different delegation trees depending on the option voted upon (Section~\ref{sec:design_per_option_delegation}).
-    \item \textbf{FR3:} 
+    \item \textbf{FR1:} See Figure~\ref{fig:per-option-delegation-sc} and Figure~\ref{fig:per-option-delegation-invite}.
+    \item \textbf{FR2:} Delegation resolution is performed at the option level (see Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{FR3:} This was achieved in a similar manner to Objective 1 (see Figure~\ref{fig:per-option-delegation-sc}).
     \item \textbf{FR4:} A detailed information dialog shows active per-option delegations and allows individual revocation, improving transparency and user control (Section~\ref{sec:design_per_option_delegation}).
     \item \textbf{NFR1 and NFR2:} The user interface clearly indicates option-specific delegations, and data storage follows JSON formatting conventions compatible with CouchDB.
 \end{itemize}

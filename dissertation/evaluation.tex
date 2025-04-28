@@ -3,18 +3,98 @@
 This chapter evaluates the design and implementation of the delegation features introduced into vodle, assessing their effectiveness against the original objectives and requirements. It reviews the testing methodology, evaluates completion against functional and non-functional requirements, discusses performance results, presents feedback received, identifies limitations, and concludes with an overall assessment.
 
 \section{Testing -- TODO}
+\subsection{Unit Testing}
+Unit tests were written for core delegation, ranked delegation, and weighted delegation to verify correctness independently of the main vodle application. Tests were run in isolation to focus on delegation logic without frontend or database dependencies. Full code listings are provided in~\ref{appendix:unit_test}.
+\subsubsection{Core Delegation}
+Tests verified the correct creation, resolution, and revocation of delegations, with a focus on transitive delegation and cycle prevention:
+\begin{itemize}
+    \item\textbf{Long delegation chains:} Created delegation chains up to 50 voters long (A → B → C → ... → Z) and confirmed that the original voter's delegation resolved correctly to the final casting voter at the end of the chain.
 
-% Testing was conducted through a combination of manual exploratory testing, targeted unit tests, and integration testing across multiple devices and user accounts. Key areas of focus included:
+    \item\textbf{Cycle detection:} Attempted to create cycles (e.g., A → B → C → A) and verified that the system blocked the delegation that would complete the cycle, with a clear error.
 
-% \begin{itemize}
-%     \item Correct resolution of delegation graphs under standard, ranked, weighted, and per-option delegation modes.
-%     \item Enforcement of cycle prevention at delegation acceptance.
-%     \item Correct override behaviour when users cast direct votes.
-%     \item Cross-device synchronisation of delegation changes via CouchDB replication.
-%     \item Responsiveness of delegation operations under scaling to 200 users.
-% \end{itemize}
+    \item\textbf{Delegation revocation mid-chain:} Simulated scenarios where a voter in the middle of a delegation chain revoked their delegation, and checked that upstream delegators (e.g., A) were correctly updated, no longer delegating transitively.
 
-\section{Evaluation Against Objectives}
+    \item \textbf{Direct vote overriding delegation:} Confirmed that when a user submitted a direct vote, it took priority over any existing delegation, and downstream voters delegated to them updated accordingly.
+\end{itemize}
+
+\subsubsection{Ranked Delegation}
+Tests focused on verifying delegation path resolution under the MinSum rule:
+\begin{itemize}
+    \item\textbf{Multiple path resolution:} Created scenarios where voters had several possible delegation paths and verified that the system always selected the path with the lowest total rank sum.
+
+    \item\textbf{Unavailable delegates:} Simulated top-ranked delegates abstaining or being removed, and confirmed that the system correctly fell back to the next available ranked delegate.
+
+    \item\textbf{Reordering ranked delegates:} Modified delegate rankings after initial delegation and checked that delegation paths were re-resolved based on the updated order.
+\end{itemize}
+
+\subsubsection{Weighted Delegation}
+Weighted delegation tests checked the correct calculation of effective ratings through the trust matrix model:
+
+\begin{itemize}
+\item\textbf{Basic trust distributions:} Verified that with no delegations, each voter's effective ratings matched their own submitted ratings.
+
+\item\textbf{Simple weighted delegation:} Tested cases where users delegated part of their trust to others (e.g., 60\% delegation) and confirmed that the resulting ratings were computed proportionally.
+
+\item\textbf{Delegation chains:} Simulated cases where trust was delegated through multiple layers (e.g., A delegates to B, B delegates to C), and verified that effective ratings propagated correctly through the chain.
+
+\item\textbf{Multiple delegates:} Tested voters splitting trust across two or more delegates with different weights, and verified that final ratings reflected the correct weighted combination.
+
+\item\textbf{Maximum delegation edge:} Simulated voters delegating up to 99\% of their trust while retaining the required minimum 1\% self-trust, and confirmed correct handling of extremely small self-trust contributions.
+
+\item\textbf{Cyclical delegation with self-trust:} Simulated voters delegating partially to each other in a cycle (e.g., A delegates to B and B delegates to A, each with 50\%), and confirmed that the system converged correctly due to the mandatory self-trust floor.
+\end{itemize}
+
+
+
+\subsection{Performance Testing}
+To assess the scalability of the weighted delegation algorithm, performance benchmarks were conducted on randomly generated graphs and worst-case chain graphs of varying sizes. The goal was to measure convergence time and iteration counts under both typical and adversarial conditions. The full benchmarking scripts are provided in Appendix B.
+
+Tests were run with graph sizes of 100, 200, and 500 voters, using five voting options. For each size, 500 random graphs were generated and tested. Additionally, for each size ($N$), a worst-case chain graph was constructed, where voters delegated 99\% of their vote in a cycle of size $N$.
+
+Performance was measured under two convergence thresholds:
+\begin{itemize}
+    \item \textbf{$\epsilon = 1$}: Allowing updates to terminate when changes between iterations were smaller than 1 unit (the threshold used in \textit{vodle}'s implementation).
+    \item \textbf{$\epsilon = 0$}: Requiring exact convergence, terminating only when no changes occurred at all.
+\end{itemize}
+
+\textbf{Results ($\epsilon = 1$)}  
+
+As shown in Figure~\ref{fig:e1_perf}, convergence was fast under the practical $\epsilon = 1$ setting:
+\begin{itemize}
+    \item Average iteration counts increased slowly with graph size, from approximately 7 iterations at 100 voters to around 7.6 iterations at 500 voters.
+    \item Average convergence time scaled linearly with the number of voters, reaching approximately 7 milliseconds for graphs of 500 voters.
+    \item Maximum iteration counts and times were dominated by worst-case chain graphs, but even in these cases, maximum convergence times remained under 200 milliseconds.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../common/perf_graphs/e_1.png}
+    \caption{Weighted delegation convergence performance with $\epsilon = 1$. Average and maximum iteration counts and convergence times for graph sizes of 100, 200, and 500 voters.}
+    \label{fig:e1_perf}
+\end{figure}
+
+\textbf{Results ($\epsilon = 0$)}  
+
+Under the stricter $\epsilon = 0$ setting (Figure~\ref{fig:e0_perf}), convergence costs increased:
+\begin{itemize}
+    \item Average iterations were higher, around 21.8 iterations for 500 voters.
+    \item Maximum iterations still reached the number of voters (500) in worst-case chain graphs.
+    \item Average convergence times remained low, scaling linearly with graph size, reaching about 20 milliseconds for 500 voters.
+    \item Maximum times reached approximately 225 milliseconds for worst-case chains.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../common/perf_graphs/e_0.png}
+    \caption{Weighted delegation convergence performance with $\epsilon = 0$. Stricter convergence requirements lead to higher iteration counts and slightly increased convergence times.}
+    \label{fig:e0_perf}
+\end{figure}
+
+\textbf{Discussion}  
+
+These results demonstrate that the weighted delegation mechanism scales linearly with the number of voters in typical cases, and remains tractable even in worst-case configurations. Using $\epsilon = 1$ provides a practical trade-off, offering fast convergence without loss of meaningful rating accuracy. Overall, the performance results confirm that the trust matrix model is efficient and suitable for deployment at the intended application scale.
+
+\section{Evaluation Against Requirements}
 
 This section evaluates the project against the specific functional and non-functional requirements outlined in Chapter~\ref{ch:project_objectives}. For each project objective, a table summarising whether each requirement was achieved is presented, followed by a detailed discussion providing evidence and references to the implementation. Where necessary, placeholders are included for requirements requiring further confirmation or referencing.
 

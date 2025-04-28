@@ -1,0 +1,694 @@
+\chapter{Code for Unit Tests}\label{appendix:unit_test}
+\section{Core Delegation}
+\begin{minted}{javascript}
+// --- Global Test Counter ---
+let testCounter = 0;
+
+// --- Simulated Maps for Testing ---
+const directDelegationMap = new Map();
+const inverseIndirectMap = new Map();
+
+// --- Simulated Database Accessors ---
+function get_direct_delegation_map() {
+  return directDelegationMap;
+}
+
+function get_inverse_indirect_map() {
+  return inverseIndirectMap;
+}
+
+function set_inverse_indirect_map(newMap) {
+  inverseIndirectMap.clear();
+  for (const [k, v] of newMap.entries()) {
+    inverseIndirectMap.set(k, new Set(v));
+  }
+}
+
+// --- Core Delegation Logic ---
+function can_add_delegation(voter, delegate) {
+  if (voter === delegate) return false;
+  const dm = get_direct_delegation_map();
+  const existingDelegate = dm.get(delegate);
+  if (existingDelegate === voter) return false;
+  const sm = get_inverse_indirect_map();
+  const voterDependents = sm.get(voter);
+  if (voterDependents && voterDependents.has(delegate)) return false;
+  return true;
+}
+
+function add_delegation(voter, delegate) {
+  if (!can_add_delegation(voter, delegate)) return false;
+  const dm = get_direct_delegation_map();
+  dm.set(voter, delegate);
+
+  const sm = get_inverse_indirect_map();
+  const voterDependents = new Set([voter]);
+  const voterIndirect = sm.get(voter);
+  if (voterIndirect) {
+    for (const dep of voterIndirect) {
+      voterDependents.add(dep);
+    }
+  }
+  const delegateDependents = sm.get(delegate) || new Set();
+  for (const dep of voterDependents) {
+    delegateDependents.add(dep);
+  }
+  sm.set(delegate, delegateDependents);
+  return true;
+}
+
+function remove_delegation(voter) {
+  const dm = get_direct_delegation_map();
+  const sm = get_inverse_indirect_map();
+  const delegate = dm.get(voter);
+  if (!delegate) return false;
+  dm.delete(voter);
+
+  const voterDependents = new Set([voter]);
+  const voterIndirect = sm.get(voter);
+  if (voterIndirect) {
+    for (const dep of voterIndirect) {
+      voterDependents.add(dep);
+    }
+  }
+  for (const [d, dependents] of sm.entries()) {
+    for (const dep of voterDependents) {
+      dependents.delete(dep);
+    }
+  }
+  return true;
+}
+
+// --- Utilities ---
+function resetMaps() {
+  directDelegationMap.clear();
+  inverseIndirectMap.clear();
+}
+
+function assertEqual(actual, expected, message) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    console.error(`FAIL (Test ${testCounter}): ${message}\nExpected: ${JSON.stringify(expected)}\nGot: ${JSON.stringify(actual)}\n`);
+    throw new Error("Test failed");
+  } else {
+    console.log(`PASS (Test ${testCounter}): ${message}`);
+  }
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    console.error(`FAIL (Test ${testCounter}): ${message}`);
+    throw new Error("Test failed");
+  } else {
+    console.log(`PASS (Test ${testCounter}): ${message}`);
+  }
+}
+
+// --- Test Cases ---
+function test_simple_delegation() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Simple Delegation ===`);
+  resetMaps();
+  add_delegation('A', 'B');
+  assertEqual(Object.fromEntries(directDelegationMap), { A: 'B' }, "A should delegate to B");
+}
+
+function test_chain_no_cycle() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Chain Without Cycle ===`);
+  resetMaps();
+  add_delegation('A', 'B');
+  add_delegation('B', 'C');
+  add_delegation('C', 'D');
+  assertEqual(Object.fromEntries(directDelegationMap), { A: 'B', B: 'C', C: 'D' }, "Chain A->B->C->D exists");
+}
+
+function test_detect_cycle() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Detect Cycle ===`);
+  resetMaps();
+  add_delegation('A', 'B');
+  add_delegation('B', 'C');
+  add_delegation('C', 'D');
+  const success = add_delegation('D', 'A');
+  assert(!success, "Should detect cycle when D tries to delegate to A");
+}
+
+function test_remove_delegation() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Remove Delegation ===`);
+  resetMaps();
+  add_delegation('A', 'B');
+  add_delegation('B', 'C');
+  remove_delegation('B');
+  assertEqual(Object.fromEntries(directDelegationMap), { A: 'B' }, "Only A->B should remain");
+}
+
+function test_add_after_removal() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Add After Removal ===`);
+  resetMaps();
+  add_delegation('A', 'B');
+  add_delegation('B', 'C');
+  add_delegation('C', 'D');
+  remove_delegation('B');
+  const success = add_delegation('D', 'A');
+  assert(success, "Should allow D->A after B->C removed");
+}
+
+function test_delegation_to_self() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Delegation to Self ===`);
+  resetMaps();
+  const success = add_delegation('A', 'A');
+  assert(!success, "Should not allow delegation to self");
+}
+
+function test_indirect_dependency_tracking() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Indirect Dependency Tracking ===`);
+  resetMaps();
+  add_delegation('A', 'B');
+  add_delegation('B', 'C');
+  add_delegation('C', 'D');
+  const indirect = [...inverseIndirectMap.get('D')];
+  indirect.sort();
+  assertEqual(indirect, ['A', 'B', 'C'], "D should have indirect dependents A, B, C");
+}
+
+function test_multiple_voters_to_same_delegate() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Multiple Voters to Same Delegate ===`);
+  resetMaps();
+  add_delegation('A', 'Z');
+  add_delegation('B', 'Z');
+  add_delegation('C', 'Z');
+  assertEqual(Object.fromEntries(directDelegationMap), { A: 'Z', B: 'Z', C: 'Z' }, "Multiple voters delegating to Z");
+}
+
+function test_star_topology() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Star Topology ===`);
+  resetMaps();
+  add_delegation('A', 'Z');
+  add_delegation('B', 'Z');
+  add_delegation('C', 'Z');
+  add_delegation('D', 'Z');
+  add_delegation('E', 'Z');
+  const indirect = [...inverseIndirectMap.get('Z')];
+  indirect.sort();
+  assertEqual(indirect, ['A', 'B', 'C', 'D', 'E'], "Z should have A, B, C, D, E as dependents");
+}
+
+// --- Run All Tests ---
+function run_all_core_delegation_tests() {
+  console.log("\n=== Running Core Delegation Unit Tests ===");
+
+  test_simple_delegation();
+  test_chain_no_cycle();
+  test_detect_cycle();
+  test_remove_delegation();
+  test_add_after_removal();
+  test_delegation_to_self();
+  test_indirect_dependency_tracking();
+  test_multiple_voters_to_same_delegate();
+  test_star_topology();
+
+  console.log(`\n=== ALL ${testCounter} CORE DELEGATION TESTS PASSED ===`);
+}
+
+// --- Start ---
+run_all_core_delegation_tests();
+\end{minted}
+
+\section{Ranked Delegation}
+\begin{minted}{javascript}
+// --- Simulated Maps for testing (Ranked Delegation Only) ---
+const directDelegationMap = new Map(); // voter -> array of [did, rank, status]
+
+// --- Simulated DB accessors ---
+function get_direct_delegation_map() {
+  return directDelegationMap;
+}
+
+function resetMaps() {
+  directDelegationMap.clear();
+  did_to_delegate.clear();
+  did_to_rank.clear();
+}
+
+// --- Helper Functions ---
+
+function get_delegations(voter) {
+  return get_direct_delegation_map().get(voter) || [];
+}
+
+function set_delegations(voter, delegations) {
+  get_direct_delegation_map().set(voter, delegations);
+}
+
+function find_all_paths(voter, currentPath, paths) {
+  const delegations = get_delegations(voter);
+  for (const [did, _rank, active] of delegations) {
+    if (active === '0') {
+      continue;
+    }
+    const delegate = get_delegate_from_did(did);
+    const newPath = [...currentPath, [voter, did]];
+    if (is_casting_voter(delegate)) {
+      paths.push(newPath);
+    } else if (!currentPath.find(([v, _]) => v === delegate)) {
+      find_all_paths(delegate, newPath, paths);
+    }
+  }
+}
+
+function is_casting_voter(voter) {
+  const delegations = get_delegations(voter);
+  for (const [did, _rank, active] of delegations) {
+    if (active !== '0') {
+      return false;
+    }
+  }
+  return true;
+}
+
+function get_delegate_from_did(did) {
+  return did_to_delegate.get(did);
+}
+
+function get_rank_from_did(did) {
+  return did_to_rank.get(did);
+}
+
+function min_sum(voter) {
+  const paths = [];
+  find_all_paths(voter, [], paths);
+
+  let minSumPath = [];
+  let minSum = Number.MAX_VALUE;
+
+  for (const path of paths) {
+    let sum = 0;
+    for (const [_v, did] of path) {
+      sum += get_rank_from_did(did);
+    }
+    if (sum < minSum) {
+      minSum = sum;
+      minSumPath = path;
+    }
+  }
+  return minSumPath;
+}
+
+function min_sum_all() {
+  for (const voter of get_direct_delegation_map().keys()) {
+    const minPath = min_sum(voter);
+    if (minPath.length > 0) {
+      for (const [v, did] of minPath) {
+        const delegations = get_delegations(v);
+        const updated = delegations.map(([d, rank, active]) => {
+          if (d === did) {
+            return [d, rank, '2'];
+          } else if (active === '2') {
+            return [d, rank, '1'];
+          }
+          return [d, rank, active];
+        });
+        set_delegations(v, updated);
+      }
+    }
+  }
+}
+
+// --- Utilities for Testing ---
+
+let testCounter = 1;
+
+function assertEqual(actual, expected, message) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    console.error(`FAIL (Test #${testCounter}): ${message}\nExpected: ${JSON.stringify(expected)}\nGot: ${JSON.stringify(actual)}\n`);
+    throw new Error("Test failed");
+  } else {
+    console.log(`PASS (Test #${testCounter}): ${message}`);
+    testCounter++;
+  }
+}
+
+// --- Mappings for DID -> delegate and rank ---
+const did_to_delegate = new Map();
+const did_to_rank = new Map();
+
+// --- Test Cases ---
+
+function test_ranked_delegation_simple() {
+  console.log("\n=== Test: Simple Ranked Delegation ===");
+  resetMaps();
+
+  set_delegations('A', [['did1', 1, '1'], ['did2', 2, '1']]);
+  did_to_delegate.set('did1', 'B');
+  did_to_delegate.set('did2', 'C');
+  did_to_rank.set('did1', 1);
+  did_to_rank.set('did2', 2);
+
+  min_sum_all();
+
+  assertEqual(get_delegations('A'), [['did1', 1, '2'], ['did2', 2, '1']], "A should activate delegation to B with lower rank");
+}
+
+function test_ranked_delegation_chain() {
+  console.log("\n=== Test: Ranked Delegation Chain ===");
+  resetMaps();
+
+  set_delegations('A', [['did1', 1, '1']]);
+  set_delegations('B', [['did2', 2, '1']]);
+  did_to_delegate.set('did1', 'B');
+  did_to_delegate.set('did2', 'C');
+  did_to_rank.set('did1', 1);
+  did_to_rank.set('did2', 2);
+
+  min_sum_all();
+
+  assertEqual(get_delegations('A'), [['did1', 1, '2']], "A's delegation to B should stay active");
+  assertEqual(get_delegations('B'), [['did2', 2, '2']], "B's delegation to C should be activated");
+}
+
+function test_ranked_delegation_multiple_paths() {
+  console.log("\n=== Test: Ranked Delegation Multiple Paths ===");
+  resetMaps();
+
+  set_delegations('A', [['did1', 3, '1'], ['did2', 1, '1']]);
+  did_to_delegate.set('did1', 'B');
+  did_to_delegate.set('did2', 'C');
+  did_to_rank.set('did1', 3);
+  did_to_rank.set('did2', 1);
+
+  min_sum_all();
+
+  assertEqual(get_delegations('A'), [['did1', 3, '1'], ['did2', 1, '2']], "A should pick delegation to C with lower rank");
+}
+
+// --- More Complex Tests ---
+
+function test_ranked_delegation_complex_1() {
+  console.log("\n=== Test: Complex Ranked Delegation 1 ===");
+  resetMaps();
+
+  set_delegations('A', [['did1', 2, '1'], ['did2', 5, '1']]);
+  set_delegations('B', [['did3', 1, '1']]);
+  did_to_delegate.set('did1', 'B');
+  did_to_delegate.set('did2', 'D');
+  did_to_delegate.set('did3', 'C');
+  did_to_rank.set('did1', 2);
+  did_to_rank.set('did2', 5);
+  did_to_rank.set('did3', 1);
+
+  min_sum_all();
+
+  assertEqual(get_delegations('A'), [['did1', 2, '2'], ['did2', 5, '1']], "A should activate to B through did1");
+  assertEqual(get_delegations('B'), [['did3', 1, '2']], "B should activate to C through did3");
+}
+
+function test_ranked_delegation_complex_2() {
+    console.log("\n=== Test: Complex Ranked Delegation 2 ===");
+    resetMaps();
+
+    set_delegations('A', [['did1', 5, '1'], ['did2', 2, '1']]);
+    set_delegations('B', [['did3', 2, '1']]);
+    set_delegations('C', [['did4', 3, '1']]);
+    did_to_delegate.set('did1', 'B');
+    did_to_delegate.set('did2', 'C');
+    did_to_delegate.set('did3', 'D');
+    did_to_delegate.set('did4', 'E');
+    did_to_rank.set('did1', 5);
+    did_to_rank.set('did2', 2);
+    did_to_rank.set('did3', 2);
+    did_to_rank.set('did4', 3);
+
+    min_sum_all();
+
+    assertEqual(get_delegations('A'), [['did1', 5, '1'], ['did2', 2, '2']], "A should pick C through did2 (lowest total rank)");
+    assertEqual(get_delegations('B'), [['did3', 2, '2']], "B should activate to D through did3");
+    assertEqual(get_delegations('C'), [['did4', 3, '2']], "C should activate to E through did4");
+
+}
+  
+
+// --- Run All Tests ---
+
+function run_ranked_delegation_tests() {
+  console.log("\n=== Running Ranked Delegation Tests ===");
+  test_ranked_delegation_simple();
+  test_ranked_delegation_chain();
+  test_ranked_delegation_multiple_paths();
+  test_ranked_delegation_complex_1();
+  test_ranked_delegation_complex_2();
+  console.log("\n=== ALL RANKED DELEGATION TESTS PASSED ===");
+}
+
+// --- Start Tests ---
+run_ranked_delegation_tests();
+
+\end{minted}
+
+\section{Weighted Delegation}
+\begin{minted}{javascript}
+// test_weighted_delegation.js
+
+// --- Global Test Counter ---
+let testCounter = 0;
+
+// --- Simulated Maps for Testing ---
+const directDelegationMap = new Map(); // voter -> array of [did, trust, active]
+const didToDelegate       = new Map(); // did -> delegate userId
+
+// --- Utilities ---
+function resetMaps() {
+  directDelegationMap.clear();
+  didToDelegate.clear();
+}
+
+function assertEqual(actual, expected, message) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    console.error(`FAIL (Test ${testCounter}): ${message}
+Expected: ${JSON.stringify(expected)}
+Got:      ${JSON.stringify(actual)}\n`);
+    throw new Error("Test failed");
+  } else {
+    console.log(`PASS (Test ${testCounter}): ${message}`);
+  }
+}
+
+// --- Helper Functions for Weighted Delegation ---
+
+/**
+ * Runs the iterative weighted-delegation update until convergence or max iterations.
+ * - selfMap: Map<userId, Map<optionId, number>>
+ */
+function updateEffectiveVotes(selfMap, maxIters = 50) {
+  // initialize effective = self
+  let effective = new Map();
+  for (const [uid, ratings] of selfMap.entries()) {
+    effective.set(uid, new Map(ratings));
+  }
+
+  for (let iter = 0; iter < maxIters; iter++) {
+    let changed = false;
+    const nextEff = new Map();
+
+    for (const [uid, ratings] of selfMap.entries()) {
+      const delegs = directDelegationMap.get(uid) || [];
+      if (delegs.length === 0) {
+        // no delegation: identical to self
+        nextEff.set(uid, new Map(ratings));
+        continue;
+      }
+      const combined = new Map();
+      for (const [oid, selfVal] of ratings.entries()) {
+        let weightDone = 0, val = 0;
+        for (const [did, trustStr, active] of delegs) {
+          if (active === '0') continue;
+          const trust = parseInt(trustStr, 10);
+          weightDone += trust;
+          const delegate = didToDelegate.get(did);
+          val += (trust/100) * effective.get(delegate).get(oid);
+        }
+        val += ((100 - weightDone)/100) * selfVal;
+        // detect any change
+        if (!combined.has(oid) || val !== effective.get(uid).get(oid)) {
+          changed = true;
+        }
+        combined.set(oid, val);
+      }
+      nextEff.set(uid, combined);
+    }
+
+    effective = nextEff;
+    if (!changed) break;
+  }
+
+  // floor final values
+  const floored = new Map();
+  for (const [uid, ratings] of effective.entries()) {
+    const m = new Map();
+    for (const [oid, v] of ratings.entries()) {
+      m.set(oid, Math.floor(v));
+    }
+    floored.set(uid, m);
+  }
+  return floored;
+}
+
+// --- Test Cases ---
+
+function test_no_delegation() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: No Delegation ===`);
+  resetMaps();
+  const self = new Map([
+    ['A', new Map([ ['x',50], ['y',80] ])]
+  ]);
+  const eff = updateEffectiveVotes(self);
+  assertEqual(
+    Array.from(eff.get('A').entries()),
+    [['x',50],['y',80]],
+    "With no delegations, effective == self"
+  );
+}
+
+function test_simple_weighted_delegation() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Simple Weighted Delegation ===`);
+  resetMaps();
+  directDelegationMap.set('A', [['did1','60','1']]);
+  didToDelegate.set('did1','B');
+  const self = new Map([
+    ['A', new Map([ ['x',100] ])],
+    ['B', new Map([ ['x',50]  ])]
+  ]);
+  const eff = updateEffectiveVotes(self);
+  // 0.6*50 + 0.4*100 = 30+40 = 70
+  assertEqual(
+    Array.from(eff.get('A').entries()),
+    [['x',70]],
+    "A's effective x = 60% of B's 50 + 40% of own 100"
+  );
+  assertEqual(
+    Array.from(eff.get('B').entries()),
+    [['x',50]],
+    "B unaffected"
+  );
+}
+
+function test_chain_weighted_delegation() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Chain Weighted Delegation ===`);
+  resetMaps();
+  directDelegationMap.set('A', [['d1','50','1']]);
+  directDelegationMap.set('B', [['d2','50','1']]);
+  didToDelegate.set('d1','B');
+  didToDelegate.set('d2','C');
+  const self = new Map([
+    ['A', new Map([ ['x',100] ])],
+    ['B', new Map([ ['x',80]  ])],
+    ['C', new Map([ ['x',20]  ])]
+  ]);
+  const eff = updateEffectiveVotes(self);
+  // B: .5*20 + .5*80 = 50
+  // A: .5*50 + .5*100 = 75
+  assertEqual(
+    Array.from(eff.get('B').entries()),
+    [['x',50]],
+    "B's effective x = 50%"
+  );
+  assertEqual(
+    Array.from(eff.get('A').entries()),
+    [['x',75]],
+    "A's effective x = 75%"
+  );
+}
+
+function test_multi_delegate_splitting() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Multi-Delegate Splitting ===`);
+  resetMaps();
+  directDelegationMap.set('A', [
+    ['d1','30','1'],
+    ['d2','50','1']
+  ]);
+  didToDelegate.set('d1','B');
+  didToDelegate.set('d2','C');
+  const self = new Map([
+    ['A', new Map([ ['x',100], ['y',0] ])],
+    ['B', new Map([ ['x',0],   ['y',100] ])],
+    ['C', new Map([ ['x',50],  ['y',50]  ])]
+  ]);
+  const eff = updateEffectiveVotes(self);
+  // x= .3*0 + .5*50 + .2*100 = 45 ; y= .3*100 + .5*50 + .2*0 = 55
+  assertEqual(
+    Array.from(eff.get('A').entries()),
+    [['x',45],['y',55]],
+    "A splits trust: x=45, y=55"
+  );
+}
+
+function test_exact_full_self_trust() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Full Self-Trust Edge ===`);
+  resetMaps();
+  directDelegationMap.set('A',[ ['d1','100','1'] ]);
+  didToDelegate.set('d1','B');
+  const self = new Map([
+    ['A', new Map([ ['x',90] ])],
+    ['B', new Map([ ['x',10] ])]
+  ]);
+  const eff = updateEffectiveVotes(self);
+  // A fully delegates, so x = B's 10
+  assertEqual(
+    Array.from(eff.get('A').entries()),
+    [['x',10]],
+    "A's x fully delegated to B"
+  );
+}
+
+function test_cyclical_delegation_convergence() {
+  testCounter++;
+  console.log(`\n=== Test ${testCounter}: Cyclical Delegation Convergence ===`);
+  resetMaps();
+  // A <-> B each 50%
+  directDelegationMap.set('A',[ ['d1','50','1'] ]);
+  directDelegationMap.set('B',[ ['d2','50','1'] ]);
+  didToDelegate.set('d1','B');
+  didToDelegate.set('d2','A');
+  const self = new Map([
+    ['A', new Map([ ['x',80] ])],
+    ['B', new Map([ ['x',80] ])]
+  ]);
+  const eff = updateEffectiveVotes(self);
+  // both should remain at 80 after convergence
+  assertEqual(
+    Array.from(eff.get('A').entries()),
+    [['x',80]],
+    "A converges to 80 in the A<->B cycle"
+  );
+  assertEqual(
+    Array.from(eff.get('B').entries()),
+    [['x',80]],
+    "B converges to 80 in the A<->B cycle"
+  );
+}
+
+// --- Run All Tests ---
+function run_all_weighted_tests() {
+  console.log("\n=== Running Weighted Delegation Tests ===");
+  test_no_delegation();
+  test_simple_weighted_delegation();
+  test_chain_weighted_delegation();
+  test_multi_delegate_splitting();
+  test_exact_full_self_trust();
+  test_cyclical_delegation_convergence();
+  console.log(`\n=== ALL ${testCounter} WEIGHTED DELEGATION TESTS PASSED ===`);
+}
+
+run_all_weighted_tests();
+
+\end{minted}

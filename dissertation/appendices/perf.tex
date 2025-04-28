@@ -1,0 +1,183 @@
+\chapter{Code for Weighted Delegation Performance Testing}\label{appendix:perf_weighted}
+\begin{minted}{javascript}
+// perf_weighted_delegation.js
+// This module exports a runPerformance function that benchmarks the
+// weighted-delegation convergence routine (random graphs + worst-case chain).
+
+const { performance } = require('perf_hooks');
+
+// --- Core updateEffectiveVotes implementation ---
+function updateEffectiveVotes(
+  selfMap,
+  directDelMap,
+  agreementMap,
+  options,
+  epsilon = 0.00001,
+  maxIters = 10000
+) {
+  let effective = new Map(selfMap);
+  let iterations = 0;
+
+  while (iterations < maxIters) {
+    let maxDelta = 0;
+    const nextEff = new Map();
+
+    for (const [uid, selfRatings] of selfMap.entries()) {
+      const delegs = directDelMap.get(uid) || [];
+      if (delegs.length === 0) {
+        nextEff.set(uid, new Map(selfRatings));
+        continue;
+      }
+
+      const newRatings = new Map();
+      for (const oid of options) {
+        let weightDone = 0, acc = 0;
+        for (const [did, trust, status] of delegs) {
+          if (status === '0') continue;
+          const agr = agreementMap.get(did);
+          if (!agr || agr.status === 'pending') continue;
+          const delId = agr.delegate_vid;
+          weightDone += trust;
+          acc += (trust / 100) * effective.get(delId).get(oid);
+        }
+        // include self-trust
+        acc += ((100 - weightDone) / 100) * selfMap.get(uid).get(oid);
+        maxDelta = Math.max(maxDelta, Math.abs(acc - effective.get(uid).get(oid)));
+        newRatings.set(oid, acc);
+      }
+      nextEff.set(uid, newRatings);
+    }
+
+    effective = nextEff;
+    iterations++;
+    if (maxDelta <= epsilon) break;
+  }
+
+  // floor final ratings
+  for (const ratings of effective.values()) {
+    for (const oid of ratings.keys()) {
+      ratings.set(oid, Math.floor(ratings.get(oid)));
+    }
+  }
+
+  return { effective, iterations };
+}
+
+// --- Helper to generate random test graph ---
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateRandomGraph(N, options) {
+  const selfMap = new Map();
+  const directDelMap = new Map();
+  const agreementMap = new Map();
+  const voters = Array.from({ length: N }, (_, i) => `V${i + 1}`);
+
+  // random self-ratings
+  voters.forEach(v => {
+    const ratings = new Map();
+    options.forEach(o => ratings.set(o, Math.random() * 100));
+    selfMap.set(v, ratings);
+  });
+
+  // random trust delegation
+  voters.forEach(v => {
+    const pool = voters.filter(x => x !== v);
+    let selfTrust = randomInt(1, 100),
+        remaining = 100 - selfTrust;
+
+    while (remaining > 0 && pool.length > 0) {
+      let delegate, trust;
+      if (pool.length === 1) {
+        delegate = pool[0];
+        trust = remaining;
+      } else {
+        const idx = randomInt(0, pool.length - 1);
+        delegate = pool.splice(idx, 1)[0];
+        trust = randomInt(1, remaining);
+      }
+      remaining -= trust;
+      const did = `${v}->${delegate}:${trust}`;
+      directDelMap.set(v, (directDelMap.get(v) || []).concat([[did, trust, '2']]));
+      agreementMap.set(did, { status: 'agreed', delegate_vid: delegate });
+    }
+  });
+
+  return { selfMap, directDelMap, agreementMap };
+}
+
+// --- Helper to generate worst-case chain graph ---
+function generateChainGraph(N, options) {
+  const selfMap = new Map();
+  const directDelMap = new Map();
+  const agreementMap = new Map();
+  const voters = Array.from({ length: N }, (_, i) => `V${i + 1}`);
+
+  // random self-ratings
+  voters.forEach(v => {
+    const ratings = new Map();
+    options.forEach(o => ratings.set(o, Math.random() * 100));
+    selfMap.set(v, ratings);
+  });
+
+  const trust = 99;
+  // build a linear chain: V1->V2->...->VN
+  for (let i = 0; i < N - 1; i++) {
+    const v = voters[i], nxt = voters[i + 1];
+    const did = `${v}->${nxt}:${trust}`;
+    directDelMap.set(v, [[did, trust, '2']]);
+    agreementMap.set(did, { status: 'agreed', delegate_vid: nxt });
+  }
+  const did = `${voters[N]}->${voters[0]}:${trust}`
+  directDelMap.set(voters[N], [[did, trust, '2']]);
+  agreementMap.set(did, { status: 'agreed', delegate_vid: voters[0] });
+
+  return { selfMap, directDelMap, agreementMap };
+}
+
+// --- Main benchmarking function ---
+async function runPerformance(sizes, reps, options) {
+  const results = [];
+
+  for (const N of sizes) {
+    //random graphs
+    let sumI = 0, maxI = 0, sumT = 0, maxT = 0;
+    for (let r = 0; r < reps; r++) {
+      const { selfMap, directDelMap, agreementMap } = generateRandomGraph(N, options);
+      const t0 = performance.now();
+      const { iterations } = updateEffectiveVotes(selfMap, directDelMap, agreementMap, options);
+      const t1 = performance.now();
+      sumI += iterations;
+      maxI = Math.max(maxI, iterations);
+      const dt = t1 - t0;
+      sumT += dt;
+      maxT = Math.max(maxT, dt);
+    }
+
+    // worst-case
+    {
+      const { selfMap, directDelMap, agreementMap } = generateChainGraph(N, options);
+      const t0 = performance.now();
+      const { iterations } = updateEffectiveVotes(selfMap, directDelMap, agreementMap, options);
+      const t1 = performance.now();
+      maxT = Math.max(maxT, t1-t0)
+      maxI = Math.max(maxI, iterations);
+    }
+
+    results.push({
+        size: N,
+        type: 'random',
+        avgIters: sumI / reps,
+        maxIters: maxI,
+        avgTimeMs: sumT / reps,
+        maxTimeMs: maxT
+      });
+  }
+
+  return results;
+}
+
+module.exports = { runPerformance, updateEffectiveVotes };
+
+\end{minted}

@@ -1,24 +1,27 @@
 \chapter{Future Work}
-
-\textbf{TODO: intro}
+This project established a foundation for flexible, transitive, ranked, and weighted delegation within vodle. While the primary development goals were met, there are several areas where the system could be further extended or refined. These include the development of agent-based simulation tools to better understand delegation dynamics, and the expansion of vodle's delegation features to support a wider range of use cases. Addressing these areas would strengthen both the theoretical understanding and practical deployment of liquid democracy mechanisms within platforms like vodle.
 
 \section{Agent-Based Modelling for Delegation Dynamics}
 
-As introduced in Section~\ref{sec:background_abm}, agent-based modelling (ABM) provides a methodology for analysing how local decisions and interactions aggregate into system-level outcomes~\citep{bonabeau2002agent}. Although no ABM model was created during this project (see Section~\ref{ch:project_management}), future development of agent-based simulations could offer valuable insights into the behaviour of liquid democracy mechanisms, particularly in large or complex decision-making contexts.
+Agent-based modelling (ABM) provides a methodology for analysing how local decisions and interactions aggregate into system-level outcomes~\citep{bonabeau2002agent}. Although the simulation objective outlined in Section~\ref{sec:background_abm} was ultimately descoped during this project (see Section~\ref{ch:project_management}), agent-based modelling remains a promising approach for investigating the dynamics of delegation within liquid democracy systems, particularly in large or complex decision-making contexts.
 
-Building on established principles of agent-based modelling~\citep{bonabeau2002agent}, this project proposes several original approaches for simulating dynamic trust and delegation behaviours in liquid democracy systems. Technical considerations for scalable simulation are informed by standard practices from agent-based modelling frameworks such as Mesa~\citep{kazil_utilizing_2020}.
+Prior research has explored delegation behaviour primarily through observational studies or mathematical analysis. However, few studies have examined how trust, strategic behaviour, or delegation reluctance evolve over time. This section outlines directions for developing agent-based simulations that capture these dynamic behaviours, supported by suitable evaluation metrics.
 
 \subsection{Prior Simulation Studies of Liquid Democracy}
 
-Several previous studies have examined the delegation structures that emerge within liquid democracy systems. However, most of this work has focused either on observational analysis of real-world systems or on mathematical modelling of delegation resolution processes, rather than on simulating dynamic agent behaviours.
+Several previous studies have examined the delegation structures that emerge within liquid democracy systems, although most have focused either on observational analysis of real-world systems or on mathematical modelling of delegation resolution processes, rather than on simulating dynamic agent behaviours.
 
 \subsubsection{Observational Studies}
 
 \citet{kling2015votingbehaviourpoweronline} analysed delegation graphs from the LiquidFeedback platform, using real-world data from the German Pirate Party. Their work focused on the structure of the delegation network, identifying the emergence of ``super-voters''. Although highly informative, this study was observational in nature, examining static snapshots of delegation graphs rather than simulating how individual users might form or revise their delegation choices over time.
 
+% \subsubsection{Mathematical Modelling and Synthetic Evaluation}
+
+% \citet{brill_liquid_2021} formalised a framework for ranked delegations and proposed several delegation rules for resolving delegation paths. Their analysis combined theoretical results with experimental evaluation on both synthetic and real-world datasets. However, their data generation methods created fixed agent preferences and delegation options; dynamic behavioural evolution, trust updates, or delegation reassignment over time were not modelled. As such, while their work offers critical insights into the properties of delegation rules under different conditions, it does not address dynamic aspects of delegation behaviour.
+
 \subsubsection{Mathematical Modelling and Synthetic Evaluation}
 
-\citet{brill_liquid_2021} formalised a framework for ranked delegations and proposed several delegation rules for resolving delegation paths. Their analysis combined theoretical results with experimental evaluation on both synthetic and real-world (such as partial networks from Facebook) data sets. However, their data generation methods created fixed agent preferences and delegation options; dynamic behavioural evolution, trust updates, or delegation reassignment over time were not modelled. As such, while their work offers critical insights into the properties of delegation rules under different conditions, it does not address dynamic aspects of delegation behaviour.
+\citet{brill_liquid_2021} formalised a framework for ranked delegations and proposed several delegation rules for resolving delegation paths. Their analysis involved theoretical formalisation of delegation rules and experimental evaluation on both synthetic and real-world datasets (such as partial networks from Facebook). However, their data generation methods created fixed agent preferences and delegation options; dynamic behavioural evolution, trust updates, or delegation reassignment over time were not modelled. As such, while their work offers critical insights into the properties of delegation rules under different conditions, it does not address dynamic aspects of delegation behaviour.
 
 \subsubsection{Formal Binary Models}
 
@@ -26,322 +29,131 @@ Several previous studies have examined the delegation structures that emerge wit
 
 \subsubsection{Summary}
 
-Although prior work has provided valuable insights into the static properties of delegation networks and the mathematical characteristics of delegation resolution, the dynamic formation and evolution of delegation networks based on individual agent behaviour remains underexplored. In particular, there is little research that models how trust, strategic behaviour, or delegation reluctance might influence the development of delegation networks over time. Agent-based modelling offers a natural framework to investigate these phenomena.
+Although prior work has provided valuable insights into the static properties of delegation networks and the mathematical characteristics of delegation resolution, the dynamic formation and evolution of delegation networks based on individual agent behaviour remains underexplored. Agent-based modelling offers a natural framework to investigate these phenomena.
 
 \subsection{Baseline Agent-Based Model for Delegation Dynamics}
 
-In order to simulate the evolution of delegation structures within liquid democracy, a baseline agent-based model (ABM) can be proposed. This model would capture the fundamental decision processes of individual voters and serve as the foundation for subsequent extensions involving trust dynamics, strategic behaviour, and large-scale effects.
+A baseline agent-based model could simulate the fundamental processes by which agents decide whether to vote directly or delegate. Each agent would be defined by the following attributes:
 
-\subsubsection{Agent Specification}
-
-Each agent in the model would be defined by the following attributes:
 \begin{itemize}
-\item \textbf{Voting Intention}: An initial preference regarding the poll question, represented as \texttt{Yes}, \texttt{No}, or \texttt{Abstain}.
-\item \textbf{Delegation Willingness} ($w_i$): A score in $[0,1]$ representing the agent's propensity to delegate rather than vote directly.
-\item \textbf{Trust Vector} ($T_i$): A vector where each entry $t_{ij} \in [0,1]$ expresses agent $i$'s trust in agent $j$ as a potential delegate.
-\item \textbf{Memory}: A record of past delegation and voting outcomes, used to inform future trust updates.
+    \item \textbf{Voting Intention}: An initial preference (\texttt{Yes}, \texttt{No}, or \texttt{Abstain}).
+    \item \textbf{Delegation Willingness} ($w_i$): A score in $[0,1]$ representing the agent's propensity to delegate.
+    \item \textbf{Trust Vector} ($T_i$): Trust levels towards potential delegates.
+    \item \textbf{Memory}: A record of past delegation outcomes to inform trust updates.
 \end{itemize}
 
-\subsubsection{Decision-Making Process}
+In each polling event, agents would follow a decision-making process:
 
-In each polling event, agents would follow a decision process:
 \begin{enumerate}
-\item \textbf{Delegation Decision}:
-\begin{itemize}
-\item If the maximum trust value across all other agents exceeds a delegation threshold $\theta$ and $w_i > \theta'$, the agent chooses to delegate.
-\item Otherwise, the agent votes directly based on their initial preference.
-\end{itemize}
-
-\item \textbf{Delegate Selection}:
-\begin{itemize}
-    \item The agent selects the individual with the highest trust score (above threshold) as their delegate.
-\end{itemize}
-
-\item \textbf{Trust Update} (after poll outcome revealed):
-\begin{itemize}
-    \item If the delegate's vote aligns with the agent's own preference, trust in that delegate increases by $\delta^+$.
-    \item If misaligned, trust decreases by $\delta^-$.
-    \item Trust values are capped between 0 and 1.
-\end{itemize}
-
+    \item \textbf{Delegation Decision}: If the agent's trust in others exceeds a delegation threshold $\theta$ and their willingness $w_i$ exceeds a secondary threshold $\theta'$, the agent delegates; otherwise, the agent votes directly.
+    \item \textbf{Delegate Selection}: The agent selects the individual with the highest trust score above the threshold.
+    \item \textbf{Trust Update}: After the poll outcome, trust is reinforced if the delegate's action aligns with the agent's preference, and decayed otherwise, bounded within $[0,1]$.
 \end{enumerate}
 
-\subsubsection{Environment and Simulation Cycle}
-
-The simulation would proceed over multiple polling events, following a repeated cycle:
-\begin{itemize}
-\item Agents decide whether to vote or delegate.
-\item Delegation chains are resolved using a predefined delegation rule (e.g., minimal rank sum).
-\item Poll outcome is determined.
-\item Agents update their trust in delegates based on the outcome.
-\end{itemize}
-
-This baseline model offers a minimal but extensible framework for analysing delegation network evolution over time.
+Delegation chains would be resolved according to a predefined rule (e.g., minimal rank sum), and the process would repeat across multiple polls, allowing for the study of how delegation structures evolve over time.
 
 \subsection{Extensions to the Baseline Model}
 
-While the baseline agent-based model captures fundamental delegation behaviour, several extensions can enhance its realism and analytical power. These extensions focus on dynamic trust evolution and differences between individual voter behaviours.
+Several extensions could enhance the baseline model's realism and explanatory power:
 
 \subsubsection{Dynamic Trust Evolution}
 
-In real-world settings, trust between individuals is not static. Agents may adjust their trust levels based on experiences with their delegates' performance. Incorporating dynamic trust evolution into the model would allow simulation of more realistic and adaptive delegation networks.
+Agents could dynamically adjust their trust levels based on delegate performance. Trust reinforcement would occur when a delegate's actions align with the agent's preferences, while trust decay would occur otherwise. Incorporating memory-weighted trust updates, where recent experiences have greater influence, would further reflect realistic human decision-making patterns.
 
-\paragraph{Trust Reinforcement and Decay}
+\subsubsection{Delegation Reassignment}
 
-After each voting event, agents update their trust vectors based on the alignment between their preferences and their delegates' actions:
-\begin{itemize}
-    \item \textbf{Trust Reinforcement:} If a delegate's final vote aligns with an agent's own preference, the agent's trust in that delegate increases by a fixed increment $\delta^+$.
-    \item \textbf{Trust Decay:} If a delegate's final vote conflicts with the agent's preference or results in abstention, trust decreases by $\delta^-$.
-    \item \textbf{Bounded Trust:} Trust values are clipped to remain within $[0,1]$.
-\end{itemize}
-
-\paragraph{Delegation Reassignment}
-
-Agents whose trust in their delegate falls below a reassignment threshold $\tau$ may reconsider their delegation choice. They may:
-\begin{itemize}
-    \item Search for an alternative delegate with a higher trust value,
-    \item Revert to voting directly if no suitable delegate exists.
-\end{itemize}
-
-This mechanism captures the fluidity of delegation decisions based on accumulated experience, and can lead to dynamic shifts in the delegation network over time.
-
-\paragraph{Memory-Weighted Trust Updates}
-
-Agents could weight recent experiences more heavily than distant past outcomes, introducing a memory decay parameter $\lambda$ such that older experiences have diminishing influence on trust updates. This would model recency effects observed in human decision-making.
+Agents whose trust in a delegate drops below a threshold could seek alternative delegates or revert to direct voting. This reassignment mechanism would model the fluid nature of trust relationships and delegation decisions.
 
 \subsubsection{User Behaviour and Strategic Delegation}
 
-Beyond technical and structural considerations, agent-based simulations should explore the impact of user behaviour on delegation dynamics. Real-world decision-making rarely conforms to fully rational models, and user tendencies toward strategic or imperfect delegation could significantly shape system outcomes.
-
-Recent experimental studies have highlighted several behavioural patterns:
+Simulations could incorporate varied behavioural profiles, including:
 
 \begin{itemize}
-\item \textbf{Overconfident delegation:} \citet{casella_2022} found that voters often delegated their votes even when doing so did not improve, and sometimes worsened, the final decision quality. Overconfidence in the competence of potential delegates led many participants to delegate inappropriately.
-\item \textbf{Reluctance to delegate:} Some users, despite access to more competent delegates, chose to retain their votes. This resistance to delegation may stem from distrust, risk aversion, or a desire to maintain direct control over outcomes.
+    \item \textbf{Overconfident Delegation}: As observed by \citet{casella_2022}, voters may delegate even when it reduces decision quality.
+    \item \textbf{Reluctance to Delegate}: Some voters may resist delegating even when beneficial, due to distrust or control preferences.
 \end{itemize}
 
-Future simulations could model populations with diverse delegation behaviours, including overconfident delegation, delegation reluctance, and variations in risk tolerance. Such models could investigate:
-
-\begin{itemize}
-\item The effect of behavioural diversity on network connectivity and vote aggregation.
-\item The emergence of systemic biases if poor delegation decisions cluster around specific agents.
-\item Whether interventions such as delegate recommendation systems could mitigate the negative effects of behavioural tendencies.
-\end{itemize}
-
-Incorporating realistic models of user behaviour would allow agent-based simulations to assess not only the idealised functioning of delegation systems, but also their resilience to practical deviations from rational voting and delegation strategies.
-
-% \subsection{Large-Scale Behaviour and Scalability}
-
-% While small-scale simulations provide valuable insights, real-world liquid democracy platforms must operate at much larger scales, often involving thousands or millions of voters. As the electorate size increases, the structure and dynamics of delegation networks may exhibit behaviours not observable at smaller scales.
-
-% \subsubsection{Computational Scalability}
-
-% As the number of voters grows, the efficiency of delegation resolution algorithms becomes critical. Simulations could measure how runtime and memory usage scale with population size, identifying potential bottlenecks for large deployments.
+Exploring these behaviours would allow simulations to assess system robustness under more realistic, heterogeneous agent populations.
 
 \subsection{Evaluation Metrics for Simulation Outcomes}
 
-To assess the effectiveness and fairness of delegation mechanisms in agent-based simulations, a clear set of evaluation metrics is needed. These metrics should capture both the distribution of voting power and the structural properties of the delegation network. By applying these measures, future simulations can identify strengths and weaknesses in different delegation models.
+To assess the effectiveness and fairness of delegation mechanisms in agent-based simulations, a clear set of evaluation metrics is needed. These metrics should capture both the distribution of voting power and the structural properties of the delegation network.
 
 \subsubsection{Voting Power Distribution}
 
-Voting power in liquid democracy systems can be viewed as a transferable resource, similar to wealth or income. As it flows through delegation chains, it can become unevenly distributed, concentrating influence in the hands of a few. To quantify and monitor this distribution, standard inequality metrics from economics can be applied.
+Voting power in liquid democracy systems can be viewed as a transferable resource, similar to wealth or income. As it flows through delegation chains, it can become unevenly distributed, concentrating influence in the hands of a few. To quantify and monitor this distribution, standard inequality metrics from economics can be applied:
 
 \begin{itemize}
-\item \textbf{Lorenz Curve:} The Lorenz curve plots the cumulative share of total voting power against the cumulative share of voters, sorted from least to most powerful~\citep{cowell_measuring_inequality}. A perfectly equal system would produce a diagonal line; greater curvature indicates greater inequality.
-
-\item \textbf{Gini Coefficient:} The Gini coefficient summarises the Lorenz curve into a single value between 0 and 1, where 0 represents perfect equality and 1 represents maximum inequality~\citep{cowell_measuring_inequality}. The Gini coefficient allows for straightforward comparison between simulations under different models or parameter settings.
-
-\item \textbf{Maximum Voting Weight:} Tracking the maximum voting weight held by any single agent provides a direct measure of super-voter emergence.
+    \item \textbf{Lorenz Curve}: The Lorenz curve plots the cumulative share of total voting power against the cumulative share of voters, sorted from least to most powerful~\citep{cowell_measuring_inequality}. A perfectly equal system would produce a diagonal line; greater curvature indicates greater inequality.
+    \item \textbf{Gini Coefficient}: The Gini coefficient summarises the Lorenz curve into a single value between 0 and 1, where 0 represents perfect equality and 1 represents maximum inequality~\citep{cowell_measuring_inequality}.
+    \item \textbf{Maximum Voting Weight}: Tracking the maximum voting weight held by any single agent provides a direct measure of super-voter emergence.
 \end{itemize}
 
-These measures would allow simulations to assess whether delegation models promote equitable distribution of influence or lead to concentration of power.
+These measures, traditionally used in economic contexts to assess wealth inequality, are well-suited for evaluating how fairly voting power is distributed within a delegation network.
 
 \subsubsection{Delegation Network Structure}
 
-In addition to outcome-based measures, it is important to evaluate the structure of the delegation network itself:
+The structure of the delegation network itself would also provide valuable insights:
 
 \begin{itemize}
-\item \textbf{Average Delegation Path Length:} The mean number of delegation steps from voters to their final representative. Longer chains may increase risk of instability and vote loss.
-
-\item \textbf{Cycle Frequency:} The proportion of delegation attempts that result in cycles. Although cycle-prevention mechanisms can block such cycles (see Section~\ref{sec:core_delegation_detailed}), measuring their frequency indicates how prone the system is to such failures.
-
-\item \textbf{Network Connectivity:} The extent to which the delegation graph forms a cohesive structure versus fragmenting into disconnected components. High connectivity promotes inclusivity and resilience.
+    \item \textbf{Average Delegation Path Length}: Indicates the typical number of delegation steps from voters to their representatives.
+    \item \textbf{Cycle Frequency}: Measures the frequency of attempted cycles, even if prevented by the system.
+    \item \textbf{Network Connectivity}: Assesses whether the delegation network remains cohesive or fragments into isolated groups.
 \end{itemize}
 
 \subsubsection{Comparative Analysis}
 
-By applying these metrics across different delegation models -- core delegation, ranked delegation (see Section~\ref{sec:design_ranked_delegation}), weighted delegation (see Section~\ref{sec:design_per_option_delegation}) -- simulations could quantitatively compare their performance. This would enable evidence-based recommendations for designing fairer and more robust liquid democracy systems.
-
-Moreover, future simulations could analyse how these metrics evolve over time in dynamic settings, revealing whether initial inequalities or fragmentation tendencies persist, worsen, or improve with repeated delegation cycles.
+By applying these metrics across different delegation models -- such as ranked delegation (see Section~\ref{sec:design_ranked_delegation}) or weighted delegation (see Section~\ref{sec:design_per_option_delegation}) -- simulations could systematically compare the performance of different mechanisms. Longitudinal analysis could further reveal whether delegation networks tend toward stability or increasing inequality over time.
 
 \subsection{Summary}
-This section has outlined how agent-based modelling could be used to study the dynamics of delegation in liquid democracy systems. After proposing a baseline simulation framework where agents choose whether and to whom they delegate, several extensions were introduced, including dynamic trust evolution and varied user behaviours. Finally, a set of evaluation metrics was proposed to measure both voting power distributions and delegation network structures, providing a rigorous basis for comparing different delegation models and analysing long-term system stability.
+
+Agent-based modelling presents a promising approach for exploring the dynamic behaviours underlying delegation systems. By modelling individual agent decisions and trust evolution, future simulations could provide deeper insights into the stability, fairness, and scalability of liquid democracy mechanisms.
+
 
 \section{Potential Extensions for Vodle}
 
-While the implementation described in this project significantly improves delegation flexibility and expressiveness in vodle, several further extensions could be considered to enhance scalability, usability, and trust dynamics. This section outlines a selection of possible future developments.
+While the implementation described in this project significantly improves delegation flexibility and expressiveness in vodle, several further extensions could enhance the platform's scalability, usability, and transparency. This section outlines selected directions for future development.
 
 \subsection{Global Delegations}
 
-In the implementation detailed in this project, delegations are issued individually for each poll, which requires users to re-invite their preferred delegates manually whenever they join a new poll. For users who prefer to delegate their participation consistently, this overhead may reduce engagement.
+In the current implementation, delegations are issued individually for each poll, requiring users to manually re-invite their preferred delegates whenever they join a new poll. For users who consistently wish to delegate their participation, this process introduces unnecessary overhead.
 
-Global delegations address this limitation by allowing users to establish persistent delegations that automatically apply across polls. A global delegation specifies a trusted delegate that will be used for all polls, until overridden or revoked.
+Global delegations would allow users to establish persistent delegations that automatically apply across multiple polls until explicitly overridden or revoked. This design mirrors the structure used in LiquidFeedback~\citep{behrens_liquidfeedback_2014}, where users can define delegations globally, per subject area, or per issue, with more specific delegations taking precedence.
 
-This design follows the structure used in LiquidFeedback~\citep{behrens_liquidfeedback_2014}, where delegations can be defined at three levels -- globally, per subject area, or per issue -- with more specific delegations overriding less specific ones. Similarly, in vodle, per-poll delegations would take precedence over any global delegation if both are present. Additionally, if a user's global delegate is not participating in a given poll, the system would treat the user as an independent voter unless a poll-specific delegation is available.
+Implementing global delegations in vodle would require changes to the platform's identity management system. At present, poll-specific user identifiers are used to preserve privacy and prevent cross-poll tracking. Supporting global delegations would necessitate introducing persistent identifiers scoped exclusively to the delegation system, ensuring delegation persistence without compromising poll privacy.
 
-Adding global delegations would support vodle's principles of user autonomy and flexibility. Users would be able to remain represented without requiring continuous management of each decision, while retaining the ability to override default delegations on a case-by-case basis.
+Delegations would be stored within user profile metadata, and the resolution process would prioritise per-poll delegations before falling back to any global delegation. Cycle prevention mechanisms would also need to account for both global and local delegation links during validation.
 
-From a technical perspective, implementing global delegations would introduce several challenges. In the current system, user identifiers are poll-specific to preserve privacy by preventing identifiers from being reverse-engineered to track users across polls. This design prevents persistent links between users, complicating the implementation of global delegations. Supporting global delegations would therefore require introducing persistent identifiers that are scoped exclusively to the delegation system, allowing global delegation to be implemented without compromising privacy or interfering with the existing logic for creating and assigning user IDs. 
+At the user interface level, additional screens would allow users to manage global delegations, review their active settings, and revoke delegations as needed. Clear indicators during voting would distinguish between global and poll-specific delegations, maintaining transparency about how votes are cast.
 
-Delegations would be stored within user profile metadata, and the delegation resolution process would first check for an active per-poll delegation before falling back to a user's global delegation. Additionally, cycle prevention mechanisms would need to account for both local and global delegations when validating new polls.
-
-In addition to backend changes, global delegations would also require user-facing features to support delegation management and maintain transparency.
-
-At the user interface level, an additional management screen would allow users to view, edit, and revoke their global delegations. Clear indicators during voting would distinguish between globally delegated votes and poll-specific delegations, preserving transparency.
-
-Overall, global delegations would reduce delegation management friction, support varying participation levels, and further enhance the scalability of liquid democracy within vodle.
+Introducing global delegations would reduce management friction for active users, accommodate varying engagement levels, and further scale vodle's implementation of liquid democracy.
 
 \subsection{Delegation Expiry Mechanisms}
 
-Persistent delegations improve convenience but risk becoming outdated if users' trust relationships evolve over time. To address this, vodle could introduce optional expiration dates on delegations.
+Although persistent delegations improve convenience, they risk becoming outdated if users' trust relationships change over time. To mitigate this, vodle could introduce optional expiry periods for delegations.
 
-Under this extension, users would have the ability to set an expiry period when issuing a delegation, such as six months or one year. Once expired, a delegation would automatically become inactive, prompting the user to either renew, modify, or revoke it.
+When issuing a delegation, users would have the ability to specify an expiry period, such as six months or one year. Once expired, the delegation would automatically become inactive, prompting the user to review, renew, or modify their delegation choice.
 
-Delegation expiry would encourage regular reconsideration of trust relationships and prevent passive accumulation of voting power by delegates whose views may drift over time. It would also align with vodle's emphasis on maintaining up-to-date and user-driven participation.
+Delegation expiry would encourage users to regularly reconsider their trust relationships, prevent passive accumulation of voting power, and promote a dynamic and up-to-date delegation network. Technically, this extension would involve associating an optional expiry timestamp with each delegation and modifying the resolution process to treat expired delegations as inactive, defaulting either to backup delegates or to direct voting.
 
-Technically, delegation records would store an optional expiry timestamp. The delegation resolution process would treat expired delegations as inactive, defaulting either to ranked fall-backs or to direct voting as appropriate.
-
-Providing sensible default expiry periods, with clear user notifications before expiration, would help balance user convenience with the goal of maintaining dynamic and accurate delegation networks.
+Providing reasonable default expiry options, combined with user notifications prior to expiry, would help balance user convenience with network integrity.
 
 \subsection{Auditability of Delegation Chains}
 
-Transparency is critical to trust in liquid democracy systems. While vodle currently displays active delegations to users, additional transparency features could be added to make delegation chains more auditable.
+Transparency in how votes are cast and propagated is crucial for building trust in liquid democracy systems. One potential extension is to provide users with greater auditability of their delegation chains: showing how their vote travels through the network to reach its final casting point.
 
-A possible extension would allow users to view the full path that their delegated vote takes through the network, including intermediate agents. This would make the resolution of their vote more understandable and would allow users to detect indirect delegation loops or undesirable intermediary agents.
+However, auditability must be balanced carefully against delegate privacy. In vodle, delegations and votes are private, and no user identity should be exposed unless explicitly permitted. Drawing inspiration from the ``Golden Rule of Liquid Democracy'' proposed in Google Votes~\citep{hardt_google_2015}, a privacy-preserving auditability model can be adopted:  
+users can trace how their own votes were used, but identities of intermediaries are only shown if those users have explicitly opted into public visibility.
 
-Implementing delegation chain auditability would involve extending the data structures tracking delegation resolutions to retain path information. A user interface feature could then visualise the delegation tree for any given poll, providing a clear and accessible view of how votes propagate.
+Practically, vodle could implement a system where:
+\begin{itemize}
+    \item Users see the number of steps their delegated vote has traversed.
+    \item If an intermediary has opted into being a public delegate, their pseudonym is displayed.
+    \item Otherwise, intermediate steps are anonymised but structurally visible.
+\end{itemize}
 
-Improving transparency in this way would help users make more informed delegation choices and would further differentiate vodle as a user-centric, trust-preserving platform for decision making.
+This approach preserves voter transparency without compromising delegate privacy, and aligns with best practices in privacy-respecting liquid democracy systems.
 
+\section{Summary}
 
-% \subsection{Dynamic Trust Evolution}
-
-% Trust between voters and their delegates is a dynamic and evolving property in real-world decision-making scenarios. Static delegation graphs, which assume that trust relationships are fixed, fail to capture important aspects of delegation behaviour, such as dissatisfaction with delegate performance or increasing confidence in trusted representatives.
-
-% Future agent-based simulations could incorporate dynamic trust mechanisms to more accurately model how voters adjust their delegation choices over time. Following standard agent-based modelling practice~\citep{bonabeau2002agent}, local trust dynamics can be modelled as simple update rules applied individually by agents, whose aggregate effects at the network level can then be studied.
-
-% Several dynamic trust mechanisms could be considered:
-
-% \begin{itemize}
-% \item \textbf{Trust reinforcement:} Agents could strengthen their trust in delegates who consistently make decisions aligned with their own preferences. This could reduce the likelihood of reassignment and foster longer, more stable delegation chains.
-% \item \textbf{Trust decay:} Agents could weaken trust when delegates vote inconsistently, abstain, or make decisions perceived as suboptimal. A decaying trust metric would increase the probability of agents revoking delegations.
-% \item \textbf{Delegation reassignment:} Agents could dynamically reassign their votes when trust levels fall below a critical threshold. Reassignment could be random among trusted alternatives, or preferential toward delegates with previously higher satisfaction ratings.
-% \end{itemize}
-
-% Introducing dynamic trust mechanisms would allow the simulation of delegation networks that are adaptive rather than static. This in turn could impact critical system-level outcomes, including network stability, vote retention, super-voter emergence, and the distribution of voting power.
-
-% Such models would also allow investigation into whether liquid democracy systems are robust to shocks (e.g., mass delegate dissatisfaction events) or whether small changes in agent trust propagate disproportionately through the network, leading to structural reconfigurations.
-
-% \subsection{Voting Power Distributions and Network Structures}
-
-% Beyond tracking changes in delegation patterns, future agent-based simulations should investigate how delegation dynamics impact the distribution of voting power and the structural properties of the resulting delegation network.
-
-% Voting power in liquid democracy can be conceptualised analogously to income or wealth distribution in economics, where transferable resources may become concentrated in the hands of a few. This analogy provides a theoretical foundation for applying standard inequality measures, such as the Lorenz curve and Gini coefficient, to assess fairness and concentration of influence~\citep{cowell_measuring_inequality}.
-
-% Several outcome-focused metrics could be applied:
-
-% \begin{itemize}
-% \item \textbf{Lorenz curve visualisation:} The Lorenz curve plots the cumulative share of total voting power against the cumulative share of voters, ordered from least to most powerful. A perfectly equal system would yield a diagonal line; curvature away from the diagonal indicates inequality.
-% \item \textbf{Gini coefficient:} The Gini coefficient quantifies the inequality captured by the Lorenz curve. A coefficient of 0 represents perfect equality, while a coefficient of 1 represents maximum concentration of voting power.
-% \item \textbf{Maximum voting weight achieved:} Tracking the highest individual voting weight could directly identify super-voter emergence.
-% \end{itemize}
-
-% In parallel, network-structural metrics could be investigated:
-
-% \begin{itemize}
-% \item \textbf{Average path length:} Measuring the average number of delegation steps from voters to their final representatives. Longer paths could increase instability and the risk of vote loss.
-% \item \textbf{Cycle frequency and prevention effectiveness:} Cycles prevent votes from being correctly resolved (see Section~\ref{subsec:delegation_cycles}). Simulations could quantify how often cycles arise and evaluate the robustness of implemented cycle-prevention mechanisms (see Section~\ref{sec:core_delegation_detailed}).
-% \item \textbf{Connectivity and fragmentation:} Examining whether the delegation network forms a cohesive structure or fragments into disconnected clusters. High fragmentation could lead to systemic under-representation.
-% \end{itemize}
-
-% Systematically evaluating both voting power distributions and network structures would provide a more comprehensive picture of delegation system performance. Future simulations could compare the effects of different delegation models -- core delegation, ranked delegation (see Section~\ref{sec:design_ranked_delegation}), and weighted delegation (see Section~\ref{sec:design_per_option_delegation}) -- on these critical metrics.
-
-% \subsection{Scalability and Large-Scale Behaviour}
-
-% While small-scale simulations can reveal important behavioural patterns, real-world liquid democracy platforms are likely to involve thousands or millions of voters. Delegation networks operating at these scales may exhibit structural and computational behaviours that are not apparent in smaller settings.
-
-% Future simulations should therefore investigate how delegation models behave as the electorate size increases, focusing on key properties that may affect system performance and fairness:
-
-% \begin{itemize}
-% \item \textbf{Computational scalability of delegation resolution:} As the number of voters grows, the efficiency of algorithms for resolving ranked and weighted delegations becomes increasingly important. Simulations could measure how runtime and memory requirements scale with population size, identifying potential bottlenecks.
-
-% \item \textbf{Emergence of dominant hubs:} As delegation networks grow, certain individuals may naturally accumulate a disproportionate number of incoming delegations, forming highly connected hubs. \citet{barabasi_albert_1999} demonstrate that in growing networks, even simple stochastic processes such as preferential attachment can produce highly skewed degree distributions. Although delegations in liquid democracy are not assigned randomly, similar dynamics could arise if voters preferentially delegate to trusted or well-known individuals.
-
-% \item \textbf{Phase transitions in network structure:} Delegation networks may undergo qualitative structural changes as they expand, similar to phase transitions observed in random graph theory. \citet{erdos_renyi_1959} showed that when the number of edges surpasses a critical threshold, random graphs abruptly transition from many small disconnected components to a giant connected component. While delegation is not purely random, social delegation behaviours might display comparable phenomena as network density increases.
-
-% \end{itemize}
-
-% Studying these aspects systematically would help validate whether delegation mechanisms scale gracefully, maintaining fairness, connectivity, and computational feasibility in large electorates. Such evidence would be critical for assessing the real-world viability of liquid democracy implementations.
-
-% \subsection{User Behaviour and Strategic Delegation}
-
-% Finally, beyond technical and structural considerations, agent-based simulations should explore the impact of user behaviour on delegation dynamics. Real-world decision-making rarely conforms to fully rational models, and user tendencies toward strategic or imperfect delegation could significantly shape system outcomes.
-
-% Recent experimental studies have highlighted several behavioural patterns:
-
-% \begin{itemize}
-% \item \textbf{Overconfident delegation:} \citet{casella2023liquid} found that voters often delegated their votes even when doing so did not improve, and sometimes worsened, the final decision quality. Overconfidence in the competence of potential delegates led many participants to delegate inappropriately.
-% \item \textbf{Reluctance to delegate:} Some users, despite access to more competent delegates, chose to retain their votes. This resistance to delegation may stem from distrust, risk aversion, or a desire to maintain direct control over outcomes.
-% \end{itemize}
-
-% Future simulations could model populations with heterogeneous behaviours, including overconfident delegation, delegation reluctance, and variations in risk tolerance. Such models could investigate:
-
-% \begin{itemize}
-% \item The effect of behavioural heterogeneity on network connectivity and vote aggregation.
-% \item The emergence of systemic biases if poor delegation decisions cluster around specific agents.
-% \item Whether interventions such as delegate recommendation systems could mitigate the negative effects of behavioural tendencies.
-% \end{itemize}
-
-% Incorporating realistic models of user behaviour would allow agent-based simulations to assess not only the idealised functioning of delegation systems, but also their resilience to practical deviations from rational voting and delegation strategies.
-
-% \subsection{Summary}
-
-% Agent-based modelling provides a promising approach to explore questions that static analyses of liquid democracy cannot easily address. By simulating dynamic trust evolution, analysing voting power distributions, studying scalability at large population sizes, and incorporating behavioural imperfections, future work can more realistically evaluate the strengths and weaknesses of delegation systems. Carefully designed simulations could reveal structural vulnerabilities, inform safeguards against super-voter domination, and highlight how systems might behave under real-world conditions of imperfect trust and strategic behaviour. These insights would not only extend the theoretical foundations of liquid democracy, but also contribute to the practical development of more robust, fair, and scalable democratic decision-making platforms.
-
-
-% \section{Enhancing User Support for Delegation Decisions}
-
-% Although the current interface provides slider-based input and real-time validation for trust allocation, additional features could further assist users in making effective delegation decisions.
-
-% Potential enhancements include:
-
-% \begin{itemize}
-%     \item \textbf{Dynamic Trust Adjustment}: Trust allocations could be adapted automatically in response to delegate inactivity, ensuring that votes continue to be meaningfully represented~\cite{burke2007trust}.
-%     \item \textbf{Global Delegates}: Allowing users to specify a default or ``global'' delegate who would automatically represent them across all polls unless explicitly overridden. This feature, similar to the approach taken by LiquidFeedback~\cite{liquidfeedbackbook}, would streamline participation for users who trust certain individuals consistently, reducing friction and improving long-term engagement while maintaining the ability to vote directly or set per-poll delegates if desired.
-% \end{itemize}
-
-% These features would help users better understand and manage their delegation structures, increasing confidence and autonomy within the platform.
-
-% \section{Performance Optimisation for Scalability}
-
-% As vodle scales to larger user bases and more complex delegation networks, performance considerations become increasingly critical. Several optimisations could be explored:
-
-% \begin{itemize}
-%     \item \textbf{Incremental Computation}: Updating only the affected parts of the delegation graph when changes occur, rather than recomputing full graphs.
-%     \item \textbf{Client-Side Parallelism}: Leveraging browser Web Workers to perform intensive computations asynchronously, maintaining a responsive user experience~\cite{performanceopt}.
-%     \item \textbf{Optimised Data Structures}: Designing lightweight, efficient serialisation formats to minimise client-server communication overhead.
-% \end{itemize}
-
-% These optimisations would ensure that the system remains efficient and scalable, even for complex, real-time decision processes.
-
-% \section{Broader Applications and Integration}
-
-% The delegation mechanisms introduced in this project are applicable beyond the initial scope of rating systems. Potential broader applications include:
-
-% \begin{itemize}
-%     \item \textbf{Organisational Decision-Making}: Adapting vodle for use in institutional governance, committee voting, or other structured decision environments.
-%     \item \textbf{Civic Participation Platforms}: Deploying the system in municipal or community settings to facilitate participatory democracy initiatives~\cite{civictech}.
-%     \item \textbf{Blockchain Governance}: Integrating flexible delegation models within decentralised autonomous organisations (DAOs) to enhance participation and resilience~\cite{colony}.
-% \end{itemize}
-
-% Exploring these avenues would validate the generality and robustness of the developed features and contribute to more democratic, transparent decision-making systems across domains.
+This chapter has outlined potential directions for extending vodle's delegation system and for investigating the dynamics of liquid democracy through simulation. Agent-based modelling could offer insights into the evolution of trust and delegation behaviour, while platform-level enhancements such as global delegations, delegation expiry mechanisms, and privacy-preserving auditability would further strengthen usability and transparency. Together, these developments would support more flexible, scalable, and trustworthy decision-making systems based on liquid democracy principles.

@@ -761,6 +761,30 @@ Weighted delegation enabled users to distribute their voting power fractionally 
 %   \item recap challenges.
 % \end{itemize}
 
+\section{Database Validation Updates}
+To support liquid democracy features in vodle, minimal changes were made to the underlying CouchDB schema. Instead of introducing new document types, the system reuses existing poll structures by storing delegation-related data as special poll documents.
+
+The only database-level modification was an update to the \texttt{validate\_doc\_update.js} file, which enforces document-level access control rules in CouchDB.
+
+Specifically:
+
+\begin{itemize}
+\item A new exception was introduced allowing users to create or update documents whose \texttt{\_id} ends with \texttt{direct\_delegation\_map}, \texttt{inverse\_indirect\_map}, or \texttt{waps}.
+
+\item These exceptions permit storing delegation mappings associated with a poll while maintaining strict restrictions on other poll documents.
+
+\item Access control was preserved: only users associated with the poll (voters) are allowed to create or modify these documents, and updates remain prohibited after the poll's due date.
+\end{itemize}
+
+The rest of the vodle database structure, including user and poll document formats, remains unchanged. This approach ensured backward compatibility and minimal disruption to existing data flows. The following code snippet shows the relevant section of the \texttt{validate\_doc\_update.js} file:
+
+\begin{minted}{typescript}
+...
+  if (savedDoc && !_id.endsWith("inverse_indirect_map") && !_id.endsWith("direct_delegation_map") && !_id.endsWith("waps")) {
+    throw ({forbidden: 'Noone may update or delete existing poll documents.'});
+...
+\end{minted}
+
 \section{Summary}
 
 This chapter detailed the design and implementation of the delegation mechanisms introduced into vodle, addressing each of the project's core objectives. Beginning with a robust core delegation model, the system ensured global consistency and cycle prevention while preserving user autonomy. Ranked delegation added backup delegations based on user preference, while per-option delegation allowed finer control over delegation assignments for different poll options. Weighted delegation further extended flexibility by allowing voting power to be distributed proportionally across multiple trusted delegates. Across all features, the designs were carefully adapted to vodle's serverless, client-driven architecture, ensuring correctness, performance, and a responsive user experience. Despite the technical challenges, each major objective was fully achieved, laying a strong foundation for future extension work.

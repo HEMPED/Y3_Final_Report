@@ -1,6 +1,6 @@
 \chapter{Evaluation}\label{ch:evaluation}
 
-This chapter evaluates the design and implementation of the delegation features introduced into vodle, assessing their effectiveness against the original objectives and requirements. It reviews the testing methodology, evaluates completion against functional and non-functional requirements, discusses performance results, presents feedback received, identifies limitations, and concludes with an overall assessment.
+This chapter evaluates the delegation features implemented in vodle against the project's objectives and requirements. It reviews the testing methodology, assesses completion against functional and non-functional requirements, analyses performance results, presents feedback received, and identifies limitations.
 
 \section{Testing}
 Testing was conducted to verify the correctness, robustness, and scalability of the liquid democracy features integrated into vodle. Two types of testing were performed:
@@ -102,7 +102,7 @@ Under the stricter $\epsilon = 0$ setting (Figure~\ref{fig:e0_perf}), convergenc
 These results demonstrate that the weighted delegation mechanism scales linearly with the number of voters in typical cases, and remains tractable even in worst-case configurations. Using $\epsilon = 1$ provides a practical trade-off, offering fast convergence without loss of meaningful rating accuracy. Overall, the performance results confirm that the trust matrix model is efficient and suitable for deployment at the intended application scale.
 
 \subsection*{Summary}
-Testing confirmed that the delegation features introduced into vodle are robust, handle both standard and edge cases correctly, and scale efficiently to support realistic deployment sizes. This provides strong evidence for the practical viability of the system in participatory decision-making applications.
+Testing confirmed that the delegation features introduced into vodle are resilient, handle both standard and edge cases correctly, and scale efficiently to support realistic deployment sizes. This provides strong evidence for the practical viability of the system in participatory decision-making applications.
 
 
 \section{Evaluation Against Requirements}
@@ -274,6 +274,7 @@ Overall, while this extension objective was not realised within the project time
 \label{sec:feedback}
 
 \begin{displayquote}
+    \textquotedblleft{}
     The added user interface components are well designed and integrate very well with the existing UI and UX.
     
     The implemented back-end logic works seamlessly with the rather complicated existing data management.
@@ -284,7 +285,8 @@ Overall, while this extension objective was not realised within the project time
     
     The different mathematical methods for resolving delegation cycles, especially the weighted one, are well motivated and present a range of good options for users to delegate all or part of their vote to trusted others, without breaching privacy unnecessarily.
     
-    Overall, this delegation extension will likely be rolled out with the next release of the app.
+    Overall, the weighted delegation implementation will likely be rolled out with the next release of the app.
+    \textquotedblright{}
     \end{displayquote}
     
 \begin{flushright}
@@ -292,6 +294,10 @@ Overall, while this extension objective was not realised within the project time
 \end{flushright}
     
 
-The feedback from Heitzig confirmed that the project successfully achieved its goals. In particular, the new delegation features were assessed as robust, well-integrated into the existing system, and aligned with vodle's emphasis on user autonomy and transparency. The minor issue of potential race conditions was acknowledged as easily addressable. Potential strategies for mitigating this issue are discussed further in Section~\ref{ch:future}.
+The feedback from Heitzig confirmed that the project successfully achieved its goals. In particular, the new delegation features were assessed as well-engineered and well-integrated into the existing system. Potential race conditions were identified and acknowledged as addressable. Potential strategies for mitigating this issue are discussed further in Section~\ref{ch:future}.
 
 Overall, the feedback indicated that the delegation extension provides a substantial and valuable improvement to the vodle platform.
+
+\subsection{Summary}
+
+The evaluation demonstrates that the delegation features implemented in vodle successfully met the project's functional and non-functional objectives. Testing confirmed correctness and scalability, while feedback from Jobst Heitzig validated both the usability of the user interface and the seamlessness of the backend integration. Although a potential race condition during simultaneous delegation submissions was identified, it was judged to be easily addressable. The extension objective, implementation of agent-based modelling, was not completed due to time constraints but is identified as a priority for future work. Overall, the system achieves its core goals and provides a substantial improvement to vodle's decision-making capabilities.

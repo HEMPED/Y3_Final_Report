@@ -18,7 +18,7 @@ Several studies have explored delegation structures within liquid democracy syst
 
 \subsubsection{Mathematical Modelling and Synthetic Evaluation}
 
-\citet{brill_liquid_2021} and evaluated various delegation rules on both synthetic and real-world datasets. However, their models assumed fixed agent preferences without modelling trust evolution or delegation reassignment.
+\citet{brill_liquid_2022} evaluated various delegation rules on both synthetic and real-world datasets. However, their models assumed fixed agent preferences without modelling trust evolution or delegation reassignment.
 
 \subsubsection{Formal Binary Models}
 
@@ -66,25 +66,25 @@ Agents periodically re-evaluate their delegations, switching delegates or revert
 Incorporating varied agent behaviour, including:
 
 \begin{itemize}
-    \item \textbf{Overconfident Delegation}: Agents delegate even when it reduces decision quality, as discussed in~\citet{casella_2022}.
-    \item \textbf{Reluctance to Delegate}: Agents prefer self-representation despite potential benefits from delegation.
+    \item \textbf{Overconfident Delegation}: Agents may choose to delegate even when could reduce the quality of the overall result~\citep{casella_2022}.
+    \item \textbf{Reluctance to Delegate}: Agents could prefer self-representation despite potential benefits from delegation.
 \end{itemize}
-
-Such diversity better captures real-world voter behaviour and system robustness.
 
 \subsection{Evaluation Metrics}
 
-Simulation outcomes could be evaluated through:
+To assess the effectiveness and fairness of delegation mechanisms in agent-based simulations, a clear set of evaluation metrics is needed. These metrics should capture both the distribution of voting power and the structural properties of the delegation network.
 
 \subsubsection{Voting Power Distribution}
 
-Applying inequality measures:
+Voting power in liquid democracy systems can be viewed as a transferable resource, similar to wealth or income. As it flows through delegation chains, it can become unevenly distributed, concentrating influence in the hands of a few. To quantify and monitor this distribution, standard inequality metrics from economics can be applied:
 
 \begin{itemize}
-    \item \textbf{Lorenz Curve}: Depicts cumulative voting power distribution~\citep{cowell_measuring_inequality}.
-    \item \textbf{Gini Coefficient}: Quantifies inequality, with 0 indicating perfect equality and 1 maximal inequality.
-    \item \textbf{Maximum Voting Weight}: Tracks concentration of power.
+    \item \textbf{Lorenz Curve}: The Lorenz curve plots the cumulative share of total voting power against the cumulative share of voters, sorted from least to most powerful~\citep{cowell_measuring_inequality}. A perfectly equal system would produce a diagonal line; greater curvature indicates greater inequality.
+    \item \textbf{Gini Coefficient}: The Gini coefficient summarises the Lorenz curve into a single value between 0 and 1, where 0 represents perfect equality and 1 represents maximum inequality~\citep{cowell_measuring_inequality}.
+    \item \textbf{Maximum Voting Weight}: Tracking the maximum voting weight held by any single agent provides a direct measure of super-voter emergence.
 \end{itemize}
+
+These measures, traditionally used in economic contexts to assess wealth inequality, are well-suited for evaluating how fairly voting power is distributed within a delegation network.
 
 \subsubsection{Delegation Network Structure}
 

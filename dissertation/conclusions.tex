@@ -1,33 +1,13 @@
 \chapter{Conclusion}\label{ch:conclusions}
-This project set out to integrate a fully-featured liquid democracy system into vodle, a web-based platform for participatory decision-making. Through the introduction of transitive, ranked, per-option, and weighted delegation mechanisms, the system now enables users to flexibly delegate their influence based on trust, expertise, and personal preference.
 
-The project successfully addressed key limitations of traditional liquid democracy systems, such as cycle formation, vulnerability to abstentions, and super-voter emergence. The core delegation model enforces global consistency and prevents cyclic dependencies. Ranked delegation was implemented to prevent loss of votes when preferred delegates are unavailable, while per-option delegation provides fine-grained control across different issues. Weighted delegation, implemented through a variable trust model, allows nuanced and resilient distribution of influence across multiple trusted delegates.
+This project has successfully designed, implemented, and evaluated a comprehensive liquid democracy system within the vodle platform. The work advances vodle from a system reliant on direct voting alone to one capable of supporting flexible, transitive, ranked, and weighted delegation, thereby greatly expanding user autonomy and participation options. Several complex delegation models were integrated -- including ranked delegation using the MinSum rule, per-option delegation, and trust-based weighted delegation -- with cycle prevention and client-side resolution mechanisms ensuring system consistency despite the architectural constraints of a CouchDB-backed, serverless design.
 
-Extensive unit testing demonstrated the correctness and robustness of the delegation mechanisms across a wide range of scenarios, including long delegation chains, cycle prevention, and multi-delegate trust distributions. Performance testing confirmed that the weighted delegation system scales linearly with the number of participants, achieving fast convergence times even under adversarial conditions.
+The project's technical contribution lies in the development of a client-side delegation framework compatible with real-time collaborative environments without requiring server-side computation. Special attention was given to resolving key challenges such as cycle detection, delegation graph resolution, and maintaining user privacy. Furthermore, this work proposes solutions for critical scalability issues, notably the potential database collisions caused by shared delegation maps, laying out pathways for future architectural improvements through strategies like per-user delegation documents.
 
-The design choices were informed by both theoretical research and practical constraints imposed by vodle's serverless, client-driven architecture. In particular, careful consideration was given to ensuring that all delegation resolution and validation logic could be performed efficiently on the client side without requiring backend processing.
+This contribution is highly relevant to the field of Computer Science, particularly in areas such as computational social choice, participatory system design, and decentralised decision-making architectures. It demonstrates practical methods to balance decentralisation, flexibility, and reliability -- trade-offs that are central to many modern digital decision-making platforms.
 
-Overall, the project shows that liquid democracy -- including advanced features like weighted delegation -- can be made practical, scalable, and user-friendly within real-time web environments. The resulting system significantly enhances vodle's ability to support flexible, inclusive, and resilient collective decision-making.
+Other developers and researchers can build upon this work by adopting or extending the delegation models presented here. The delegation structures and resolution algorithms are adaptable to a wide range of decision-making contexts beyond vodle, such as online governance platforms, collaborative filtering systems, and digital democracy initiatives.
 
-Future work could explore further refinements, including enhanced transparency tools, delegation expiry mechanisms, and deeper simulation of delegation dynamics via agent-based modelling. Nevertheless, the project establishes a strong foundation for liquid democracy in web-based rating systems, and demonstrates its viability for broader deployment.
+The project represents a significant achievement in its integration of complex liquid democracy mechanisms within tight architectural constraints, preserving usability, efficiency, and trustworthiness for end users. It required extensive background research, careful technical design, and iterative validation to ensure correctness and scalability, all of which were successfully delivered within the project timeline.
 
-
-% \section{Author's Assessment of the Project}
-% ``It can be a useful exercise for you (and a point of consolidation for the reader) to put together a brief summary of what you have achieved. This is not a compulsory section, but a self-assessment is welcome. A suggested format for this is to include a short section entitled 'Author's Assessment of the Project' consisting of brief (up to 100 words) answers to each of the following questions.
-
-% \begin{itemize}
-% \item What is the (technical) contribution of this project?
-% \item Why should this contribution be considered relevant and important for the subject of your degree?
-% \item How can others make use of the work in this project?
-% \item Why should this project be considered an achievement?
-% \item What are the limitations of this project?
-% \end{itemize}''
-% \subsection*{What is the (technical) contribution of this project?}
-
-% \subsection*{Why should this contribution be considered relevant and important for the subject of your degree?}
-
-% \subsection*{How can others make use of the work in this project?}
-
-% \subsection*{Why should this project be considered an achievement?}
-
-% \subsection*{What are the limitations of this project?}
+Nonetheless, some limitations remain. The database collision issue, while identified and partially addressed, requires deeper architectural redesign for full resolution. Furthermore, the agent-based simulation component, though proposed and partially scoped, was not fully implemented within the available time. Finally, large-scale empirical validation on live user data remains an avenue for future work.

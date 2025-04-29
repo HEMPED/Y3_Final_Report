@@ -116,17 +116,17 @@ This section evaluates the project against the specific functional and non-funct
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1.1: Users can invite others to act as their delegate & Achieved \\ \hline
-FR1.2: Users can accept delegation requests & Achieved \\ \hline
-FR1.3: Users are prevented from delegating to themselves & Achieved \\ \hline
-FR1.4: Delegation cycles are detected and prevented & Achieved \\ \hline
-FR2: Users can view and revoke delegations & Achieved \\ \hline
-FR3: Delegations are resolved transitively & Achieved \\ \hline
-FR4: Users can override delegated votes & Achieved \\ \hline
-NFR1: Delegation data stored as JSON & Achieved \\ \hline
-NFR2: Schema changes backward compatible & Achieved \\ \hline
-NFR3: Privacy preserved (only final outcomes visible) & Achieved \\ \hline
-NFR4: Delegation UI intuitive & Achieved \\ \hline
+FR1.1: Users can invite others to act as their delegate & Met \\ \hline
+FR1.2: Users can accept delegation requests & Met \\ \hline
+FR1.3: Users are prevented from delegating to themselves & Met \\ \hline
+FR1.4: Delegation cycles are detected and prevented & Met \\ \hline
+FR2: Users can view and revoke delegations & Met \\ \hline
+FR3: Delegations are resolved transitively & Met \\ \hline
+FR4: Users can override delegated votes & Met \\ \hline
+NFR1: Delegation data stored as JSON & Met \\ \hline
+NFR2: Schema changes backward compatible & Met \\ \hline
+NFR3: Privacy preserved (only final outcomes visible) & Met \\ \hline
+NFR4: Delegation UI intuitive & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 1: Core Delegation Model Requirements}
 \label{tab:objective1_requirements}
@@ -159,12 +159,12 @@ this._setp_in_polldb(pid, `poll.{pid}.inverse_indirect_map`, jsonData);
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Users can specify up to 3 ranked delegates & Achieved \\ \hline
-FR2: Ranked delegation resolution follows MinSum rule & Achieved \\ \hline
-FR3: Users can override ranked delegation by direct voting & Achieved \\ \hline
-FR4: Users can view, reorder, and revoke ranked delegations & Achieved \\ \hline
-NFR1: UI intuitive & Achieved \\ \hline
-NFR2: Data stored as JSON & Achieved \\ \hline
+FR1: Users can specify up to 3 ranked delegates & Met \\ \hline
+FR2: Ranked delegation resolution follows MinSum rule & Met \\ \hline
+FR3: Users can override ranked delegation by direct voting & Met \\ \hline
+FR4: Users can view, reorder, and revoke ranked delegations & Met \\ \hline
+NFR1: UI intuitive & Met \\ \hline
+NFR2: Data stored as JSON & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 2: Ranked Delegation Requirements}
 \label{tab:objective2_requirements}
@@ -188,12 +188,12 @@ NFR2: Data stored as JSON & Achieved \\ \hline
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Users can delegate to multiple users simultaneously & Achieved \\ \hline
-FR2: Trust weights sum to no more than 0.99 & Achieved \\ \hline
-FR3: Trust matrix model used for final rating calculation & Achieved \\ \hline
-NFR1: Weighted delegation calculated client-side & Achieved \\ \hline
-NFR2: Data serialised as JSON & Achieved \\ \hline
-NFR3: UI provided for adjusting trust weights & Achieved \\ \hline
+FR1: Users can delegate to multiple users simultaneously & Met \\ \hline
+FR2: Trust weights sum to no more than 0.99 & Met \\ \hline
+FR3: Trust matrix model used for final rating calculation & Met \\ \hline
+NFR1: Weighted delegation calculated client-side & Met \\ \hline
+NFR2: Data serialised as JSON & Met \\ \hline
+NFR3: UI provided for adjusting trust weights & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 3: Weighted Delegation Requirements}
 \label{tab:objective3_requirements}
@@ -218,12 +218,12 @@ NFR3: UI provided for adjusting trust weights & Achieved \\ \hline
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Users can assign different delegates per option & Achieved \\ \hline
-FR2: Option-specific delegation resolution independent & Achieved \\ \hline
-FR3: Users can override delegated votes per option & Achieved \\ \hline
-FR4: UI for per-option viewing and revocation & Achieved \\ \hline
-NFR1: UI clearly indicates delegate per option & Achieved \\ \hline
-NFR2: Data storage remains CouchDB compatible & Achieved \\ \hline
+FR1: Users can assign different delegates per option & Met \\ \hline
+FR2: Option-specific delegation resolution independent & Met \\ \hline
+FR3: Users can override delegated votes per option & Met \\ \hline
+FR4: UI for per-option viewing and revocation & Met \\ \hline
+NFR1: UI clearly indicates delegate per option & Met \\ \hline
+NFR2: Data storage remains CouchDB compatible & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 4: Per-Option Delegation Requirements}
 \label{tab:objective4_requirements}
@@ -246,14 +246,14 @@ NFR2: Data storage remains CouchDB compatible & Achieved \\ \hline
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Model individual agents capable of voting, abstaining, or delegating & Not Achieved \\ \hline
-FR2: Support multiple delegation mechanisms (standard, ranked, weighted) & Not Achieved \\ \hline
-FR3: Allow configuration of simulation parameters (number of agents, etc.) & Not Achieved \\ \hline
-FR4: Track and record key metrics (vote concentration, super-voters, etc.) & Not Achieved \\ \hline
-FR5: Output simulation results in structured format (CSV/JSON) & Not Achieved \\ \hline
-NFR1: Simulation framework must be lightweight and extensible & Not Achieved \\ \hline
-NFR2: Use Mesa and Python libraries (NumPy, Pandas, Matplotlib) & Not Achieved \\ \hline
-NFR3: Support reproducibility with fixed random seeds & Not Achieved \\ \hline
+FR1: Model individual agents capable of voting, abstaining, or delegating & Not Met \\ \hline
+FR2: Support multiple delegation mechanisms (standard, ranked, weighted) & Not Met \\ \hline
+FR3: Allow configuration of simulation parameters (number of agents, etc.) & Not Met \\ \hline
+FR4: Track and record key metrics (vote concentration, super-voters, etc.) & Not Met \\ \hline
+FR5: Output simulation results in structured format (CSV/JSON) & Not Met \\ \hline
+NFR1: Simulation framework must be lightweight and extensible & Not Met \\ \hline
+NFR2: Use Mesa and Python libraries (NumPy, Pandas, Matplotlib) & Not Met \\ \hline
+NFR3: Support reproducibility with fixed random seeds & Not Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Extension Objective: Simulate Delegation Mechanisms Requirements}
 \label{tab:objective5_requirements}
@@ -292,6 +292,6 @@ Overall, while this extension objective was not realised within the project time
 \end{flushright}
     
 
-The feedback from Heitzig confirmed that the project successfully achieved its goals. In particular, the new delegation features were assessed as robust, well-integrated into the existing system, and aligned with vodle's emphasis on user autonomy and transparency. The minor issue of potential race conditions was acknowledged as easily addressable. Potential strategies for mitigating this issue are discussed further in Section~\ref{ch:background}.
+The feedback from Heitzig confirmed that the project successfully achieved its goals. In particular, the new delegation features were assessed as robust, well-integrated into the existing system, and aligned with vodle's emphasis on user autonomy and transparency. The minor issue of potential race conditions was acknowledged as easily addressable. Potential strategies for mitigating this issue are discussed further in Section~\ref{ch:future}.
 
 Overall, the feedback indicated that the delegation extension provides a substantial and valuable improvement to the vodle platform.

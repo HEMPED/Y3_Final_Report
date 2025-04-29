@@ -17,7 +17,7 @@ Several previous studies have examined the delegation structures that emerge wit
 
 % \subsubsection{Mathematical Modelling and Synthetic Evaluation}
 
-% \citet{brill_liquid_2021} formalised a framework for ranked delegations and proposed several delegation rules for resolving delegation paths. Their analysis combined theoretical results with experimental evaluation on both synthetic and real-world datasets. However, their data generation methods created fixed agent preferences and delegation options; dynamic behavioural evolution, trust updates, or delegation reassignment over time were not modelled. As such, while their work offers critical insights into the properties of delegation rules under different conditions, it does not address dynamic aspects of delegation behaviour.
+% \citet{brill_liquid_2022} formalised a framework for ranked delegations and proposed several delegation rules for resolving delegation paths. Their analysis combined theoretical results with experimental evaluation on both synthetic and real-world datasets. However, their data generation methods created fixed agent preferences and delegation options; dynamic behavioural evolution, trust updates, or delegation reassignment over time were not modelled. As such, while their work offers critical insights into the properties of delegation rules under different conditions, it does not address dynamic aspects of delegation behaviour.
 
 \subsubsection{Mathematical Modelling and Synthetic Evaluation}
 
@@ -101,9 +101,15 @@ The structure of the delegation network itself would also provide valuable insig
     \item \textbf{Network Connectivity}: Assesses whether the delegation network remains cohesive or fragments into isolated groups.
 \end{itemize}
 
-\subsubsection{Comparative Analysis}
+\subsubsection{Delegation Network Structure}
 
-By applying these metrics across different delegation models -- such as ranked delegation (see Section~\ref{sec:design_ranked_delegation}) or weighted delegation (see Section~\ref{sec:design_per_option_delegation}) -- simulations could systematically compare the performance of different mechanisms. Longitudinal analysis could further reveal whether delegation networks tend toward stability or increasing inequality over time.
+The structure of the delegation network itself would also provide valuable insights:
+
+\begin{itemize}
+    \item \textbf{Average Delegation Path Length}: Indicates the typical number of delegation steps from voters to their representatives.
+    \item \textbf{Cycle Frequency}: Measures the frequency of attempted cycles, even if prevented by the system.
+    \item \textbf{Network Connectivity}: Assesses whether the delegation network remains cohesive or fragments into isolated groups.
+\end{itemize}
 
 \subsection{Summary}
 
@@ -154,6 +160,27 @@ Practically, vodle could implement a system where:
 
 This approach preserves voter transparency without compromising delegate privacy, and aligns with best practices in privacy-respecting liquid democracy systems.
 
+\subsection{Database Collision and Shared Map Scalability}
+
+Currently, vodle stores shared delegation data structures, such as the \texttt{direct\_delegation\_map}, within a single poll document. This design sufficed during initial development when delegation usage was limited. However, feedback from the project customer (see Section~\ref{sec:feedback}) highlighted significant risks associated with this approach as delegation features become more heavily used.
+
+Since multiple users indirectly modify these shared maps when accepting, rejecting, or revoking delegations, concurrent updates risk overwriting each other -- a form of database collision. In CouchDB's document model, each write operation replaces the entire document. If two users attempt to update delegations simultaneously, one user's update can overwrite or erase the other's unless complex conflict resolution strategies are employed. This problem will intensify as user numbers grow, threatening the consistency and reliability of the delegation system.
+
+Several potential strategies to address this issue were identified for future work:
+
+\begin{itemize} \item \textbf{Per-User Delegation Documents}: Rather than storing all delegations in a single shared map, each user could maintain a private delegation document representing their outgoing delegations. The system would then dynamically resolve the global delegation graph client-side by aggregating relevant user documents during poll resolution. This would eliminate write contention between users, at the cost of increased client-side complexity and resolution time.
+
+\begin{itemize}
+\item \textbf{Map Sharding}: An alternative is to partition the delegation maps by option, user group, or another shard key, storing smaller, independently modifiable documents. This reduces the likelihood of write conflicts but would require careful coordination when resolving delegations across shards.
+
+\item \textbf{Delegation Transaction Log}: Instead of updating full maps, each delegation action (invite, accept, revoke) could be stored as an immutable event in a transaction log. Clients would replay the log to reconstruct the current delegation state. While this approach scales well and aligns with CouchDB's append-only model, it would require significant changes to vodle's frontend logic.
+
+\item \textbf{Conflict-Aware Resolution}: If shared maps remain in use, conflict detection and manual resolution mechanisms could be implemented. Clients would detect CouchDB conflicts during sync and prompt users to retry operations. However, this approach may harm user experience and remains unresponsive under heavy concurrency.
+\end{itemize}
+
+Given vodle's lightweight, client-driven architecture, moving toward per-user delegation documents the most appropriate long-term solution. It preserves client autonomy, aligns with CouchDB's document model, and allows parallel updates without collision risk. However, implementing this change would require reworking how delegation resolution, cycle detection, and weighted voting are performed, and therefore represents a significant engineering effort.
+
 \section{Summary}
 
-This chapter has outlined potential directions for extending vodle's delegation system and for investigating the dynamics of liquid democracy through simulation. Agent-based modelling could offer insights into the evolution of trust and delegation behaviour, while platform-level enhancements such as global delegations, delegation expiry mechanisms, and privacy-preserving auditability would further strengthen usability and transparency. Together, these developments would support more flexible, scalable, and trustworthy decision-making systems based on liquid democracy principles.
+This chapter has outlined potential directions for extending vodle's delegation system and for investigating the dynamics of liquid democracy through simulation. Agent-based modelling could offer insights into the evolution of trust and delegation behaviour, while platform-level enhancements such as global delegations, delegation expiry mechanisms, and privacy-preserving auditability would further strengthen usability and transparency.
+Additionally, addressing database collision risks through per-user delegation documents or other strategies would ensure the system remains performant as user numbers grow. Together, these developments would support more flexible, scalable, and trustworthy decision-making systems based on liquid democracy principles.

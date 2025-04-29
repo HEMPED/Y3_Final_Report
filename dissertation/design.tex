@@ -3,7 +3,9 @@
 This chapter describes the design decisions and implementation work undertaken to meet the core objectives of the project.
 Each section focuses on a major delegation mechanism introduced into vodle. These include: a core delegation model providing global consistency and cycle prevention; ranked delegation allowing users to specify backup preferences; per-option delegation enabling different delegates for different poll options; and weighted delegation allowing fractional trust-based voting.
 
-Due to the distinct design challenges of each delegation mechanism, they were developed as separate modes rather than fully interoperable features. When creating a poll, users must select a single delegation mode -- standard delegation, ranked delegation, weighted delegation, or per-option delegation -- which determines the delegation features available during voting.
+Due to the distinct design goals of each delegation mechanism, they were developed as separate modes rather than fully interoperable features. When creating a poll, users must select a single delegation mode -- standard delegation, ranked delegation, weighted delegation, or per-option delegation -- which then determines the available delegation features during voting.
+
+This separation also reflects the project's longer-term intention: in the final version of vodle, only one delegation mechanism will be retained (see Chapter~\ref{ch:conclusions} for more details). Exploring multiple modes in the development environment allowed evaluation of different approaches, but mixing modes within a single poll was deliberately avoided. Allowing poll creators to combine delegation features could introduce bias by letting them selectively favour mechanisms advantageous to themselves. By enforcing a single, consistent delegation mode per poll, vodle preserves fairness and neutrality.
 
 The design and implementation challenges for each mechanism are presented in turn, followed by a summary of how they were integrated into vodle's architecture.
 
@@ -18,9 +20,9 @@ Vodle is built as a serverless web application that emphasises accessibility, cl
 \end{enumerate}
 
 \subsubsection{Implications of This Architecture}
-Vodle's serverless architecture has several implications for the design and implementation of the delegation mechanisms, especially due to the absence of a traditional data processing backend. The following points summarise the key considerations:
+This architecture has several implications for the design and implementation of the delegation mechanisms. These arise especially due to the absence of a traditional data processing backend. The following points summarise the key considerations:
 \begin{itemize}
-  \item All vote delegation logic, including transitive resolution, cycle detection, and weighted delegation calculations, must be executed in the browser. This places constraints on performance and requires careful optimisation of algorithms used.
+  \item All vote delegation logic, including transitive resolution, cycle detection, and weighted delegation calculations, must be executed in the browser, placing constraints on performance and requires careful optimisation of algorithms used.
   \item CouchDB's document-based storage model means that all data must be serialised and deserialised in JSON format. This affects how data structures are designed and manipulated, as well as how they are stored and retrieved from the database.
 \end{itemize}
 
@@ -51,8 +53,7 @@ Together, these constraints shape some of the design and implementation choices 
 In order to provide a reliable foundation for liquid democracy within vodle, the core delegation model was redesigned to ensure consistent, cycle-free delegation across all users. The new system addresses the critical flaws of the previous implementation by maintaining a global view of the delegation graph and enforcing delegation validation at the moment of acceptance. Delegations are initiated through explicit invitation links, preserving user autonomy, and direct votes override delegations on a per-option basis. These improvements ensure that delegation relationships are robust, transparent, and correctly resolved across all clients.
 
 \subsection{Limitations of the Pre-existing Implementation}
-
-Before this project began, vodle included a partially implemented delegation system. Although disabled due to critical flaws, the system introduced several foundational ideas and structures that influenced the final design. This section introduces the key data structures used in the original model, explains the intended delegation flow, and analyses why a redesign was necessary.
+Prior to the inception of this project, vodle included a partially implemented delegation system. Although disabled due to critical flaws, the system introduced several foundational ideas and structures that influenced the final design. This section introduces the key data structures used in the original model, explains the intended delegation flow, and analyses why a redesign was necessary.
 
 \subsubsection*{Delegation Maps}
 
@@ -61,7 +62,7 @@ The delegation mechanism relied on several maps to track how votes were delegate
 \begin{itemize}
     \item \textbf{direct\_delegation\_map}: This map recorded direct delegation relationships. For each option ID (\texttt{oid}), it stored a mapping from voter IDs to the user they directly delegated to.
 
-    \item \textbf{effective\_delegation\_map}: This map stored the final casting voter for each user by resolving the full transitive chain of delegations. For example, if user A delegated to B and B delegated to C, the effective delegate of A was C.
+    \item \textbf{effective\_delegation\_map}: This map stored the final casting voter for each user by resolving the full transitive chain of delegations. For example, if user A delegated to user B and user B delegated to user C, the effective delegate of user A was user C.
 
     \item \textbf{inv\_effective\_delegation\_map}: The inverse of the effective map. For each user, it stored the set of voters whose votes were ultimately counted under them. This was useful for computing voting weights and for cycle detection.
 \end{itemize}
@@ -203,7 +204,7 @@ This map enables several key operations required for maintaining a consistent an
 \]
 \end{itemize}
 
-\subsubsection{Delegated Vote Override}
+\subsubsection{Overriding Delegated Vote}
 
 The original vodle implementation included basic support for per-option overriding of delegated votes: when a user had active delegations, a banner such as ``\texttt{B controls some of your waps as your delegate}'' was displayed, and users could manually toggle between using their delegate's rating or submitting their own per poll option. However, the existing override functionality was inconsistent and often failed to update the UI correctly when delegation states changed. As part of this project, the override system was revised and extended to integrate reliably with the redesigned core delegation model, as well as the new ranked, weighted, and per-option delegation mechanisms developed during this project.
 
@@ -420,14 +421,13 @@ Only unused ranks are displayed to the user, avoiding manual validation and main
 
 \subsection{Managing and Reordering Delegations}
 
-This project also introduced a new user interface for managing existing delegations during an active poll. This work supports functional requirements FR4 (provide users with a clear view of their ranked delegation choices, including the ability to alter their rankings at any time) as specified in Section~\ref{subsec:requirements_ranked_delegation}. Users can view their current delegations, revoke them, or reorder them via drag-and-drop.
-
-The management interface is provided through an information dialog listing all current delegates, their assigned ranks, and their acceptance status.
+This project also introduced a new user interface for managing existing delegations during an active poll. This work supports functional requirements FR4 (provide users with a clear view of their ranked delegation choices, including the ability to alter their rankings at any time) as specified in the requirements (see Section~\ref{req_ranked}). Users can view their current delegations, revoke them, or reorder them via drag-and-drop. This interface is provided through an information dialog, as shown in in Figure~\ref{fig:info_rank} and can be accessed by pressing the information button shown in in Figure~\ref{fig:info_button_rank}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{../common/vodle_screenshots/ranked_where_info_button.png}
   \caption{The information dialog can be accessed by tapping the information icon (second icon from the left) in the delegation info banner.}
+  \label{fig:info_button_rank}
 \end{figure}
 
 \begin{figure}[H]
@@ -444,8 +444,8 @@ The management interface is provided through an information dialog listing all c
   \includegraphics[width=\linewidth]{../common/vodle_screenshots/ranked_info_reorder.png}
   \caption{Reordering mode enabled. Users can drag delegates to reorder their ranks and then save.}
   \end{subfigure}
-  
   \caption{Information dialog for managing and reordering ranked delegations which appears after clicking the information button.}
+  \label{fig:info_rank}
 \end{figure}
 
 \subsubsection{Drag-and-Drop Reordering Logic}
@@ -514,7 +514,7 @@ Ranked delegation extended the core model by allowing users to specify multiple 
 \section{Implement Per-Option Delegation}
 \label{sec:design_per_option_delegation}
 
-To better reflect the varying expertise and trust relationships that arise across different decision topics, per-option delegation was introduced into vodle. This feature allows users to assign different delegates for individual poll options, providing significantly greater flexibility than poll-wide delegation models. Implementing per-option delegation required substantial changes to vodle's delegation architecture, including the restructuring of core data maps and modifications to the delegation resolution logic to support independent per-option graphs.
+To better reflect the varying expertise and trust relationships that arise across different decision topics, per-option delegation was introduced into vodle. This feature allows users to assign different delegates for individual poll options, providing significantly greater flexibility than poll-wide delegation models.
 
 Supporting per-option delegation required significant changes to vodle's delegation architecture. Both the \texttt{direct\_delegation\_map} and \texttt{inverse\_indirect\_map} were refactored to operate on a per-option basis:
 
@@ -615,11 +615,11 @@ Per-option delegation introduced the ability for users to assign different deleg
 
 Building on the earlier delegation models, weighted delegation was introduced to enable users to distribute their voting power fractionally across multiple trusted delegates. This approach enhances resilience against vote loss, mitigates the emergence of super-voters, and allows users to express nuanced trust relationships more accurately. This section outlines the design and implementation of weighted delegation in vodle, addressing Objective 4 of the project.
 
-The system builds upon the trust matrix model introduced in Section~\ref{subsec:background_weighted_delegation} but adapts it to vodle's client-driven, real-time environment, where all computation must be efficiently performed within the browser.
+The system builds upon the trust matrix model introduced in Section~\ref{subsec:background_weighted_delegation} but adapts it to vodle's architecture, where all computation must be efficiently performed within the browser.
 
 \subsection{Data Structures}
 
-To accommodate weighted delegation, the \texttt{direct\_delegation\_map} was adapted to store the trust values instead of ranks:
+To accommodate weighted delegation, the \texttt{direct\_delegation\_map} was adapted to store trust values instead of ranks:
 
 \[
 [delegation\_id, trust\_value, status]
@@ -674,7 +674,7 @@ This dual-interface design ensures accessibility for casual users while granting
   \begin{subfigure}[t]{0.45\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../common/weighted_sc/expert.png}
-  \caption{Export mode enabled. Users can edit the trust of their delegations and save.}
+  \caption{Expert mode enabled. Users can edit the trust of their delegations and save.}
   \end{subfigure}
   
   \caption{Information dialog for managing and editing weighted delegations which appears after clicking the information button.}
@@ -685,7 +685,7 @@ This dual-interface design ensures accessibility for casual users while granting
 
 The weighted delegation resolution algorithm ensures that updates to ratings or trust assignments propagate accurately through the delegation network. This is crucial because vodle operates entirely client-side: no backend process is available to recalculate or correct inconsistencies. Therefore, any updates must be performed reliably and efficiently in the user's browser.
 
-The central function responsible for computing updated ratings is \texttt{update\_effective\_votes()}. It is triggered when users modify either their self-assigned ratings or their delegation relationships:
+The central function responsible for computing updated ratings is \\\texttt{update\_effective\_votes()}, which is called whenever users modify their self-assigned ratings of poll options or delegation relationships (changing trust, adding a delegate, or removing a delegate):
 
 \begin{minted}{typescript}
 call_update_effective_votes() {

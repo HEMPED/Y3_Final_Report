@@ -202,9 +202,9 @@ This map enables several key operations required for maintaining a consistent an
 
 \subsubsection{Overriding Delegated Vote}
 
-The original vodle implementation included basic support for per-option overriding of delegated votes: when a user had active delegations, a banner such as ``\texttt{B controls some of your waps as your delegate}'' was displayed, and users could manually toggle between using their delegate's rating or submitting their own per poll option. However, the existing override functionality was inconsistent and often failed to update the UI correctly when delegation states changed. As part of this project, the override system was revised and extended to integrate reliably with the redesigned core delegation model, as well as the new ranked, weighted, and per-option delegation mechanisms developed during this project.
+The original vodle implementation included basic support for per-option overriding of delegated votes: when a user had active delegations, a banner such as ``\texttt{B controls some of your waps as your delegate}'' was displayed, and users could manually toggle between using their delegate's rating or submitting their own per poll option. However, the existing override functionality was inconsistent and often failed to update the UI correctly when delegation states changed. This override system was revised and extended to integrate reliably with the redesigned core delegation model, as well as the new ranked, weighted, and per-option delegation mechanisms developed during this project.
 
-The toggle for each poll option was backed by the \texttt{rate\_yourself\_toggle[option\_id]} array. When set to \texttt{true}, the user's own rating was applied; otherwise, the delegated rating was used. The number of options under delegation was tracked using the following logic:
+The toggle for each poll option was set by the \texttt{rate\_yourself\_toggle[option\_id]} array. When set to \texttt{true}, the user's own rating was applied; otherwise, the delegated rating was used. The number of options under delegation was tracked using the following logic:
 
 \begin{minted}{typescript}
 n_delegated = 0;
@@ -504,7 +504,7 @@ Saving the updated order commits the changes to the local delegation structure a
 
 Ranked delegation extended the core model by allowing users to specify multiple backup delegates, ranked by trust preference. Using the MinSum rule, the system dynamically selects the delegation path with the lowest cumulative rank cost, ensuring that votes flow through the most preferred available delegates. A new drag-and-drop interface was introduced to enable users to easily manage and reorder their ranked delegates during an active poll.
 
-\section{Implement Per-Option Delegation}
+\section{Implement Per-Option Delegation into Vodle}
 \label{sec:design_per_option_delegation}
 
 To better reflect the varying expertise and trust relationships that arise across different decision topics, per-option delegation was introduced into vodle. This feature allows users to assign different delegates for individual poll options, providing significantly greater flexibility than poll-wide delegation models.
@@ -520,7 +520,10 @@ Supporting per-option delegation required significant changes to vodle's delegat
 
   \item \texttt{inverse\_indirect\_map}: Similarly adapted to maintain descendant relationships independently for each option:
   \[
-    \texttt{option\_id} \rightarrow \texttt{user\_id} \rightarrow \text{list of users who delegate to this user (directly or indirectly)}
+  \begin{aligned}
+    \texttt{option\_id} &\rightarrow \texttt{user\_id} \\
+                     &\rightarrow \text{list of users who delegate to this user (directly or indirectly)}
+\end{aligned}
   \]
 \end{itemize}
 

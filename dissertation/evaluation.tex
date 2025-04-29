@@ -116,17 +116,17 @@ This section evaluates the project against the specific functional and non-funct
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1.1: Users can invite others to act as their delegate & Met \\ \hline
-FR1.2: Users can accept delegation requests & Met \\ \hline
-FR1.3: Users are prevented from delegating to themselves & Met \\ \hline
-FR1.4: Delegation cycles are detected and prevented & Met \\ \hline
-FR2: Users can view and revoke delegations & Met \\ \hline
-FR3: Delegations are resolved transitively & Met \\ \hline
-FR4: Users can override delegated votes & Met \\ \hline
-NFR1: Delegation data stored as JSON & Met \\ \hline
-NFR2: Schema changes backward compatible & Met \\ \hline
-NFR3: Privacy preserved (only final outcomes visible) & Met \\ \hline
-NFR4: Delegation UI intuitive & Met \\ \hline
+\textbf{FR1.1:} Users can invite others to act as their delegate & Met \\ \hline
+\textbf{FR1.2:} Users can accept delegation requests & Met \\ \hline
+\textbf{FR1.3:} Users are prevented from delegating to themselves & Met \\ \hline
+\textbf{FR1.4:} Delegation cycles are detected and prevented & Met \\ \hline
+\textbf{FR1.5:} Users can view and revoke delegations & Met \\ \hline
+\textbf{FR1.6:} Delegations are resolved transitively & Met \\ \hline
+\textbf{FR1.7:} Users can override delegated votes & Met \\ \hline
+\textbf{NFR1.1:} Delegation data stored as JSON & Met \\ \hline
+\textbf{NFR1.2:} Schema changes backward compatible & Met \\ \hline
+\textbf{NFR1.3:} Privacy preserved (only final outcomes visible) & Met \\ \hline
+\textbf{NFR1.4:} Delegation UI intuitive & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 1: Core Delegation Model Requirements}
 \label{tab:objective1_requirements}
@@ -138,18 +138,18 @@ NFR4: Delegation UI intuitive & Met \\ \hline
     \item \textbf{FR1.1 and FR1.2:} Achieved through the delegation invitation system, where users generate a secure, unique link to invite another user to act as their delegate (see Section~\ref{subsec:design_core}, Figure~\ref{fig:delegation-flow-accept}). This process includes both sending and accepting a delegation request, ensuring that all delegations are consensual.
     \item \textbf{FR1.3:} This is enforced proactively when accepting a delegation (see Section~\ref{subsec:design_core}).
     \item \textbf{FR1.4:} Cycle prevention is enforced proactively when accepting a delegation (see Section~\ref{subsec:design_core}, Figure~\ref{fig:del-accept-cycle}).
-    \item \textbf{FR2:} Users can view their current delegation and revoke it by pressing a button (see Figure~\ref{fig:vote_override}).
-    \item \textbf{FR3:} Delegations resolve transitively, meaning that if A delegates to B and B delegates to C, then A effectively delegates to C unless overridden (Section~\ref{subsec:design_core}).
-    \item \textbf{FR4:} Toggles are implemented, allowing users to switch between their delegate's and their own vote (see Figure~\ref{fig:vote_override}).
-    \item \textbf{NFR1 and NFR2:} All data is serialised and stored in JSON, example below:
+    \item \textbf{FR1.5:} Users can view their current delegation and revoke it by pressing a button (see Figure~\ref{fig:vote_override}).
+    \item \textbf{FR1.6:} Delegations resolve transitively, meaning that if A delegates to B and B delegates to C, then A effectively delegates to C unless overridden (Section~\ref{subsec:design_core}).
+    \item \textbf{FR1.7:} Toggles are implemented, allowing users to switch between their delegate's and their own vote (see Figure~\ref{fig:vote_override}).
+    \item \textbf{NFR1.1 and NFR1.2:} All data is serialised and stored in JSON, example below:
 \begin{minted}{typescript}
 save_inverse_indirect_map(pid: string, oid: string, val: Map<string, string>) {
 const jsonData = JSON.stringify(Array.from(mp.entries(), ([k, v]) => [k, Array.from(v.entries())]));
 this._setp_in_polldb(pid, `poll.{pid}.inverse_indirect_map`, jsonData);
 }
 \end{minted}
-    \item \textbf{NFR3:} Only the final vote is visible to the delegated voter (see Figure~\ref{fig:vote_override}).
-    \item \textbf{NFR4:} Only one step is required to initiate (create an invite) or remove (press the revoke button) a delegation.
+    \item \textbf{NFR1.3:} Only the final vote is visible to the delegated voter (see Figure~\ref{fig:vote_override}).
+    \item \textbf{NFR1.4:} Only one step is required to initiate (create an invite) or remove (press the revoke button) a delegation.
 \end{itemize}
 
 \subsection{Objective 2: Implement Ranked Delegation}
@@ -159,12 +159,12 @@ this._setp_in_polldb(pid, `poll.{pid}.inverse_indirect_map`, jsonData);
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Users can specify up to 3 ranked delegates & Met \\ \hline
-FR2: Ranked delegation resolution follows MinSum rule & Met \\ \hline
-FR3: Users can override ranked delegation by direct voting & Met \\ \hline
-FR4: Users can view, reorder, and revoke ranked delegations & Met \\ \hline
-NFR1: UI intuitive & Met \\ \hline
-NFR2: Data stored as JSON & Met \\ \hline
+\textbf{FR2.1:} Users can specify up to 3 ranked delegates & Met \\ \hline
+\textbf{FR2.2:} Ranked delegation resolution follows MinSum rule & Met \\ \hline
+\textbf{FR2.3:} Users can override ranked delegation by direct voting & Met \\ \hline
+\textbf{FR2.4:} Users can view, reorder, and revoke ranked delegations & Met \\ \hline
+\textbf{NFR2.1:} Data stored as JSON & Met \\ \hline
+\textbf{NFR2.2:} UI intuitive & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 2: Ranked Delegation Requirements}
 \label{tab:objective2_requirements}
@@ -173,12 +173,12 @@ NFR2: Data stored as JSON & Met \\ \hline
 \subsubsection{Discussion:}
 
 \begin{itemize}
-    \item \textbf{FR1:} Users are able to assign up to three delegates in a ranked order when setting up a delegation. Uniqueness is enforced when creating an invite (see Section~\ref{sec:design_ranked_delegation}).
-    \item \textbf{FR2:} The MinSum rule is used (see Section~\ref{sec:design_ranked_delegation}).
-    \item \textbf{FR4:} Toggles are implemented, allowing users to switch between their delegate's and their own vote (see Figure~\ref{fig:vote_override}).
-    \item \textbf{FR4:} Users are provided with a drag-and-drop dialog that allows for reordering and removal of ranked delegates (see Section~\ref{sec:design_ranked_delegation}).
-    \item \textbf{NFR1:} The system automatically selects the most preferred (lowest ranked) available delegate in the invitation dialog, minimising user effort and making the ranked delegation implementation intuitive and easy to understand. (See Section~\ref{sec:design_ranked_delegation}, Figure~\ref{fig:ranked_invite}).
-    \item \textbf{NFR2:} Has been achieved using the same methods as Objective 1.
+    \item \textbf{FR2.1:} Users are able to assign up to three delegates in a ranked order when setting up a delegation. Uniqueness is enforced when creating an invite (see Section~\ref{sec:design_ranked_delegation}).
+    \item \textbf{FR2.2:} The MinSum rule is used (see Section~\ref{sec:design_ranked_delegation}).
+    \item \textbf{FR2.3:} Toggles are implemented, allowing users to switch between their delegate's and their own vote (see Figure~\ref{fig:vote_override}).
+    \item \textbf{FR2.4:} Users are provided with a drag-and-drop dialog that allows for reordering and removal of ranked delegates (see Section~\ref{sec:design_ranked_delegation}).
+    \item \textbf{NFR2.1:} Has been achieved using the same methods as Objective 1.
+    \item \textbf{NFR2.2:} The system automatically selects the most preferred (lowest ranked) available delegate in the invitation dialog, minimising user effort and making the ranked delegation implementation intuitive and easy to understand. (See Section~\ref{sec:design_ranked_delegation}, Figure~\ref{fig:ranked_invite}).
 \end{itemize}
 
 \subsection{Objective 3: Implement Weighted Delegation}
@@ -188,12 +188,11 @@ NFR2: Data stored as JSON & Met \\ \hline
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Users can delegate to multiple users simultaneously & Met \\ \hline
-FR2: Trust weights sum to no more than 0.99 & Met \\ \hline
-FR3: Trust matrix model used for final rating calculation & Met \\ \hline
-NFR1: Weighted delegation calculated client-side & Met \\ \hline
-NFR2: Data serialised as JSON & Met \\ \hline
-NFR3: UI provided for adjusting trust weights & Met \\ \hline
+\textbf{FR3.1:} Users can delegate to multiple users simultaneously and trust weights sum to no more than 0.99& Met \\ \hline
+\textbf{FR3.2 }: Trust matrix model used for final rating calculation & Met \\ \hline
+\textbf{NFR3.1:} Weighted delegation calculated client-side & Met \\ \hline
+\textbf{NFR3.2:} Data serialised as JSON & Met \\ \hline
+\textbf{NFR3.3:} UI provided for adjusting trust weights & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 3: Weighted Delegation Requirements}
 \label{tab:objective3_requirements}
@@ -202,28 +201,27 @@ NFR3: UI provided for adjusting trust weights & Met \\ \hline
 \subsubsection{Discussion:}
 
 \begin{itemize}
-    \item \textbf{FR1:} This can be seen in Figure~\ref{fig:weighted_info}.
-    \item \textbf{FR2:} Invitation dialog was extended to allow users to specify a trust level (from 1 to the amount of trust available to delegate), see Figure~\ref{fig:trust-slider}.
-    \item \textbf{FR3:} The final ratings are calculated using an iterative trust matrix model, ensuring that delegation chains propagate weights correctly while converging rapidly to stable outcomes (Section~\ref{sec:design_per_option_delegation}).
-    \item \textbf{NFR1:} Weighted delegation is calculated client-side. (See Section~\ref{sec:design_per_option_delegation}.)
-    \item \textbf{NFR2:} Weighted delegation data is stored using the same method as Objective 1.
-    \item \textbf{NFR3:} An ``expert mode'' was added for adjusting trust values. (See Figure~\ref{fig:weighted_info}.)
+    \item \textbf{FR3.1:} This can be seen in Figure~\ref{fig:weighted_info}.
+    \item \textbf{FR3.2:} Invitation dialog was extended to allow users to specify a trust level (from 1 to the amount of trust available to delegate), see Figure~\ref{fig:trust-slider}. The final ratings are calculated using an iterative trust matrix model, ensuring that delegation chains propagate weights correctly while converging rapidly to stable outcomes (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{NFR3.1:} Weighted delegation is calculated client-side. (See Section~\ref{sec:design_per_option_delegation}.)
+    \item \textbf{NFR3.2:} Weighted delegation data is stored using the same method as Objective 1.
+    \item \textbf{NFR3.3:} An ``expert mode'' was added for adjusting trust values. (See Figure~\ref{fig:weighted_info}.)
 
 \end{itemize}
 
-\subsection{Objective 4: Implement Per-Option Delegation}
+\subsection{Objective 4: Implement Per-Option Delegation into Vodle}
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Users can assign different delegates per option & Met \\ \hline
-FR2: Option-specific delegation resolution independent & Met \\ \hline
-FR3: Users can override delegated votes per option & Met \\ \hline
-FR4: UI for per-option viewing and revocation & Met \\ \hline
-NFR1: UI clearly indicates delegate per option & Met \\ \hline
-NFR2: Data storage remains CouchDB compatible & Met \\ \hline
+\textbf{FR4.1:} Users can assign different delegates per option & Met \\ \hline
+\textbf{FR4.2:} Option-specific delegation resolution independent & Met \\ \hline
+\textbf{FR4.3:} Users can override delegated votes per option & Met \\ \hline
+\textbf{FR4.4:} UI for per-option viewing and revocation & Met \\ \hline
+\textbf{NFR4.1:} Data storage remains CouchDB compatible & Met \\ \hline
+\textbf{NFR4.2:} UI clearly indicates delegate per option & Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Objective 4: Per-Option Delegation Requirements}
 \label{tab:objective4_requirements}
@@ -232,11 +230,11 @@ NFR2: Data storage remains CouchDB compatible & Met \\ \hline
 \subsubsection{Discussion:}
 
 \begin{itemize}
-    \item \textbf{FR1:} See Figure~\ref{fig:per-option-delegation-sc} and Figure~\ref{fig:per-option-delegation-invite}.
-    \item \textbf{FR2:} Delegation resolution is performed at the option level (see Section~\ref{sec:design_per_option_delegation}).
-    \item \textbf{FR3:} This was achieved in a similar manner to Objective 1 (see Figure~\ref{fig:per-option-delegation-sc}).
-    \item \textbf{FR4:} A detailed information dialog shows active per-option delegations and allows individual revocation, improving transparency and user control (Section~\ref{sec:design_per_option_delegation}).
-    \item \textbf{NFR1 and NFR2:} The user interface clearly indicates option-specific delegations, and data storage follows JSON formatting conventions compatible with CouchDB.
+    \item \textbf{FR4.1:} See Figure~\ref{fig:per-option-delegation-sc} and Figure~\ref{fig:per-option-delegation-invite}.
+    \item \textbf{FR4.2:} Delegation resolution is performed at the option level (see Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{FR4.3:} This was achieved in a similar manner to Objective 1 (see Figure~\ref{fig:per-option-delegation-sc}).
+    \item \textbf{FR4.4:} A detailed information dialog shows active per-option delegations and allows individual revocation, improving transparency and user control (Section~\ref{sec:design_per_option_delegation}).
+    \item \textbf{NFR4.1 and NFR4.2:} The user interface clearly indicates option-specific delegations, and data storage follows JSON formatting conventions compatible with CouchDB.
 \end{itemize}
 
 \subsection{Extension Objective: Simulate Delegation Mechanisms}
@@ -246,14 +244,14 @@ NFR2: Data storage remains CouchDB compatible & Met \\ \hline
 \begin{tabular}{|p{9cm}|c|}
 \hline
 \textbf{Requirement} & \textbf{Met?} \\ \hline
-FR1: Model individual agents capable of voting, abstaining, or delegating & Not Met \\ \hline
-FR2: Support multiple delegation mechanisms (standard, ranked, weighted) & Not Met \\ \hline
-FR3: Allow configuration of simulation parameters (number of agents, etc.) & Not Met \\ \hline
-FR4: Track and record key metrics (vote concentration, super-voters, etc.) & Not Met \\ \hline
-FR5: Output simulation results in structured format (CSV/JSON) & Not Met \\ \hline
-NFR1: Simulation framework must be lightweight and extensible & Not Met \\ \hline
-NFR2: Use Mesa and Python libraries (NumPy, Pandas, Matplotlib) & Not Met \\ \hline
-NFR3: Support reproducibility with fixed random seeds & Not Met \\ \hline
+\textbf{FR5.1:} Model individual agents capable of voting, abstaining, or delegating & Not Met \\ \hline
+\textbf{FR5.2:} Support multiple delegation mechanisms (standard, ranked, weighted) & Not Met \\ \hline
+\textbf{FR5.3:} Allow configuration of simulation parameters (number of agents, etc.) & Not Met \\ \hline
+\textbf{FR5.4:} Track and record key metrics (vote concentration, super-voters, etc.) & Not Met \\ \hline
+\textbf{FR5.5:} Output simulation results in structured format (CSV/JSON) & Not Met \\ \hline
+\textbf{NFR5.1:} Simulation framework must be lightweight and extensible & Not Met \\ \hline
+\textbf{NFR5.2:} Use Mesa and Python libraries (NumPy, Pandas, Matplotlib) & Not Met \\ \hline
+\textbf{NFR5.3:} Support reproducibility with fixed random seeds & Not Met \\ \hline
 \end{tabular}
 \caption{Evaluation of Extension Objective: Simulate Delegation Mechanisms Requirements}
 \label{tab:objective5_requirements}
@@ -290,7 +288,7 @@ Overall, while this extension objective was not realised within the project time
     \end{displayquote}
     
 \begin{flushright}
-\textemdash\ Jobst Heitzig
+\textemdash\ Jobst Heitzig, Main Developer of Vodle and Customer.
 \end{flushright}
     
 

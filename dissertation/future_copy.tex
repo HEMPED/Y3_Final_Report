@@ -115,7 +115,7 @@ Currently, delegations are poll-specific. Global delegations -- persisting acros
 Implementation would require:
 
 \begin{itemize}
-    \item Persistent delegation identifiers, scoped to delegation only (preserving poll privacy).
+    \item Persistent delegation identifiers, scoped to delegation only (preserving poll privacy by preventing reverse-engineering of identifiers).
     \item Resolution logic combining global and local delegations.
     \item New UI components for managing global settings.
 \end{itemize}
@@ -145,7 +145,7 @@ This balances accountability with privacy, strengthening user confidence.
 
 \subsection{Database Scalability and Concurrency Issues}
 
-Currently, vodle stores shared delegation data structures, such as the \texttt{direct\_delegation\_map}, within a single poll document. This design sufficed during initial development when delegation usage was limited. However, feedback from the project customer (see Section~\ref{sec:feedback}) highlighted significant risks associated with this approach as delegation features become more heavily used.
+Currently, vodle stores shared delegation data structures, such as the \\\texttt{direct\_delegation\_map}, within a single poll document. This design sufficed during initial development when delegation usage was limited. However, feedback from the project customer (see Section~\ref{sec:feedback}) highlighted significant risks associated with this approach as delegation features become more heavily used.
 
 Since multiple users indirectly modify these shared maps when accepting, rejecting, or revoking delegations, concurrent updates risk overwriting each other -- a form of database collision. In CouchDB's document model, each write operation replaces the entire document. If two users attempt to update delegations simultaneously, one user's update can overwrite or erase the other's unless complex conflict resolution strategies are employed. This problem will intensify as user numbers grow, threatening the consistency and reliability of the delegation system.
 

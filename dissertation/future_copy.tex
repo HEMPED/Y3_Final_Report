@@ -1,6 +1,6 @@
 \chapter{Future Work}\label{ch:future}
 
-This project established a foundation for flexible, transitive, ranked, and weighted delegation within vodle. While the primary development goals were achieved, several areas remain for extension and refinement. These include the development of agent-based simulation tools to better understand delegation dynamics, and the expansion of vodle's delegation features to support a wider range of use cases. Addressing these areas would strengthen both theoretical understanding and practical deployment of liquid democracy systems.
+Building on the foundations established during this project, several opportunities for enhancement have been identified. These include technical extensions to vodle's scalability and trust mechanisms, user interface improvements, and broader theoretical investigations through agent-based simulation of delegation dynamics.
 
 \section{Agent-Based Modelling for Delegation Dynamics}
 
@@ -104,7 +104,7 @@ Comparing metrics across different delegation modes (core, ranked, weighted) to 
 
 Agent-based simulations could reveal how delegation networks emerge, concentrate power, or adapt over time. This would inform design choices for more robust and equitable liquid democracy systems.
 
-\section{Potential Extensions for Vodle}
+\section{Platform Extensions for Vodle}
 
 While vodle's current delegation features substantially extend user flexibility, further enhancements could improve scalability, transparency, and long-term usability.
 
@@ -143,7 +143,25 @@ Transparency into delegation paths increases trust. Vodle could offer auditabili
 
 This balances accountability with privacy, strengthening user confidence.
 
+\subsection{Database Scalability and Concurrency Issues}
+
+Currently, vodle stores shared delegation data structures, such as the \texttt{direct\_delegation\_map}, within a single poll document. This design sufficed during initial development when delegation usage was limited. However, feedback from the project customer (see Section~\ref{sec:feedback}) highlighted significant risks associated with this approach as delegation features become more heavily used.
+
+Since multiple users indirectly modify these shared maps when accepting, rejecting, or revoking delegations, concurrent updates risk overwriting each other -- a form of database collision. In CouchDB's document model, each write operation replaces the entire document. If two users attempt to update delegations simultaneously, one user's update can overwrite or erase the other's unless complex conflict resolution strategies are employed. This problem will intensify as user numbers grow, threatening the consistency and reliability of the delegation system.
+
+Several potential strategies to address this issue were identified for future work:
+
+\begin{itemize} \item \textbf{Per-User Delegation Documents}: Rather than storing all delegations in a single shared map, each user could maintain a private delegation document representing their outgoing delegations. The system would then dynamically resolve the global delegation graph client-side by aggregating relevant user documents during poll resolution. This would eliminate write contention between users, at the cost of increased client-side complexity and resolution time.
+
+\item \textbf{Map Sharding}: An alternative is to partition the delegation maps by option, user group, or another shard key, storing smaller, independently modifiable documents. This reduces the likelihood of write conflicts but would require careful coordination when resolving delegations across shards.
+
+\item \textbf{Delegation Transaction Log}: Instead of updating full maps, each delegation action (invite, accept, revoke) could be stored as an immutable event in a transaction log. Clients would replay the log to reconstruct the current delegation state. While this approach scales well and aligns with CouchDB's append-only model, it would require significant changes to vodle's frontend logic.
+
+\item \textbf{Conflict-Aware Resolution}: If shared maps remain in use, conflict detection and manual resolution mechanisms could be implemented. Clients would detect CouchDB conflicts during sync and prompt users to retry operations. However, this approach may harm user experience and remains unresponsive under heavy concurrency.
+\end{itemize}
+
 \section{Summary}
 
-Extending vodle with agent-based modelling tools and platform enhancements would significantly advance its capabilities. Simulation could illuminate delegation stability, inequality, and resilience under realistic behaviour. Platform features like global delegations, expiry, and privacy-respecting auditability would further improve usability, transparency, and trust. Together, these directions offer a path toward a more scalable, adaptive, and fair implementation of liquid democracy principles.
+This chapter has outlined potential directions for extending vodle's delegation system and for investigating the dynamics of liquid democracy through simulation. Agent-based modelling could offer insights into the evolution of trust and delegation behaviour, while platform-level enhancements such as global delegations, delegation expiry mechanisms, and privacy-preserving auditability would further strengthen usability and transparency.
+Additionally, addressing database collision risks through per-user delegation documents or other strategies would ensure the system remains performant as user numbers grow. Together, these developments would support more flexible, scalable, and trustworthy decision-making systems based on liquid democracy principles.
 

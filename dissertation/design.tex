@@ -203,7 +203,7 @@ This map enables several key operations required for maintaining a consistent an
 \]
 \end{itemize}
 
-\subsubsection{Direct Vote Override Integration}
+\subsubsection{Delegated Vote Override}
 
 The original vodle implementation included basic support for per-option overriding of delegated votes: when a user had active delegations, a banner such as ``\texttt{B controls some of your waps as your delegate}'' was displayed, and users could manually toggle between using their delegate's rating or submitting their own per poll option. However, the existing override functionality was inconsistent and often failed to update the UI correctly when delegation states changed. As part of this project, the override system was revised and extended to integrate reliably with the redesigned core delegation model, as well as the new ranked, weighted, and per-option delegation mechanisms developed during this project.
 
@@ -221,10 +221,7 @@ for (const oid of this.p.oids) {
 This allowed the banner text to dynamically reflect the delegation status, by setting the appropriate translation key depending on how many options were still delegated:
 
 \begin{minted}{typescript}
-const all_most_some_none = 
-    n_delegated === this.p.oids.length ? 'all' : 
-    2 * n_delegated > this.p.oids.length ? 'most' :
-    n_delegated > 0 ? 'some' : 'none';
+const all_most_some_none = n_delegated === this.p.oids.length ? 'all' : 2 * n_delegated > this.p.oids.length ? 'most' : n_delegated > 0 ? 'some' : 'none';
 
 delegate_controls_string = 'poll.delegate-controls-' + all_most_some_none;
 \end{minted}
@@ -297,12 +294,7 @@ Delegation paths are constructed via a depth-first search (DFS), beginning from 
 Cycle prevention is handled implicitly during traversal: before iterating further, the function checks whether the proposed delegate has already been seen in the current path. If so, that path is skipped.
 
 \begin{minted}[fontsize=\small,baselinestretch=1]{typescript}
-private find_all_paths(
-  pid: string,
-  vid: string,
-  current_path: string[],
-  paths: string[][]
-) {
+private find_all_paths(pid: string, vid: string, current_path: string[], paths: string[][]) {
   const dm = this.G.D.get_direct_delegation_map(pid);
   for (const [did, _, active] of dm.get(vid) || []) {
     if (active === '0') continue; // skip rejected or pending
@@ -349,7 +341,7 @@ The function \texttt{min\_sum\_all} runs this logic for every delegating user. O
 
 If no valid path is found (e.g.\ due to rejection or cycles), all active statuses are cleared. This ensures that outdated or invalid delegation edges never persist.
 
-\begin{minted}[fontsize=\small,baselinestretch=1]{typescript}
+\begin{minted}{typescript}
 private min_sum_all(pid: string) {
   const dm = this.G.D.get_direct_delegation_map(pid);
   for (const vid of this.delegating_voters(pid)) {
@@ -411,9 +403,7 @@ initialise_rank_values() {
 
   // create new array from 1..max_delegations
   // then remove all used ranks
-  this.rank_options = Array
-    .from({ length: environment.delegation.max_delegations }, (_, i) => i + 1)
-    .filter(rank => !usedRanks.includes(rank));
+  this.rank_options = Array.from({ length: environment.delegation.max_delegations }, (_, i) => i + 1).filter(rank => !usedRanks.includes(rank));
 
   this.rank = this.rank_options[0];
 }
@@ -498,8 +488,7 @@ reorder_button_clicked() {
 
   // update ranks in direct_delegation_map
   for (const entry of list) {
-    entry[1] = this.delegation_list
-      .find(x => x.did === entry[0]).rank;
+    entry[1] = this.delegation_list.find(x => x.did === entry[0]).rank;
   }
 
   // order delegations by rank
@@ -700,8 +689,7 @@ The central function responsible for computing updated ratings is \texttt{update
 
 \begin{minted}{typescript}
 call_update_effective_votes() {
-    const ret = this.G.Del.update_effective_votes(
-      this.pid, this.self_rating_map);
+    const ret = this.G.Del.update_effective_votes(this.pid, this.self_rating_map);
     this.effective_rating_map = new Map(ret);
 }
 \end{minted}
@@ -732,8 +720,7 @@ if (acceptable_diff_reached){
     }
     newEffectiveMap.set(id, flooredRatings);
   }
-  this.G.D.set_self_and_effective_waps(
-    pid, newEffectiveMap, self_rating_map);
+  this.G.D.set_self_and_effective_waps(pid, newEffectiveMap, self_rating_map);
   return newEffectiveMap;
 }
 \end{minted}
@@ -753,8 +740,7 @@ if (count > 15) {
         }
         effective_map.set(id, flooredRatings);
     }
-    this.G.D.set_self_and_effective_waps(
-      pid, effective_map, self_rating_map);
+    this.G.D.set_self_and_effective_waps(pid, effective_map, self_rating_map);
     return effective_map;
 }
 \end{minted}

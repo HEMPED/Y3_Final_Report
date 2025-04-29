@@ -1,136 +1,113 @@
 \chapter{Project Objectives}
 \label{ch:project_objectives}
-This chapter outlines the objectives of the project. Derived from the background research, they address the technical and theoretical challenges identified with traditional delegation systems.
 
-To manage the project effectively, the objectives are divided into two categories. Core objectives form the backbone of the implementation and are essential to meeting the project's main goals, while extension objectives provide additional insight or value.
+This chapter defines the objectives of the project. Based on the challenges and needs identified during background research (Chapter~\ref{ch:background}), the objectives address both technical limitations in vodle's existing delegation system and theoretical concerns with liquid democracy models.
 
-Later in the chapter, each objective is broken down into specific functional and non-functional requirements. This structure clarifies expectations, guides implementation, and provides clear criteria for evaluating whether each objective has been met.
+Objectives are divided into two categories:
+\begin{itemize}
+    \item \textbf{Core Objectives} -- Mandatory goals that are essential to delivering a functional, improved delegation system in vodle.
+    \item \textbf{Extension Objective} -- A stretch goal intended to provide additional insights if time allows (see and Chapter~\ref{ch:project_management} and Chapter~\ref{ch:future} for details).
+\end{itemize}
 
-Core Objectives:
+Each objective is broken down into specific functional and non-functional requirements to ensure measurability and verifiability. These requirements provide a structured framework for implementation and evaluation.
+
+\section{Core Objectives (Mandatory)}
 \begin{enumerate}
-    \item \textbf{Implement a Core Delegation Model into Vodle: } Build upon the existing, partially implemented delegation code within the vodle platform to create a fully functional system, including resolving key challenges such as cyclic delegations.
+    \item \textbf{Implement a Core Delegation Model into vodle:} Build a fully functional, cycle-safe delegation system, addressing the challenges of cycle prevention and transitive delegation (identified in Section~\ref{subsec:background_existing_delegation}).
 
-    \item \textbf{Implement Ranked Delegation into Vodle: } Add a backup delegation mechanism to vodle, allowing users to specify up to three delegates.
+    \item \textbf{Implement Ranked Delegation into vodle:} Extend the system to allow users to specify multiple backup delegates, mitigating vote loss due to unavailable delegates (motivated by issues discussed in Section~\ref{subsec:background_ranked_delegation}).
 
-    \item \textbf{Implement a Weighted Delegation into Vodle: } Add functionality to allow users to delegate fractions of their rating to multiple delegates, using the trust matrix model to calculate final ratings.
+    \item \textbf{Implement Weighted Delegation into vodle:} Enable fractional delegation to multiple delegates using the trust matrix model (see Section~\ref{subsec:background_weighted_delegation}).
 
-    \item \textbf{Implement Per-Option Delegation}: Allow users to delegate the ratings of specific options to different delegates.
+    \item \textbf{Implement Per-Option Delegation:} Allow users to delegate different options to different delegates within the same poll, enhancing voter flexibility (inspired by Google Votes; see Section~\ref{subsec:google_votes}).
 \end{enumerate}
 
-Extension Objective:
+\section{Extension Objective (Optional)}
 \begin{enumerate}
-    \item \textbf{Simulate Delegation Mechanisms: } Perform agent-based modelling to analyse the effectiveness of various delegation systems, including those outlined in Core Objectives 1-3.
+    \item \textbf{Simulate Delegation Mechanisms:} Develop an agent-based modelling (ABM) simulation to evaluate the performance and robustness of different delegation mechanisms.
 \end{enumerate}
 
 \section{Project Requirements}
-The project objectives represent high-level goals that must be translated into specific, actionable requirements. This process clarifies scope, ensures comprehensive coverage of each objective, and establishes a structured foundation for both implementation and evaluation.
+The following functional (F) and non-functional (NF) requirements operationalise the project objectives. Each requirement is stated to be specific, measurable, and testable, enabling systematic verification against the project goals.
 
-To support this, requirements are organised into two categories: functional (F) and non-functional (NF). Functional requirements describe the core behaviours and features the system must support, while non-functional requirements define performance, usability, and other quality-related constraints \citep{sommervill_2016}. Distinguishing between these categories helps ensure that both the system's functionality and overall user experience are properly addressed.
-
-Each requirement is formulated to be measurable and testable. This enables objective evaluation during development, facilitates verification against the project goals, and helps identify areas for improvement as the system evolves.
-
-\subsection{Implement a Core Delegation Model into Vodle}\label{subsec:requirements_core}
+\subsection{Requirements for Core Objective 1: Core Delegation Model}
 \subsubsection{Functional Requirements}
 \begin{itemize}
-    \item \textbf{FR1:} The system shall correctly handle the delegation process from invitation to acceptance.
-    \begin{itemize}
-        \item \textbf{FR1.1:} The system shall allow users to invite others to act as their delegate.
-        \item \textbf{FR1.2:} The system shall allow invited users to accept delegation requests.
-        \item \textbf{FR1.3:} The system shall prevent users from accepting their own delegation invitations.
-        \item \textbf{FR1.4:} The system shall detect and prevent the formation of delegation cycles.
-    \end{itemize}
-
-    \item \textbf{FR2:} The system shall provide users with a clear view of their current delegation, including the ability to revoke it at any time.
-
-    \item \textbf{FR3:} The system shall resolve delegations transitively, such that if User A delegates to B and B delegates to C, User C is the final casting voter for A's vote.
-
-    \item \textbf{FR4:} The system shall allow users to override a delegate's decision for specific poll options by submitting a direct vote.
+    \item \textbf{FR1.1:} The system shall allow users to invite others to act as delegates.
+    \item \textbf{FR1.2:} Invited users shall be able to accept or decline delegation requests.
+    \item \textbf{FR1.3:} Users shall be prevented from accepting their own delegation invitations.
+    \item \textbf{FR1.4:} The system shall detect and prevent cyclic delegations.
+    \item \textbf{FR1.5:} Users shall be able to view and revoke existing delegations.
+    \item \textbf{FR1.6:} Delegations shall be resolved transitively to ensure accurate final vote attribution.
+    \item \textbf{FR1.7:} Users shall be able to override their delegation by submitting direct votes.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{NFR1:} All delegation-related data must be stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
-    \item \textbf{NFR2:} Any changes to the database schema must be backward compatible, ensuring that existing data is not lost or corrupted during the upgrade process.
-    \item \textbf{NFR3:} The system shall preserve user privacy by ensuring that individual voting preferences and delegation choices are not visible to other users. The only information visible to a delegated user shall be the final vote cast on their behalf.
-    \item \textbf{NFR4:} The user interface for delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
+    \item \textbf{NFR1.1:} Delegation data shall be stored in JSON format for compatibility with vodle's CouchDB backend.
+    \item \textbf{NFR1.2:} Database schema changes must be backward compatible.
+    \item \textbf{NFR1.3:} Users' voting and delegation choices shall remain private.
+    \item \textbf{NFR1.4:} The delegation interface shall be intuitive and accessible.
 \end{itemize}
 
-\subsection{Implement Ranked Delegation into Vodle}\label{subsec:requirements_ranked_delegation}
-
+\subsection{Requirements for Core Objective 2: Ranked Delegation}
 \subsubsection{Functional Requirements}
 \begin{itemize}
-    \item \textbf{FR1:} The system shall allow users to specify a ranked list of up to 3 delegates for each poll, with the ranking applying to all options within that poll.
-    
-    \item \textbf{FR2:} The system shall apply the MinSum delegation rule to resolve each voter's delegation path based on their ranked list of delegates.
-    
-    \item \textbf{FR3:} The system shall allow users to override the ranked delegation by submitting a direct vote for specific poll options.
-    
-    \item \textbf{FR4:} The system shall provide users with a clear view of their ranked delegation choices, including the ability to alter their rankings or revoke them at any time.
+    \item \textbf{FR2.1:} Users shall be able to specify up to three ranked delegates per poll.
+    \item \textbf{FR2.2:} The MinSum rule shall be applied to resolve delegation paths.
+    \item \textbf{FR2.3:} Users shall be able to override ranked delegations by direct voting.
+    \item \textbf{FR2.4:} Users shall be able to modify or revoke ranked delegation preferences.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{NFR1:} The user interface for ranked delegation shall be intuitive and accessible, with clear instructions and minimal friction to perform delegation actions.
-    
-    \item \textbf{NFR2:} The system shall ensure that any data related to ranked delegation is stored in a JSON-encoded format, ensuring compatibility with the existing vodle CouchDB database.
+    \item \textbf{NFR2.1:} Ranked delegation data shall be stored in a JSON-compatible format.
+    \item \textbf{NFR2.2:} The user interface for ranked delegation shall be clear and user-friendly.
 \end{itemize}
-\subsection{Implement Weighted Delegation into Vodle}\label{subsec:requirements_weighte}
+
+\subsection{Requirements for Core Objective 3: Weighted Delegation}
 \subsubsection{Functional Requirements}
 \begin{itemize}
-    \item \textbf{FR1:} The system shall allow users to delegate their vote to multiple delegates simultaneously for a single poll.
-
-    \item \textbf{FR2:} The system shall allow users to assign a weight to each delegate such that the total weight does not exceed 0.99.
-
-    \item \textbf{FR3:} The system shall calculate the final rating for each option using the weighted delegation model based on the trust matrix approach (see Section~\ref{subsec:background_weighted_delegation}).
+    \item \textbf{FR3.1:} Users shall be able to assign fractional votes to multiple delegates, ensuring the total weight does not exceed 0.99.
+    \item \textbf{FR3.2:} Final vote weights shall be calculated using the trust matrix model.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{NFR1:} The system shall ensure that weighted delegation calculations are performed entirely on the client side to comply with vodle's CouchDB architecture.
-
-    \item \textbf{NFR2:} All related data must be serialised as JSON strings to ensure compatibility with the CouchDB backend.
-
-    \item \textbf{NFR3:} The user interface for weighted delegation shall be intuitive and allow users to adjust weights easily, using sliders or numeric inputs.
+    \item \textbf{NFR3.1:} Weighted delegation calculations shall occur client-side.
+    \item \textbf{NFR3.2:} Data shall be stored as JSON to maintain CouchDB compatibility.
+    \item \textbf{NFR3.3:} The weighted delegation UI shall provide intuitive controls (e.g., sliders) for assigning weights.
 \end{itemize}
-\subsection{Implement Per-Option Delegation}\label{subsec:requirements_option}
+
+\subsection{Requirements for Core Objective 4: Per-Option Delegation}
 \subsubsection{Functional Requirements}
 \begin{itemize}
-    \item \textbf{FR1:} The system shall allow users to assign different delegates for each individual option or subset of options within a poll.
-
-    \item \textbf{FR2:} The system shall ensure that each delegated option is resolved independently, using the appropriate delegate's vote for that option.
-
-    \item \textbf{FR3:} The system shall allow users to override a delegate's vote for a specific option by providing their own rating.
-
-    \item \textbf{FR4:} The system shall enable users to view and revoke individual delegations via the user interface.
+    \item \textbf{FR4.1:} Users shall be able to assign different delegates for different poll options.
+    \item \textbf{FR4.2:} Delegation resolution shall be performed independently for each option.
+    \item \textbf{FR4.3:} Users shall be able to override per-option delegations with direct votes.
+    \item \textbf{FR4.4:} Users shall be able to view and manage per-option delegations easily.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{NFR1:} The delegation interface shall clearly display the assigned delegate for each option and allow users to identify and manage delegations with minimal steps.
-
-    \item \textbf{NFR2:} The delegation data must be serialised in a format compatible with CouchDB (e.g., JSON-encoded) to maintain compatibility with vodle's storage system.
+    \item \textbf{NFR4.1:} Per-option delegation data shall be stored in JSON format.
+    \item \textbf{NFR4.2:} The user interface shall clearly show assigned delegates per option.
 \end{itemize}
-\subsection{Simulate Delegation Mechanisms}\label{subsec:requirements_sim}
+
+\subsection{Requirements for Extension Objective: Simulate Delegation Mechanisms}
 \subsubsection{Functional Requirements}
 \begin{itemize}
-    \item \textbf{FR1:} The simulation system shall model individual agents representing voters, each capable of voting, abstaining, or delegating their vote according to a selected delegation rule.
-
-    \item \textbf{FR2:} The system shall support multiple delegation mechanisms, including standard transitive delegation, ranked delegation (with the MinSum delegation rule), and weighted delegation.
-
-    \item \textbf{FR3:} The system shall allow configuration of simulation parameters such as number of agents, delegation probabilities and abstention rates.
-
-    \item \textbf{FR4:} The system shall track and record key metrics such as vote concentration, number of super-voters, average chain length, vote loss due to abstentions or cycles, and final decision alignment with initial voter intent.
-
-    \item \textbf{FR5:} The system shall output simulation results in a structured format (e.g. CSV or JSON) for further analysis.
+    \item \textbf{FR5.1:} The simulation system shall model agents capable of voting, abstaining, or delegating.
+    \item \textbf{FR5.2:} Simulations shall support core, ranked, and weighted delegation modes.
+    \item \textbf{FR5.3:} Key parameters (number of agents, delegation probability, abstention rates) shall be configurable.
+    \item \textbf{FR5.4:} Metrics such as super-voter concentration, delegation chain length, and vote loss shall be recorded.
+    \item \textbf{FR5.5:} Simulation results shall be exportable in CSV or JSON format.
 \end{itemize}
 
 \subsubsection{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{NFR1:} The simulation framework shall be lightweight and easy to extend, enabling rapid experimentation with new delegation rules or metrics.
-
-    \item \textbf{NFR2:} The system shall be developed using Mesa to take advantage of existing data science libraries such as NumPy, Pandas, and Matplotlib for analysis and visualisation.
-
-    \item \textbf{NFR3:} The simulation design shall support reproducibility by enabling fixed random seeds and storing configuration settings alongside output data.
-
+    \item \textbf{NFR5.1:} The simulation shall be lightweight and extensible.
+    \item \textbf{NFR5.2:} Mesa shall be used as the agent-based modelling framework.
+    \item \textbf{NFR5.3:} Simulations shall be reproducible with fixed random seeds.
 \end{itemize}
 

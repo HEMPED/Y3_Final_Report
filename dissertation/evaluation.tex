@@ -143,10 +143,8 @@ NFR4: Delegation UI intuitive & Achieved \\ \hline
     \item \textbf{FR4:} Toggles are implemented, allowing users to switch between their delegate's and their own vote (see Figure~\ref{fig:vote_override}).
     \item \textbf{NFR1 and NFR2:} All data is serialised and stored in JSON, example below:
 \begin{minted}{typescript}
-save_inverse_indirect_map(
-    pid: string, oid: string, val: Map<string, string>) {
-const jsonData = JSON.stringify(
-    Array.from(mp.entries(), ([k, v]) => [k, Array.from(v.entries())]));
+save_inverse_indirect_map(pid: string, oid: string, val: Map<string, string>) {
+const jsonData = JSON.stringify(Array.from(mp.entries(), ([k, v]) => [k, Array.from(v.entries())]));
 this._setp_in_polldb(pid, `poll.{pid}.inverse_indirect_map`, jsonData);
 }
 \end{minted}

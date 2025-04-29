@@ -1,14 +1,11 @@
 \chapter{Background Research}\label{ch:background}
-
 This chapter provides the necessary foundation for designing and implementing a liquid democracy system within vodle. It begins by comparing liquid democracy to traditional models (direct and representative democracy), highlighting its potential to balance transparency, scalability, and individual agency.
-%by letting users either vote directly or delegate their vote to someone they trust -- and reclaim it at any time.
 
 The chapter then examines key limitations of liquid democracy in practice -- including delegation cycles, abstentions, and the emergence of super-voters -- alongside the strategies proposed in the literature to mitigate them.
 
 Furthermore, real-world deployments of liquid democracy are considered, drawing lessons from systems such as LiquidFeedback and Google Votes. These examples inform both the technical feasibility and design challenges of integrating delegation mechanisms into online platforms.
 
 Finally, the chapter outlines the technical foundations of vodle, including its architecture and existing (incomplete) delegation features. These constraints play a key role in shaping the design choices presented in later chapters.
-
 \section{Liquid Democracy}
 
 While liquid democracy was briefly introduced in Chapter~\ref{ch:introduction}, this section provides a more detailed rationale for its relevance -- particularly in the context of decision-making systems like vodle.
@@ -37,7 +34,7 @@ By supporting both direct and delegated participation, liquid democracy allows u
 
 \subsection{Issues With Liquid Democracy}
 
-While liquid democracy offers an elegant compromise between agency and scalability, it introduces several non-trivial implementation challenges. The following section identifies three core issues that threaten its reliability and fairness in practice: cycles in delegation chains, vote loss due to abstentions, and the disproportionate influence of super-voters.
+Although liquid democracy offers an elegant compromise between agency and scalability, it introduces several non-trivial implementation challenges. This section identifies three core issues that threaten its reliability and fairness in practice: cycles in delegation chains, vote loss due to abstentions, and the disproportionate influence of super-voters.
 
 To support this discussion, the following diagram legend is used to visually distinguish between voter behaviours:
 
@@ -124,17 +121,17 @@ Even when systems allow voters to revoke delegations at any time, many users may
 
 For example, in the German Pirate Party's use of LiquidFeedback, some participants became so dominant that their votes carried decree-like weight, even though they were not formally elected \citep{sven_becker_liquid_2012, kling2015votingbehaviourpoweronline}. While \citet{kling2015votingbehaviourpoweronline} observed that these super-voters generally aligned with majority opinion, contributing to system stability rather than distorting it, their disproportionate influence still raises concerns about transparency and the extent to which individual voters retain meaningful control over their vote.
 
-This is not confined to traditional political platforms. In decentralised autonomous organisations (DAOs), which use token-based voting on blockchains, similar patterns emerge. \citet{hallWhatHappensWhen2024} found that in many DAOs, voting power was highly concentrated among a few delegates due to low overall participation. In some cases, such as \textit{Gitcoin}, over 90\% of votes cast were controlled by the top five delegates.
+This is not confined to traditional political platforms. In decentralised autonomous organisations (DAOs), which use token-based voting on blockchains, similar patterns emerge. \citet{hallWhatHappensWhen2024} found that in many DAOs, voting power was highly concentrated among a few delegates due to low overall participation. In some cases, such as \textit{Gitcoin}, over 90\% of votes cast were controlled by the top five delegates. Although DAOs operate within blockchain environments rather than web platforms like vodle, these patterns underline the need for safeguards against disproportionate power accumulation across all liquid democracy systems.
 
 These examples emphasise the importance of delegation mechanisms that can curb excessive power accumulation. Techniques such as weighted delegation and capping the maximum voting power of an individual are essential to preserving fairness, especially in vodle, which aims to uphold proportional representation and protect minority voices through its rating aggregation system (see Section~\ref{subsec:background_maxparc}).
 
 \subsection{Variations of Liquid Democracy}
-This section explores several proposed extensions to liquid democracy that address the limitations outlined above. While many models offer theoretical advantages, particular attention is paid to ranked delegation and weighted delegation -- two techniques that are not only promising from a fairness and soundness perspective, but are also feasible to implement within vodle's existing architecture.
+Several proposed extensions to liquid democracy aim to mitigate the limitations outlined above. While many models offer theoretical advantages, this section focuses on ranked delegation and weighted delegation -- two techniques that are not only promising from a fairness and soundness perspective but are also feasible to implement within vodle's existing architecture.
 
 The challenges discussed in the previous section, such as delegation cycles, vote loss due to abstentions, and the emergence of super-voters, highlight inherent vulnerabilities in the standard liquid democracy model. To mitigate these issues, enhancements have been proposed that modify how delegations function. These include techniques that allow voters to specify multiple delegates or distribute their vote to multiple casting voters. Each approach introduces different trade-offs and requires algorithmic support to ensure sound and interpretable outcomes.
 
 The following subsections present several such variations, along with the algorithms that can be used to implement them.
-\subsection*{Ranked Delegation -- TODO: ADD DIAGRAMS}\label{subsec:background_ranked_delegation}
+\subsection*{Ranked Delegation}\label{subsec:background_ranked_delegation}
 Ranked delegation improves liquid democracy by allowing voters to list several trusted delegates in order of preference. Instead of choosing just one delegate, a voter can specify a ranked list so that if their top choice is unavailable (e.g. due to abstention or being a part of a delegation cycle) the system can use the next delegate specified.
 
 Implementing ranked delegation requires a mechanism to decide among multiple possible delegation paths (routes that a vote can take through the delegation graph).
@@ -167,9 +164,11 @@ In summary, ranked delegation enhances liquid democracy by reducing the risk of 
 Based on these considerations, the project adopts the MinSum rule. It offers a clear trade-off between delegation quality, computational efficiency, and user interpretability, making it well-suited for deployment within vodle. By selecting the path with the lowest total rank sum, MinSum prioritises higher-ranked delegates while avoiding unnecessarily long or indirect chains. This supports user trust and clarity by ensuring that final delegation paths reflect stated preferences in an understandable way.
 
 
-\subsection*{Weighted Delegation -- TODO: ADD DIAGRAMS}\label{subsec:background_weighted_delegation}
+\subsection*{Weighted Delegation}\label{subsec:background_weighted_delegation}
 
-Traditional delegation systems, which require voters to delegate their entire vote to a single individual, introduce significant risks such as vote loss through delegate abstentions, delegation cycles, and excessive concentration of voting power in the hands of a few super-voters. To mitigate these issues, weighted delegation allows voters to divide their voting power among multiple delegates, rather than assigning it entirely to one. This approach provides greater flexibility and robustness while preserving voter intent more accurately.
+Traditional delegation systems require voters to entrust their entire vote to a single delegate, creating risks such as vote loss or excessive concentration of power. Weighted delegation addresses these issues by allowing voters to divide their voting weight among multiple trusted individuals.
+
+% Traditional delegation systems, which require voters to delegate their entire vote to a single individual, introduce significant risks such as vote loss through delegate abstentions, delegation cycles, and excessive concentration of voting power in the hands of a few super-voters. To mitigate these issues, weighted delegation allows voters to divide their voting power among multiple delegates, rather than assigning it entirely to one. This approach provides greater flexibility and robustness while preserving voter intent more accurately.
 
 Weighted delegation offers several key advantages:
 \begin{itemize}
@@ -262,31 +261,38 @@ This model offers the highest granularity and flexibility, allowing voters to fi
 Each weighted-delegation method balances voter expressivity, computational complexity, and ease of implementation differently. After evaluating these trade-offs, this project selects the trust matrix model for its high expressiveness and compatibility with vodle's principles of autonomy and transparency. While more computationally intensive, it captures nuanced trust relationships and enables fine-grained participation -- both essential for resilient, inclusive decision-making at scale.
 
 \section{Existing Implementations of Liquid Democracy}
-To understand how liquid democracy can be integrated into vodle, it is important to examine how similar systems have been implemented in real-world contexts. 
-This section explores two implementations, LiquidFeedback and Google Votes, that offer valuable insights into the technical, social, and usability challenges associated with applying liquid democracy at scale.
+Having reviewed the theoretical background and proposed extensions to liquid democracy, this section explores real-world systems, examining two major implementations -- LiquidFeedback and Google Votes -- that offer valuable insights into the technical, social, and usability challenges of applying liquid democracy at scale.
+
 \subsection{LiquidFeedback}
 LiquidFeedback is one of the earliest and most influential real-world implementations of liquid democracy. Developed as an open-source platform, it was notably adopted by the German Pirate Party in 2010 to facilitate internal policy-making through online participation \citep{behrens_liquidfeedback_2014}. The platform allowed members to submit proposals, debate them in structured phases, and vote either directly or via transitive delegation.
 
 In LiquidFeedback, users could choose different delegates for different topics, allowing them to assign their vote to someone they trusted on a specific issue. These choices remained in place until the user changed them, which meant that certain individuals could gradually accumulate more influence if others did not update their delegations. When multiple proposals were put forward, the system used a ranking-based voting method (the Schulze method) to decide which one should win. The Schulze method compares proposals in head-to-head matchups and identifies the option with the strongest overall support, even considering indirect chains of preference. This helped ensure that the winning proposal was broadly supported across the electorate. Importantly, LiquidFeedback only accepted a proposal if it clearly beat the default option of doing nothing, helping to avoid unnecessary or unpopular changes.
 
 
-In practice, the Pirate Party's use of LiquidFeedback revealed several key dynamics relevant to this project. The platform was successful in enabling large-scale participation and crowd sourced policy formation, but it also demonstrated common risks of liquid democracy. Such as the existence of super-voters, as discussed previously.
+In practice, the Pirate Party's use of LiquidFeedback revealed several key dynamics relevant to this project. The platform was successful in enabling large-scale participation and crowdsourced policy formation, but it also demonstrated common risks of liquid democracy, such as the existence of super-voters(as discussed previously).
 
 Another practical issue was the complexity of the system. LiquidFeedback was difficult to understand, especially for users unfamiliar with concepts such as transitive delegation or multi-stage voting, which limited its accessibility and contributed to declining engagement over time \citep{kling2015votingbehaviourpoweronline}.
 
 For a platform like vodle, the experience of LiquidFeedback highlights several important design considerations. First, user interfaces must be intuitive enough to allow voters to participate without needing deep technical knowledge. Second, the user must know the status of their delegation at a glance - improving the understanding of the platform. Finally, ensuring that votes lead to visible and actionable outcomes is critical for maintaining user engagement.
 
 %Overall, LiquidFeedback serves as both a proof of concept and a cautionary tale; demonstrating that liquid democracy can work at scale, but that thoughtful implementation is essential to avoid replicating the very problems it seeks to solve.
-\subsection{Google Votes}
+\subsection{Google Votes}\label{subsec:google_votes}
+Google Votes was an internal experiment at Google designed to explore the practical application of liquid democracy within a corporate environment. Built on top of the company's internal Google+ social network, it operated between 2012 and 2015 and allowed employees to participate in decision making by either voting directly or delegating their vote to a colleague \citep{hardt_google_2015}.
+
+Delegations in Google Votes were category-specific, meaning that users could choose different delegates for different areas of interest, such as food, events, or technical infrastructure. These delegations were persistent but could be overridden at any time, giving users flexibility to either rely on trusted experts or vote independently as needed. The system supported transitive delegation and allowed users to reclaim control by casting their own vote, even after delegating.
+
+Figure~\ref{fig:google_votes} shows the user interface of Google Votes, highlighting how delegation and voting transparency were presented to users
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\linewidth]{../common/google_votes.png}
   \caption{Screenshot taken from \citet{hardt_google_2015} showing the user interface of Google Votes.}
+  \label{fig:google_votes}
 \end{figure}
 
-Google Votes was an internal experiment at Google designed to explore the practical application of liquid democracy within a corporate environment. Built on top of the company's internal Google+ social network, it operated between 2012 and 2015 and allowed employees to participate in decision making by either voting directly or delegating their vote to a colleague \citep{hardt_google_2015}.
+%Google Votes was an internal experiment at Google designed to explore the practical application of liquid democracy within a corporate environment. Built on top of the company's internal Google+ social network, it operated between 2012 and 2015 and allowed employees to participate in decision making by either voting directly or delegating their vote to a colleague \citep{hardt_google_2015}.
 
-Delegations in Google Votes were category-specific, meaning that users could choose different delegates for different areas of interest, such as food, events, or technical infrastructure. These delegations were persistent but could be overridden at any time, giving users flexibility to either rely on trusted experts or vote independently as needed. The system supported transitive delegation and allowed users to reclaim control by casting their own vote, even after delegating.
+%Delegations in Google Votes were category-specific, meaning that users could choose different delegates for different areas of interest, such as food, events, or technical infrastructure. These delegations were persistent but could be overridden at any time, giving users flexibility to either rely on trusted experts or vote independently as needed. The system supported transitive delegation and allowed users to reclaim control by casting their own vote, even after delegating.
 
 The platform placed strong emphasis on usability and transparency. Delegation features were rolled out incrementally, with additional tools such as voting power estimates and delegation advertisements helping users understand their influence. One key design principle was what the authors called the ``Golden Rule of Liquid Democracy'': if a user delegates their vote, they should be able to see how it is being used. To accomplish this, users received notifications when their delegate voted, and all votes were visible to the relevant group. This encouraged accountability and gave voters confidence that their delegated votes were being used appropriately.
 
@@ -305,9 +311,10 @@ Several widely used ABM frameworks exist, each with their own strengths and draw
 \end{itemize}
 Given the time constraints of this project, Mesa offers a practical and efficient solution. Its Python-based interface and straightforward setup allow for rapid development without the overhead of learning a new framework. This ease of use enables more time to be spent designing meaningful experiments and analysing results, rather than configuring tooling.
 \section{Vodle}
-To design and implement liquid democracy mechanisms effectively, it is crucial to first understand the platform into which they are integrated. Vodle is a web-based decision-making tool that supports participatory group processes through interactive polls and transparent aggregation methods. It allows users to rate decision options on a 0-100 scale using sliders, encouraging nuanced input and compromise.
+Having established the broader context of liquid democracy and examined existing systems, this section introduces vodle -- the platform into which these mechanisms are integrated.
+Vodle is a web-based decision-making tool designed to support participatory group processes through interactive polls and transparent aggregation methods. It allows users to rate decision options on a 0-100 scale using sliders, encouraging nuanced input and fostering compromise.
 
-This section introduces Vodle's core architecture, including its underlying rating system (MaxParC) and the technologies that support its operation. These technical foundations played a critical role in shaping the design and feasibility of the advanced delegation features developed in this project.
+The section outlines vodle's core architecture, including its underlying rating system (MaxParC) and the technologies that support its operation. These technical foundations played a critical role in shaping the design and feasibility of the advanced delegation features developed during this project.
 
 \subsection{MaxParC}\label{subsec:background_maxparc}
 MaxParC (Maximum Partial Consensus) is the rating system used in vodle to aggregate user preferences and determine poll outcomes. Introduced by \citet{heitzig_fair_2024}, MaxParC was designed to address common limitations of traditional voting systems, particularly the tendency for majority rule to overlook minority preferences. Its goal is to balance fairness, consensus, and efficiency in collective decision making.
@@ -342,30 +349,47 @@ The lack of server-side computation means the delegation algorithms must be desi
 These technological considerations (covered in more detail in Section~\ref{sec:design_architecture}) strongly shaped the practical implementation of liquid democracy in vodle. They necessitated a focus on efficient client-side logic as well as careful management of data flow.
 
 \subsection{Partially Implemented Delegation in Vodle}\label{subsec:background_existing_delegation}
-At the start of the project, vodle contained a partially implemented, currently disable delegation system.
-Although never deployed in a working state, this prototype included an invitation-based mechanism for initiating delegations and early UI components to support the feature.
+At the start of the project, vodle contained a partially implemented, currently disabled delegation system.  
+Although never deployed in a working state, this prototype included an invitation-based mechanism for initiating delegations and early user interface components to support the feature.
 
-However, the implementation lacked several core features required for a robust liquid democracy system. Most notably, it failed to reliably detect or prevent delegation cycles. Since delegation graphs were stored only in each user's local memory, clients could have inconsistent views of the system. This meant delegation actions that appeared valid on one browser could later form cycles as other users updated their delegations, compromising system reliability.
+However, the implementation lacked several core features required for wide-scale deployment. Most notably, it failed to reliably detect or prevent delegation cycles. Since delegation graphs were stored only in each user's local memory, clients could have inconsistent views of the system. This meant that delegation actions appearing valid on one browser could later form cycles as other users updated their delegations, compromising system reliability.
 
-Despite these shortcomings, the incomplete implementation highlighted key challenges that the project would need to address. In particular, it highlighted the importance of consistent state synchronisation, clear UI feedback, and reliable validation mechanisms. These lessons informed the redesigned delegation architecture described in Chapter~\ref{ch:design_implementation}.
-
-Chapter~\ref{ch:design_implementation} discusses these issues in detail, along with how the delegation system was adapted, improved, or replaced.
+These initial limitations -- especially the absence of consistent cycle prevention and consistent delegation states -- defined the key technical challenges addressed during the system redesign, which is discussed in detail in Chapter~\ref{ch:design_implementation}.
 % \subsection{Design Philosophy -- TODO}
 
+% \section{Summary}
+% The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle.
+% The research highlighted critical limitations in traditional liquid democracy systems, including delegation cycles, abstention risks, and the disproportionate influence of super-voters.
+
+% In response, several promising delegation strategies were identified, particularly ranked and weighted delegation.
+% Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness.
+
+% Weighted delegation was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates.
+% Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
+
+% Among the weighted delegation methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's goals of user autonomy and flexibility.
+% By allowing voters to articulate nuanced trust relationships across multiple delegates, including themselves, the model offers a compelling balance between representation quality and individual control.
+
+% While more computationally intensive than simpler approaches, it presents a viable strategy for robust weighted delegation within a real-time voting system.
+% The technological constraints of vodle itself, especially the reliance on client-side processing due to the CouchDB architecture, demonstrated the need for efficient, lightweight implementation strategies.
+
+% These insights collectively define the project's objectives, which are formalised in the following chapter.
+
 \section{Summary}
-The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle.
-The research highlighted critical limitations in traditional liquid democracy systems, including delegation cycles, abstention risks, and the disproportionate influence of super-voters.
+The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle.  
+It highlighted critical limitations in traditional liquid democracy systems, including delegation cycles, abstention risks, and the disproportionate influence of super-voters.
 
-In response, several promising delegation strategies were identified, particularly ranked and weighted delegation.
-Ranked delegation was found to be an effective approach for reducing the risk of lost votes, with the MinSum delegation rule being particularly suitable due to its clear balance of efficiency, interpretability, and fairness.
+In response, several promising delegation strategies were identified, with particular emphasis on ranked and weighted delegation.  
+Ranked delegation was found to be an effective method for reducing the risk of lost votes, with the MinSum delegation rule offering a strong balance between efficiency, interpretability, and fairness.
 
-Weighted delegation was identified as a valuable strategy to allow voters greater flexibility by distributing their influence among multiple trusted delegates.
-Additionally, the concept of delegating different options to distinct delegates was supported by practical experiences from Google Votes, where topic-specific delegations improved user engagement and representation accuracy.
+Weighted delegation emerged as a valuable strategy for enhancing voter flexibility by allowing influence to be distributed across multiple trusted delegates.  
+Practical experiences from systems such as Google Votes further supported the value of topic-specific delegation, where assigning different delegates for different decision areas improved engagement and representation accuracy.
 
-Among the weighted delegation methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's goals of user autonomy and flexibility.
-By allowing voters to articulate nuanced trust relationships across multiple delegates, including themselves, the model offers a compelling balance between representation quality and individual control.
+Among the weighted delegation methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's principles of user autonomy and flexible participation.  
+By allowing voters to articulate nuanced trust relationships across multiple delegates—including themselves—the model offers a compelling balance between representation quality and individual control.
 
-While more computationally intensive than simpler approaches, it presents a viable strategy for robust weighted delegation within a real-time voting system.
-The technological constraints of vodle itself, especially the reliance on client-side processing due to the CouchDB architecture, demonstrated the need for efficient, lightweight implementation strategies.
+Although more computationally intensive than simpler approaches, the trust matrix model presents a viable strategy for implementing robust weighted delegation within a real-time voting system.  
+The technological constraints of vodle itself, particularly the reliance on client-side processing through CouchDB, further emphasised the need for efficient, lightweight implementation strategies.
 
-These insights collectively define the project's objectives, which are formalised in the following chapter.
+Together, these insights define the objectives and requirements addressed in the next stage of the project.  
+The following chapter formalises these design goals and describes the development of a fully integrated liquid democracy system within vodle.

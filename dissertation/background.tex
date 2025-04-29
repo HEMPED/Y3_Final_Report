@@ -54,6 +54,8 @@ To support this discussion, the following diagram legend is used to visually dis
 \subsection*{Delegation Cycles}\label{subsec:delegation_cycles}
 Delegation cycles occur when a vote is delegated in such a way that it ends up forming a loop \citep{brill_liquid_2022}, preventing the vote from reaching a final casting voter. For example, if Alice delegates her vote to Bob, Bob delegates to Charlie, and Charlie delegates back to Alice, the votes become trapped in a cycle (see Figure~\ref{fig:triangle-cycle}) and can be treated as a loss of representation \citep{christoff2017liquiddemocracyanalysisbinary}.
 
+Preventing such cycles is essential in vodle to ensure that delegated votes are always correctly resolved and that no voter's influence is lost without their knowledge.
+
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[->, >=stealth, thick, scale=1.5]
@@ -74,15 +76,15 @@ Delegation cycles occur when a vote is delegated in such a way that it ends up f
 This issue is particularly problematic because it can nullify votes without the affected users' knowledge -- in implementations that do not properly handle cycles, the final decision-making outcome may be altered without participants realising it.
 %these votes could be discarded silently, potentially changing the final outcome of the votes.
 
-One straightforward method for preventing cycles is to check whether a new delegation would introduce a cycle before accepting it. For example, if Alice tries to delegate her vote to Bob, the system checks whether Bob has already directly or indirectly delegated their vote to Alice. If so, the delegation is rejected. However, this approach can be cumbersome and may lead to a poor user experience, as users may not understand why their delegation was denied.
-
-Delegation cycles are particularly likely to emerge in dynamic, real-time voting systems like vodle, where users can add or remove delegations at any time. Delegation chains that are initially valid may later form part of a cycle as other participants update their preferences. This makes cycle detection not just a one-off validation step, but an ongoing requirement for maintaining consistency and ensuring vote resolution remains reliable.
+One straightforward method for preventing cycles is to validate each new delegation by checking whether it would introduce a loop. This requires inspecting the current delegation graph to ensure that the potential delegate does not indirectly delegate back to one delegating. However, in dynamic systems like vodle, where users can update delegations at any time, static checks are insufficient. Cycle detection must be continuous, ensuring that the delegation structure remains valid as participants modify their preferences. Designing an efficient, real-time validation mechanism is therefore critical to maintaining vote resolution reliability.
 
 \subsection*{Abstentions}
 
 A voter abstains\footnote{Abstention may be deliberate, with a voter intentionally choosing not to participate, or unintentional, due to lack of awareness of the poll or inability to engage.} by neither casting a vote nor delegating it to another user \citep{brill_liquid_2022}.
 
 Abstentions are especially impactful when they occur at the end of a larger delegation chain (see Figure~\ref{fig:delegation-abstention}), as all votes passed along the chain to that voter are effectively lost \citep{brill_liquid_2022}. Additionally, the voters whose decisions were passed along the chain may also be unaware that their votes have been nullified, worsening the effect of the abstention.
+
+In vodle, this risk is especially critical, as lost votes directly undermine the project's goal of supporting broad participation while allowing users to delegate flexibly and retain influence.
 
 \begin{figure}[H]
   \centering
@@ -120,6 +122,8 @@ In liquid democracy, a \textit{super-voter} is a user who receives a large numbe
 Even when systems allow voters to revoke delegations at any time, many users may not actively monitor how their vote is used, leading to persistent power structures where a small number of users hold substantial, often unnoticed, influence over outcomes.
 
 For example, in the German Pirate Party's use of LiquidFeedback, some participants became so dominant that their votes carried decree-like weight, even though they were not formally elected \citep{sven_becker_liquid_2012, kling2015votingbehaviourpoweronline}. While \citet{kling2015votingbehaviourpoweronline} observed that these super-voters generally aligned with majority opinion, contributing to system stability rather than distorting it, their disproportionate influence still raises concerns about transparency and the extent to which individual voters retain meaningful control over their vote.
+
+In the context of vodle, the emergence of super-voters poses a direct challenge to the platform's principles of user autonomy and proportional influence. If a small number of users were to receive the majority of delegations -- particularly through features like transitive or weighted delegation -- this could lead to persistent concentration of power, undermining the goal of a fair and balanced decision-making environment.
 
 Beyond web-based implementations, decentralised autonomous organisations (DAOs), which use token-based voting on blockchains, have also experienced similar power concentration challenges. \citet{hallWhatHappensWhen2024} found that in many DAOs, voting power was highly concentrated among a few delegates due to low overall participation. In some cases, such as \textit{Gitcoin}, over 90\% of votes cast were controlled by the top five delegates. Although DAOs operate within blockchain environments rather than web platforms like vodle, these patterns underline the need for safeguards against disproportionate power accumulation across all liquid democracy systems.
 
@@ -302,14 +306,16 @@ Agent-based modelling (ABM) is a computational approach used to simulate the act
 
 The need to explore ABM arises due to the project's goal of introducing a weighted-delegation mechanism that hasn't been explored before into vodle. Traditional analysis alone may not effectively capture the dynamic interactions or unintended consequences that can emerge from this novel feature. Through ABM, it is possible to simulate realistic voting scenarios, track delegation chains, identify potential power imbalances, and anticipate challenges. These simulations can reveal performance insights and inform design decisions before implementing the mechanisms within the live platform.
 
-Several widely used ABM frameworks exist, each with their own strengths and drawbacks relevant to this project:
-\begin{itemize}
-  \item \textbf{NetLogo} \citep{netlogo} is a highly accessible and widely adopted modelling platform known for its user friendly graphical interface and ease of learning. It offers rapid prototyping capabilities and excellent visualisation features, allowing clear communication of results. However, it struggles with very complicated models.
-  \item \textbf{Repast} \citep{repast} provides a powerful and versatile suite of tools for building large scale, computationally intensive simulations. It supports distributed computing, which is beneficial for extensive delegation networks with potentially thousands of agents. However, Repast has a steep learning curve, which could hinder its compatibility with this heavily time restricted project.
-  \item \textbf{Mesa} \citep{kazil_utilizing_2020} is an open source framework written in Python and specifically designed for agent based modelling. Its advantage lies in its integration with Python's ecosystem of data science libraries. Simulations built with Mesa can easily make use of tools such as NumPy and pandas for efficient data processing, and Matplotlib or Seaborn for visualising model outputs. This compatibility allows for rapid analysis and iteration, while also significantly lowering the learning curve for developers already familiar with Python. Mesa offers a practical balance between usability and computational flexibility, making it well suited for customisable and moderately large simulations.
-  \item \textbf{Agents.jl} \citep{agentsjl} is a high-performance agent-based modelling framework written in Julia. Due to Julia's speed and efficiency, it is suitable for large-scale and computationally demanding simulations. The framework is designed to be user-friendly, with a syntax that is approachable for those familiar with scientific computing. However, the Julia ecosystem is less mature compared to Python's, which may limit the availability of additional libraries and resources. However, this trade off may be acceptable for highly performance driven solutions.
-\end{itemize}
-Given the time constraints of this project, Mesa offers a practical and efficient solution. Its Python-based interface and straightforward setup allow for rapid development without the overhead of learning a new framework. This ease of use enables more time to be spent designing meaningful experiments and analysing results, rather than configuring tooling.
+Several agent-based modelling (ABM) frameworks were considered for simulating delegation dynamics.
+
+\textbf{NetLogo}~\citep{netlogo} is highly accessible and well-suited for small-scale or educational simulations. However, it lacks native support for complex data structures and scalable computation, making it less suitable for the detailed delegation networks required in this project.
+
+\textbf{Repast}~\citep{repast} provides powerful distributed simulation capabilities and fine-grained agent behaviour modelling. Nonetheless, its steep learning curve and extensive configuration overhead conflicted with the project's time constraints.
+
+\textbf{Agents.jl}~\citep{agentsjl} offers high performance through the Julia language, particularly for large-scale agent systems. However, its relatively immature ecosystem for data analysis and visualisation posed integration challenges compared to more established Python-based frameworks.
+
+\textbf{Mesa}~\citep{kazil_utilizing_2020} was ultimately selected. Written in Python, Mesa integrates seamlessly with scientific computing libraries such as NumPy, pandas, and Matplotlib. It supports dynamic agent behaviour, networked interactions, and real-time visualisation -- all critical for modelling complex delegation chains and analysing system dynamics efficiently. Mesa therefore offered the best balance between expressiveness, ease of development, and computational flexibility, making it the optimal choice for this project.
+
 \section{Vodle}
 Having established the broader context of liquid democracy and examined existing systems, this section introduces vodle -- the platform into which these mechanisms are integrated.
 Vodle is a web-based decision-making tool designed to support participatory group processes through interactive polls and transparent aggregation methods. It allows users to rate decision options on a 0-100 scale using sliders, encouraging nuanced input and fostering compromise.
@@ -375,21 +381,24 @@ These initial limitations -- especially the absence of consistent cycle preventi
 
 % These insights collectively define the project's objectives, which are formalised in the following chapter.
 
+% \section{Summary}
+% The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle.  
+% It highlighted critical limitations in traditional liquid democracy systems, including delegation cycles, abstention risks, and the disproportionate influence of super-voters.
+
+% In response, several promising delegation strategies were identified, with particular emphasis on ranked and weighted delegation.  
+% Ranked delegation was found to be an effective method for reducing the risk of lost votes, with the MinSum delegation rule offering a strong balance between efficiency, interpretability, and fairness.
+
+% Weighted delegation emerged as a valuable strategy for enhancing voter flexibility by allowing influence to be distributed across multiple trusted delegates.  
+% Practical experiences from systems such as Google Votes further supported the value of topic-specific delegation, where assigning different delegates for different decision areas improved engagement and representation accuracy.
+
+% Among the weighted delegation methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's principles of user autonomy and flexible participation.  
+% By allowing voters to articulate nuanced trust relationships across multiple delegates -- including themselves -- the model offers a compelling balance between representation quality and individual control.
+
+% Although more computationally intensive than simpler approaches, the trust matrix model presents a viable strategy for implementing robust weighted delegation within a real-time voting system.  
+% The technological constraints of vodle itself, particularly the reliance on client-side processing through CouchDB, further emphasised the need for efficient, lightweight implementation strategies.
+
+% Together, these insights define the objectives and requirements addressed in the next stage of the project.  
+% The following chapter formalises these design goals and describes the development of a fully integrated liquid democracy system within vodle.
+
 \section{Summary}
-The background research presented in this chapter has provided the necessary foundation for designing and implementing advanced delegation features within vodle.  
-It highlighted critical limitations in traditional liquid democracy systems, including delegation cycles, abstention risks, and the disproportionate influence of super-voters.
-
-In response, several promising delegation strategies were identified, with particular emphasis on ranked and weighted delegation.  
-Ranked delegation was found to be an effective method for reducing the risk of lost votes, with the MinSum delegation rule offering a strong balance between efficiency, interpretability, and fairness.
-
-Weighted delegation emerged as a valuable strategy for enhancing voter flexibility by allowing influence to be distributed across multiple trusted delegates.  
-Practical experiences from systems such as Google Votes further supported the value of topic-specific delegation, where assigning different delegates for different decision areas improved engagement and representation accuracy.
-
-Among the weighted delegation methods explored, the trust matrix model stood out for its expressiveness and alignment with vodle's principles of user autonomy and flexible participation.  
-By allowing voters to articulate nuanced trust relationships across multiple delegates -- including themselves -- the model offers a compelling balance between representation quality and individual control.
-
-Although more computationally intensive than simpler approaches, the trust matrix model presents a viable strategy for implementing robust weighted delegation within a real-time voting system.  
-The technological constraints of vodle itself, particularly the reliance on client-side processing through CouchDB, further emphasised the need for efficient, lightweight implementation strategies.
-
-Together, these insights define the objectives and requirements addressed in the next stage of the project.  
-The following chapter formalises these design goals and describes the development of a fully integrated liquid democracy system within vodle.
+This chapter outlined the theoretical and technical background underpinning the integration of liquid democracy into vodle. It identified core issues -- such as delegation cycles, vote loss through abstentions, and disproportionate influence of super-voters -- and explored delegation strategies suited to mitigating them. With these foundations in place, the next chapter defines the project's objectives and formalises the functional and non-functional requirements for implementation.

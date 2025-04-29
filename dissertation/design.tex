@@ -75,7 +75,7 @@ Delegation in vodle followed an explicit, link-based invitation model:
 
 \begin{enumerate}
     \item A user (the delegator) generated a delegation ID (DID), created a key pair, and constructed a \texttt{del\_request} object specifying the options to delegate.
-    \item A magic link containing this information was shared with the intended delegate.
+    \item A magic link\footnote{A magic link is a secure, single-use hyperlink that authenticates a user or authorises an action without requiring manual credential entry. In this context, it contains a delegation request payload, allowing the intended delegate to accept or reject the invitation upon clicking the link.} containing this information was shared with the intended delegate.
     \item The delegate could accept or reject the invitation. If accepted, a signed \texttt{del\_response} was created, completing the delegation handshake.
     \item Once accepted, a \texttt{del\_agreement} object was created and cached by both parties. This structure tracked which options were accepted and which were currently active.
 \end{enumerate}
@@ -163,17 +163,13 @@ Suppose the following delegations exist:
 \end{itemize}
 
 The resulting \texttt{inverse\_indirect\_map} is:
-\begin{figure}[H]
-  \centering
-  \begin{minted}{python}
-    inverse_indirect_map = {
-      "B": {"A"},
-      "C": {"B", "A"},
-      "D": {"C", "B", "A"}
-    }
-    \end{minted}
-  \label{fig:inverse_indirect_map}
-\end{figure}
+\begin{minted}{python}
+  inverse_indirect_map = {
+    "B": {"A"},
+    "C": {"B", "A"},
+    "D": {"C", "B", "A"}
+  }
+\end{minted}
 
 Whenever a user modifies the \texttt{inverse\_indirect\_map} (for example, by accepting or revoking a delegation), the updated map is serialised into JSON and pushed to the CouchDB database. Other clients then pull and de-serialise the latest version, ensuring that all users maintain a consistent and up-to-date view of the global delegation graph.
 
@@ -267,14 +263,11 @@ This new map was necessary because the existing \texttt{inverse\_indirect\_map},
 
 For example, if only User A has delegated and they rank User B first, User C second, and User D third, and B and C accept the delegation while D does not respond, the resulting map is:
 
-\begin{figure}[H]
-  \begin{minted}{python}
-    direct_delegation_map = {
-      "A": [["B", 1, 2], ["C", 2, 1], ["D", 3, 0]]
-    }
-  \end{minted}
-  \caption{Example of a \texttt{direct\_delegation\_map} entry for ranked delegation. B is marked as active as the path $A\to B$ has the lowest total sum of ranks.}
-\end{figure}
+\begin{minted}{python}
+  direct_delegation_map = {
+    "A": {["B", 1, 2], ["C", 2, 1], ["D", 3, 0]}
+  }
+\end{minted}
 
 \subsection{Delegation Resolution Using MinSum}
 
@@ -782,9 +775,12 @@ The rest of the vodle database structure, including user and poll document forma
 ...
   if (savedDoc && !_id.endsWith("inverse_indirect_map") && !_id.endsWith("direct_delegation_map") && !_id.endsWith("waps")) {
     throw ({forbidden: 'Noone may update or delete existing poll documents.'});
+  }
 ...
 \end{minted}
 
 \section{Summary}
 
-This chapter detailed the design and implementation of the delegation mechanisms introduced into vodle, addressing each of the project's core objectives. Beginning with a robust core delegation model, the system ensured global consistency and cycle prevention while preserving user autonomy. Ranked delegation added backup delegations based on user preference, while per-option delegation allowed finer control over delegation assignments for different poll options. Weighted delegation further extended flexibility by allowing voting power to be distributed proportionally across multiple trusted delegates. Across all features, the designs were carefully adapted to vodle's serverless, client-driven architecture, ensuring correctness, performance, and a responsive user experience. Despite the technical challenges, each major objective was fully achieved, laying a strong foundation for future extension work.
+%This chapter detailed the design and implementation of the delegation mechanisms introduced into vodle, addressing each of the project's core objectives. Beginning with a robust core delegation model, the system ensured global consistency and cycle prevention while preserving user autonomy. Ranked delegation added backup delegations based on user preference, while per-option delegation allowed finer control over delegation assignments for different poll options. Weighted delegation further extended flexibility by allowing voting power to be distributed proportionally across multiple trusted delegates. Across all features, the designs were carefully adapted to vodle's serverless, client-driven architecture, ensuring correctness, performance, and a responsive user experience. Despite the technical challenges, each major objective was fully achieved, laying a strong foundation for future extension work.
+
+This chapter described the design and implementation of the four delegation modes integrated into vodle, with particular attention to maintaining client-side efficiency, consistency under CouchDB's document constraints, and user-driven control of delegation. The solutions developed establish the basis for evaluating the system's correctness and performance, as explored in the next chapter.

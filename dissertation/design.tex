@@ -1,10 +1,11 @@
 \chapter{Design and Implementation}
 \label{ch:design_implementation}
-This chapter describes the design decisions and implementation work undertaken to meet the core objectives of the project. Each section focuses on a major delegation mechanism introduced into vodle: first, a core delegation model providing global consistency and cycle prevention; second, ranked delegation allowing users to specify backup preferences; third, per-option delegation enabling different delegates for different poll options; and finally, weighted delegation allowing fractional trust-based voting. The design and implementation challenges for each mechanism are presented in turn, followed by a summary of how they were integrated into vodle's client-driven architecture.
+This chapter describes the design decisions and implementation work undertaken to meet the core objectives of the project.
+Each section focuses on a major delegation mechanism introduced into vodle. These include: a core delegation model providing global consistency and cycle prevention; ranked delegation allowing users to specify backup preferences; per-option delegation enabling different delegates for different poll options; and weighted delegation allowing fractional trust-based voting.
 
-\subsubsection{Delegation Modes at Poll Creation}
+Due to the distinct design challenges of each delegation mechanism, they were developed as separate modes rather than fully interoperable features. When creating a poll, users must select a single delegation mode -- standard delegation, ranked delegation, weighted delegation, or per-option delegation -- which determines the delegation features available during voting.
 
-When creating a poll, users can select the delegation mode to be used: standard delegation, ranked delegation, weighted delegation, or per-option delegation. The selected mode determines which delegation features are enabled for users during the voting process.
+The design and implementation challenges for each mechanism are presented in turn, followed by a summary of how they were integrated into vodle's architecture.
 
 \section{System Architecture Overview}\label{sec:design_architecture}
 Vodle is built as a serverless web application that emphasises accessibility, client-side performance, and ease of deployment. Its architecture comprises two components:
@@ -665,7 +666,7 @@ The delegation invitation dialog was extended to include a trust assignment slid
     \label{fig:trust-slider}
 \end{figure}
 
-Additionally, the delegation management dialog (introduced for ranked delegation) was extended to show trust percentages. An ``expert mode'' (see Figure~\ref{fig:expert-mode}) was also added, allowing users to manually edit trust values. Manual edits are validated according to the following rules:
+Additionally, the delegation management dialog (introduced for ranked delegation) was extended to show trust percentages. An ``expert mode'' (see Figure~\ref{fig:weighted_info}) was also added, allowing users to manually edit trust values. Manual edits are validated according to the following rules:
 \begin{itemize}
     \item The total delegated trust must not exceed 99\%.
     \item Each delegate must be assigned between 1\% and 99\%.
@@ -718,7 +719,6 @@ effective_rating_map = new Map(self_rating_map);
       \label{eq:effective_rating}
     \end{equation}      
     \item \textbf{Convergence Check:} After recalculating all ratings, the system checks whether the change in ratings (compared to the previous iteration) is below a small threshold, \texttt{acceptable\_diff}.
-\end{enumerate}
 
 The \texttt{acceptable\_diff} value is a configurable threshold that determines when iterative recalculation should stop. It prevents unnecessary updates by halting once changes between successive iterations fall below the precision relevant to users. In this implementation, the value was set to 1, matching the precision with which users can assign ratings, therefore saving computational efficiency without affecting visible accuracy.
 
@@ -737,11 +737,12 @@ if (acceptable_diff_reached){
   return newEffectiveMap;
 }
 \end{minted}
+\end{enumerate}
 
 \begin{enumerate}
     \setcounter{enumi}{3}
     \item \textbf{Recursion and Termination:} If convergence is not reached, the function recursively calls itself with the updated ratings. To guard against unexpected issues such as infinite loops due to numerical instability, a maximum recursion depth of 15 was imposed. Benchmarking results (Chapter~\ref{ch:evaluation}) showed that even in worst-case scenarios with 500 voters, convergence typically occurred within fewer than 10 iterations. Setting the limit at 15 provides a safe margin while ensuring the application remains responsive even if an unforeseen problem arises.
-\end{enumerate}
+
 
 \begin{minted}{typescript}
 if (count > 15) {
@@ -758,8 +759,6 @@ if (count > 15) {
 }
 \end{minted}
 
-\begin{enumerate}
-    \setcounter{enumi}{4}
     \item \textbf{Finalisation:} Once convergence is achieved or the maximum depth is reached, the final effective ratings are floored to integers just before they are saved. Deferring flooring until the final step preserves numerical accuracy during intermediate calculations and avoids the accumulation of rounding errors across recursive calls.
 \end{enumerate}
 

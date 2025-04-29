@@ -145,10 +145,9 @@ NFR4: Delegation UI intuitive & Achieved \\ \hline
 \begin{minted}{typescript}
 save_inverse_indirect_map(
     pid: string, oid: string, val: Map<string, string>) {
-...
 const jsonData = JSON.stringify(
     Array.from(mp.entries(), ([k, v]) => [k, Array.from(v.entries())]));
-this._setp_in_polldb(pid, `poll.${pid}.inverse_indirect_map`, jsonData);
+this._setp_in_polldb(pid, `poll.{pid}.inverse_indirect_map`, jsonData);
 }
 \end{minted}
     \item \textbf{NFR3:} Only the final vote is visible to the delegated voter (see Figure~\ref{fig:vote_override}).
@@ -206,7 +205,7 @@ NFR3: UI provided for adjusting trust weights & Achieved \\ \hline
 
 \begin{itemize}
     \item \textbf{FR1:} This can be seen in Figure~\ref{fig:weighted_info}.
-    \item \textbf{FR2:} Invitation dialog was extended to perform allow users to specify a trust level (from 1 to the amount of trust available to delegate), see Figure~\ref{fig:trust-slider}.
+    \item \textbf{FR2:} Invitation dialog was extended to allow users to specify a trust level (from 1 to the amount of trust available to delegate), see Figure~\ref{fig:trust-slider}.
     \item \textbf{FR3:} The final ratings are calculated using an iterative trust matrix model, ensuring that delegation chains propagate weights correctly while converging rapidly to stable outcomes (Section~\ref{sec:design_per_option_delegation}).
     \item \textbf{NFR1:} Weighted delegation is calculated client-side. (See Section~\ref{sec:design_per_option_delegation}.)
     \item \textbf{NFR2:} Weighted delegation data is stored using the same method as Objective 1.
@@ -268,7 +267,7 @@ The extension objective to simulate delegation mechanisms using agent-based mode
 
 The complexity and time demands of finalising and refining the core objectives meant that there was insufficient capacity to also build the simulation environment. This prioritisation was necessary to ensure the core deliverables met the required quality standards.
 
-Nonetheless, foundational planning was carried out, and Chapter~\ref{ch:future_work} outlines how future work could extend the project by implementing a simulation framework based on the Mesa Python library, with a view to exploring delegation dynamics under different mechanisms and network configurations.
+Nonetheless, foundational planning was carried out, and Chapter~\ref{ch:future} outlines how future work could extend the project by implementing a simulation framework based on the Mesa Python library, with a view to exploring delegation dynamics under different mechanisms and network configurations.
 
 Overall, while this extension objective was not realised within the project timeline, it remains a strong candidate for future research and development.
 
@@ -276,12 +275,25 @@ Overall, while this extension objective was not realised within the project time
 \section{Feedback}
 \label{sec:feedback}
 
-After the completion of the project, formal feedback was requested from Jobst Heitzig, the main developer of vodle and acting as the product owner for this project. His evaluation of the outcomes was very positive:
+\begin{displayquote}
+    The added user interface components are well designed and integrate very well with the existing UI and UX.
+    
+    The implemented back-end logic works seamlessly with the rather complicated existing data management.
+    
+    One possible issue with the backend logic is that there might occur racing conditions when several delegations are accepted at basically the same time. This should be easily fixable.
+    
+    All new code is well-structured and follows the style and conventions of the existing code-base.
+    
+    The different mathematical methods for resolving delegation cycles, especially the weighted one, are well motivated and present a range of good options for users to delegate all or part of their vote to trusted others, without breaching privacy unnecessarily.
+    
+    Overall, this delegation extension will likely be rolled out with the next release of the app.
+    \end{displayquote}
+    
+\begin{flushright}
+\textemdash\ Jobst Heitzig
+\end{flushright}
+    
 
-\begin{quote}
-    ``The added user interface components are well designed and integrate very well with the existing UI and UX. The implemented back-end logic works seamlessly with the rather complicated existing data management. One possible issue with the backend logic is that there might occur racing conditions when several delegations are accepted at basically the same time. This should be easily fixable. All new code is well-structured and follows the style and conventions of the existing code-base. The different mathematical methods for resolving delegation cycles, especially the weighted one, are well motivated and present a range of good options for users to delegate all or part of their vote to trusted others, without breaching privacy unnecessarily. Overall, this delegation extension will likely be rolled out with the next release of the app.''
-\end{quote}
-
-The feedback confirmed that the project successfully achieved its goals. In particular, the new delegation features were assessed as robust, well-integrated into the existing system, and aligned with vodle's emphasis on user autonomy and transparency. The minor issue of potential race conditions was acknowledged as easily addressable. Potential strategies for mitigating this issue are discussed further in Section~\ref{sec:future-work}.
+The feedback from Heitzig confirmed that the project successfully achieved its goals. In particular, the new delegation features were assessed as robust, well-integrated into the existing system, and aligned with vodle's emphasis on user autonomy and transparency. The minor issue of potential race conditions was acknowledged as easily addressable. Potential strategies for mitigating this issue are discussed further in Section~\ref{ch:background}.
 
 Overall, the feedback indicated that the delegation extension provides a substantial and valuable improvement to the vodle platform.
